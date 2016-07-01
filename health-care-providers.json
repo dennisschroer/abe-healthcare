@@ -1,0 +1,2029 @@
+{
+  "TekstViewModel": {
+    "ZoekTekst": "",
+    "ZoekResultaten": []
+  },
+  "GeavanceerdZoekenViewModel": {
+    "HrNummer": "",
+    "Zorgsoort": "00",
+    "ZorgsoortKeuzeLijst": [
+      ""
+    ],
+    "Kwalificaties": [],
+    "AGBCodeComparer": "1",
+    "AGBCode": "",
+    "Naam": "",
+    "Postcode": "",
+    "PostcodeComparer": "1",
+    "Plaats": "",
+    "PlaatsComparer": "1",
+    "Geboortedatum": "0001-01-01T00:00:00",
+    "DatumAanvangInschrijvingComparer": "0",
+    "DatumAanvangInschrijving": "0001-01-01T00:00:00",
+    "DatumEindeInschrijvingComparer": "0",
+    "DatumEindeInschrijving": "0001-01-01T00:00:00",
+    "Status": "",
+    "ReferentieNummer": "",
+    "CriteriaHelper": {
+      "TekstZoekcriteria": [
+        {
+          "Id": "0",
+          "EscapeCharacter": null,
+          "Omschrijving": "Begint met"
+        },
+        {
+          "Id": "1",
+          "EscapeCharacter": null,
+          "Omschrijving": "Bevat"
+        }
+      ],
+      "DatumZoekcriteria": [
+        {
+          "Id": "0",
+          "EscapeCharacter": ">{0}",
+          "Omschrijving": "Ligt voor"
+        },
+        {
+          "Id": "1",
+          "EscapeCharacter": "<{0}",
+          "Omschrijving": "Ligt op"
+        },
+        {
+          "Id": "2",
+          "EscapeCharacter": "{0}",
+          "Omschrijving": "Ligt na"
+        }
+      ],
+      "StatusCriteria": [
+        {
+          "Id": "0",
+          "Omschrijving": "Alle statussen\t"
+        },
+        {
+          "Id": "1",
+          "Omschrijving": "Actief\t"
+        },
+        {
+          "Id": "3",
+          "Omschrijving": "Niet actief\t"
+        },
+        {
+          "Id": "7",
+          "Omschrijving": "Schorsing\t"
+        }
+      ],
+      "ZorgsoortenZorgverlenerCriteria": [
+        {
+          "Id": "00",
+          "Omschrijving": "Alle zorgsoorten"
+        },
+        {
+          "Id": "01",
+          "Omschrijving": "Huisartsen"
+        },
+        {
+          "Id": "02",
+          "Omschrijving": "Apothekers"
+        },
+        {
+          "Id": "03",
+          "Omschrijving": "Medisch Specialisten"
+        },
+        {
+          "Id": "04",
+          "Omschrijving": "Fysiotherapeuten"
+        },
+        {
+          "Id": "05",
+          "Omschrijving": "Logopedisten"
+        },
+        {
+          "Id": "07",
+          "Omschrijving": "Oefentherapeuten"
+        },
+        {
+          "Id": "08",
+          "Omschrijving": "Verloskundigen"
+        },
+        {
+          "Id": "11",
+          "Omschrijving": "Tandarts - Specialisten (Mondziekten en Kaakchirurgie)"
+        },
+        {
+          "Id": "12",
+          "Omschrijving": "Tandartsen"
+        },
+        {
+          "Id": "13",
+          "Omschrijving": "Tandarts - Specialisten (Dento - Maxillaire Orthopedie)"
+        },
+        {
+          "Id": "14",
+          "Omschrijving": "Bedrijfsartsen"
+        },
+        {
+          "Id": "24",
+          "Omschrijving": "Dietisten"
+        },
+        {
+          "Id": "26",
+          "Omschrijving": "Podotherapeuten"
+        },
+        {
+          "Id": "44",
+          "Omschrijving": "Optometristen"
+        },
+        {
+          "Id": "57",
+          "Omschrijving": "Physician Assistant"
+        },
+        {
+          "Id": "84",
+          "Omschrijving": "Overige Artsen"
+        },
+        {
+          "Id": "87",
+          "Omschrijving": "Mondhygienisten"
+        },
+        {
+          "Id": "88",
+          "Omschrijving": "Ergotherapeuten"
+        },
+        {
+          "Id": "89",
+          "Omschrijving": "Schoonheidspecialisten"
+        },
+        {
+          "Id": "90",
+          "Omschrijving": "Genezers"
+        },
+        {
+          "Id": "91",
+          "Omschrijving": "Verpleegkundigen"
+        },
+        {
+          "Id": "93",
+          "Omschrijving": "Tandtechnici / Tandprothetici"
+        },
+        {
+          "Id": "94",
+          "Omschrijving": "Psychologische Zorgverleners"
+        },
+        {
+          "Id": "96",
+          "Omschrijving": "Pedicuren"
+        }
+      ],
+      "ZorgsoortenOndernemingCriteria": [
+        {
+          "Id": "00",
+          "Omschrijving": "Alle zorgsoorten"
+        },
+        {
+          "Id": "01",
+          "Omschrijving": "Huisartsen"
+        },
+        {
+          "Id": "02",
+          "Omschrijving": "Apothekers"
+        },
+        {
+          "Id": "03",
+          "Omschrijving": "Medisch Specialisten"
+        },
+        {
+          "Id": "04",
+          "Omschrijving": "Fysiotherapeuten"
+        },
+        {
+          "Id": "05",
+          "Omschrijving": "Logopedisten"
+        },
+        {
+          "Id": "06",
+          "Omschrijving": "Ziekenhuizen"
+        },
+        {
+          "Id": "07",
+          "Omschrijving": "Oefentherapeuten"
+        },
+        {
+          "Id": "08",
+          "Omschrijving": "Verloskundigen"
+        },
+        {
+          "Id": "11",
+          "Omschrijving": "Tandarts-Specialisten (Mondziekten en Kaakchirurgie)"
+        },
+        {
+          "Id": "12",
+          "Omschrijving": "Tandartsen"
+        },
+        {
+          "Id": "13",
+          "Omschrijving": "Tandarts-Specialisten (Dento-Maxillaire Orthopedie)"
+        },
+        {
+          "Id": "14",
+          "Omschrijving": "Bedrijfsartsen"
+        },
+        {
+          "Id": "17",
+          "Omschrijving": "Rechtspersonen"
+        },
+        {
+          "Id": "18",
+          "Omschrijving": "Dialyse Centra"
+        },
+        {
+          "Id": "19",
+          "Omschrijving": "Audiologische Centra"
+        },
+        {
+          "Id": "20",
+          "Omschrijving": "Radiotherapeutische Centra"
+        },
+        {
+          "Id": "21",
+          "Omschrijving": "Dienstenstructuren (ANW-Diensten)"
+        },
+        {
+          "Id": "22",
+          "Omschrijving": "Zelfstandige Behandelcentra"
+        },
+        {
+          "Id": "23",
+          "Omschrijving": "Instellingen voor Revalidatiedagbehandeling"
+        },
+        {
+          "Id": "24",
+          "Omschrijving": "Dietisten"
+        },
+        {
+          "Id": "25",
+          "Omschrijving": "Instellingen voor Psychiatische Deeltijdbehandeling"
+        },
+        {
+          "Id": "26",
+          "Omschrijving": "Podotherapeuten"
+        },
+        {
+          "Id": "30",
+          "Omschrijving": "Instellingen voor Verstandelijk Gehandicapten"
+        },
+        {
+          "Id": "31",
+          "Omschrijving": "Bloedbanken"
+        },
+        {
+          "Id": "32",
+          "Omschrijving": "GGD"
+        },
+        {
+          "Id": "33",
+          "Omschrijving": "Kraamcentra"
+        },
+        {
+          "Id": "34",
+          "Omschrijving": "Trombosediensten"
+        },
+        {
+          "Id": "35",
+          "Omschrijving": "Instellingen voor Visueel Gehandicapten"
+        },
+        {
+          "Id": "36",
+          "Omschrijving": "Ambulancediensten"
+        },
+        {
+          "Id": "37",
+          "Omschrijving": "Gezondheidscentra"
+        },
+        {
+          "Id": "38",
+          "Omschrijving": "Tandheelkundige Centra"
+        },
+        {
+          "Id": "39",
+          "Omschrijving": "Instellingen voor Jeugdtandverzorging"
+        },
+        {
+          "Id": "40",
+          "Omschrijving": "Instellingen voor Auditief Gehandicapten"
+        },
+        {
+          "Id": "41",
+          "Omschrijving": "ZZP-ers in wijkverpleging/ PGB aanbieders / Beheerstichtingen"
+        },
+        {
+          "Id": "42",
+          "Omschrijving": "Verzorgingshuizen"
+        },
+        {
+          "Id": "43",
+          "Omschrijving": "Beheerstichtingen Verzorgingstehuizen"
+        },
+        {
+          "Id": "44",
+          "Omschrijving": "Optometristen"
+        },
+        {
+          "Id": "45",
+          "Omschrijving": "Verpleeginrichtingen voor Somatische Ziekten"
+        },
+        {
+          "Id": "46",
+          "Omschrijving": "Verpleeginrichtingen voor Psycho-Geriatrische Patienten"
+        },
+        {
+          "Id": "47",
+          "Omschrijving": "Gecombineerde Verpleeginrichtingen"
+        },
+        {
+          "Id": "48",
+          "Omschrijving": "Overige Instellingen"
+        },
+        {
+          "Id": "49",
+          "Omschrijving": "Abortusklinieken"
+        },
+        {
+          "Id": "50",
+          "Omschrijving": "Laboratoria(Huisartsenlab./Gemeensch.Lab/Gemeensch Apoth+Lab"
+        },
+        {
+          "Id": "51",
+          "Omschrijving": "Klinisch-Genetische Centra"
+        },
+        {
+          "Id": "52",
+          "Omschrijving": "Eurotransplant"
+        },
+        {
+          "Id": "53",
+          "Omschrijving": "Diverse Samenwerkingsverbanden"
+        },
+        {
+          "Id": "54",
+          "Omschrijving": "GGZ Instellingen (PUK/PAAZ)"
+        },
+        {
+          "Id": "56",
+          "Omschrijving": "Consultatiebureaus voor Alcohol en Drugs"
+        },
+        {
+          "Id": "57",
+          "Omschrijving": "Physician Assistant"
+        },
+        {
+          "Id": "58",
+          "Omschrijving": "Centrale Post Ambulancediensten - CPA"
+        },
+        {
+          "Id": "60",
+          "Omschrijving": "Instellingen voor Dagverpleging voor Ouderen"
+        },
+        {
+          "Id": "61",
+          "Omschrijving": "Beheerstichtingen Dagverblijven"
+        },
+        {
+          "Id": "65",
+          "Omschrijving": "Gezinsvervangende Tehuizen"
+        },
+        {
+          "Id": "66",
+          "Omschrijving": "Beheerst Gezinsv Tehuizen, Dagverbl en Inst Verstand Gehand"
+        },
+        {
+          "Id": "70",
+          "Omschrijving": "Kinderdagverblijven"
+        },
+        {
+          "Id": "72",
+          "Omschrijving": "RIBW"
+        },
+        {
+          "Id": "73",
+          "Omschrijving": "Wlz Gecombineerd"
+        },
+        {
+          "Id": "74",
+          "Omschrijving": "Arbodiensten"
+        },
+        {
+          "Id": "75",
+          "Omschrijving": "Thuiszorginstellingen"
+        },
+        {
+          "Id": "76",
+          "Omschrijving": "Leveranciers Hulpmiddelen"
+        },
+        {
+          "Id": "78",
+          "Omschrijving": "Sociaal Pedagogische Diensten"
+        },
+        {
+          "Id": "79",
+          "Omschrijving": "RIAGG"
+        },
+        {
+          "Id": "84",
+          "Omschrijving": "Overige Artsen"
+        },
+        {
+          "Id": "85",
+          "Omschrijving": "Taxivervoerders"
+        },
+        {
+          "Id": "87",
+          "Omschrijving": "Mondhygienisten"
+        },
+        {
+          "Id": "88",
+          "Omschrijving": "Ergotherapeuten"
+        },
+        {
+          "Id": "89",
+          "Omschrijving": "Schoonheidspecialisten"
+        },
+        {
+          "Id": "90",
+          "Omschrijving": "Overige therapeuten en Complementair en Aanvullende zorg"
+        },
+        {
+          "Id": "91",
+          "Omschrijving": "Verpleegkundigen"
+        },
+        {
+          "Id": "93",
+          "Omschrijving": "Tandtechnici/Tandprothetici"
+        },
+        {
+          "Id": "94",
+          "Omschrijving": "Psychologische Zorgverleners"
+        },
+        {
+          "Id": "96",
+          "Omschrijving": "Pedicuren"
+        },
+        {
+          "Id": "98",
+          "Omschrijving": "Declaranten/Servicebureaus/Zorgverzekeraars"
+        }
+      ],
+      "KwalificatieTypeCriteria": [
+        {
+          "Id": "0100",
+          "Omschrijving": "Huisarts "
+        },
+        {
+          "Id": "0101",
+          "Omschrijving": "Niet apotheekhoudend"
+        },
+        {
+          "Id": "0102",
+          "Omschrijving": "Medicatiebeoordeling chronisch UR-geneesmiddelgebruik"
+        },
+        {
+          "Id": "0110",
+          "Omschrijving": "Apotheekhoudend"
+        },
+        {
+          "Id": "0120",
+          "Omschrijving": "Artsen, alternatief"
+        },
+        {
+          "Id": "0200",
+          "Omschrijving": "Apothekers"
+        },
+        {
+          "Id": "0201",
+          "Omschrijving": "Medicatiebeoordeling chronisch UR-geneesmiddelgebruik"
+        },
+        {
+          "Id": "0300",
+          "Omschrijving": "Medisch specialist "
+        },
+        {
+          "Id": "0301",
+          "Omschrijving": "Oogheelkunde"
+        },
+        {
+          "Id": "0302",
+          "Omschrijving": "Keel-, neus- en oorheelkunde"
+        },
+        {
+          "Id": "0303",
+          "Omschrijving": "Chirurgie"
+        },
+        {
+          "Id": "0304",
+          "Omschrijving": "Plastische chirurgie"
+        },
+        {
+          "Id": "0305",
+          "Omschrijving": "Orthopedie"
+        },
+        {
+          "Id": "0306",
+          "Omschrijving": "Urologie"
+        },
+        {
+          "Id": "0307",
+          "Omschrijving": "Obstetrie en gynaecologie"
+        },
+        {
+          "Id": "0308",
+          "Omschrijving": "Neurochirurgie"
+        },
+        {
+          "Id": "0309",
+          "Omschrijving": "Zenuw - en zielsziekten"
+        },
+        {
+          "Id": "0310",
+          "Omschrijving": "Dermatologie"
+        },
+        {
+          "Id": "0313",
+          "Omschrijving": "Inwendige geneeskunde"
+        },
+        {
+          "Id": "0316",
+          "Omschrijving": "Kindergeneeskunde"
+        },
+        {
+          "Id": "0318",
+          "Omschrijving": "Leer van Maag- lever en darmziekten"
+        },
+        {
+          "Id": "0320",
+          "Omschrijving": "Cardiologie"
+        },
+        {
+          "Id": "0322",
+          "Omschrijving": "Longziekten"
+        },
+        {
+          "Id": "0324",
+          "Omschrijving": "Reumatologie"
+        },
+        {
+          "Id": "0326",
+          "Omschrijving": "Allergologie"
+        },
+        {
+          "Id": "0327",
+          "Omschrijving": "Revalidatie"
+        },
+        {
+          "Id": "0328",
+          "Omschrijving": "Cardio-thoracale chirurgie"
+        },
+        {
+          "Id": "0329",
+          "Omschrijving": "Psychiatrie"
+        },
+        {
+          "Id": "0330",
+          "Omschrijving": "Neurologie"
+        },
+        {
+          "Id": "0335",
+          "Omschrijving": "Geriatrie"
+        },
+        {
+          "Id": "0360",
+          "Omschrijving": "Radiologie"
+        },
+        {
+          "Id": "0361",
+          "Omschrijving": "Radiotherapie"
+        },
+        {
+          "Id": "0362",
+          "Omschrijving": "Radiologie (voorheen radiodiagnostiek)"
+        },
+        {
+          "Id": "0363",
+          "Omschrijving": "Nucleaire geneeskunde"
+        },
+        {
+          "Id": "0386",
+          "Omschrijving": "Klinische chemie"
+        },
+        {
+          "Id": "0387",
+          "Omschrijving": "Medische microbiologie"
+        },
+        {
+          "Id": "0388",
+          "Omschrijving": "Pathologische anatomie"
+        },
+        {
+          "Id": "0389",
+          "Omschrijving": "Anaesthesiologie"
+        },
+        {
+          "Id": "0390",
+          "Omschrijving": "Klinische genetica"
+        },
+        {
+          "Id": "0400",
+          "Omschrijving": "Fysiotherapeuten "
+        },
+        {
+          "Id": "0401",
+          "Omschrijving": "Fysiotherapie"
+        },
+        {
+          "Id": "0402",
+          "Omschrijving": "Heilgymnastiek/massage"
+        },
+        {
+          "Id": "0403",
+          "Omschrijving": "Kinderfysiotherapie"
+        },
+        {
+          "Id": "0404",
+          "Omschrijving": "Manuele therapie"
+        },
+        {
+          "Id": "0405",
+          "Omschrijving": "Oedeemtherapie"
+        },
+        {
+          "Id": "0406",
+          "Omschrijving": "Bekkenfysiotherapie"
+        },
+        {
+          "Id": "0407",
+          "Omschrijving": "Fysiotherapie in de geriatrie"
+        },
+        {
+          "Id": "0408",
+          "Omschrijving": "Sportfysiotherapie"
+        },
+        {
+          "Id": "0409",
+          "Omschrijving": "Psychosomatische fysiotherapie"
+        },
+        {
+          "Id": "0410",
+          "Omschrijving": "Oro-faciale fysiotherapie"
+        },
+        {
+          "Id": "0411",
+          "Omschrijving": "Arbeids- en/of bedrijfsfysiotherapeut"
+        },
+        {
+          "Id": "0412",
+          "Omschrijving": "Oncologie"
+        },
+        {
+          "Id": "0500",
+          "Omschrijving": "Logopedisten "
+        },
+        {
+          "Id": "0501",
+          "Omschrijving": "Logopedie"
+        },
+        {
+          "Id": "0502",
+          "Omschrijving": "Foniatrie"
+        },
+        {
+          "Id": "0503",
+          "Omschrijving": "Stottertherapie"
+        },
+        {
+          "Id": "0504",
+          "Omschrijving": "Preverbale therapie"
+        },
+        {
+          "Id": "0505",
+          "Omschrijving": "Direct toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "0506",
+          "Omschrijving": "Afasie"
+        },
+        {
+          "Id": "0507",
+          "Omschrijving": "Haenen-ouderprogramma"
+        },
+        {
+          "Id": "0508",
+          "Omschrijving": "Integraal Zorg Stotteren (IZS)"
+        },
+        {
+          "Id": "0600",
+          "Omschrijving": "Niet nader gespecificeerd"
+        },
+        {
+          "Id": "0601",
+          "Omschrijving": "Algemene ziekenhuizen"
+        },
+        {
+          "Id": "0602",
+          "Omschrijving": "Academische ziekenhuizen"
+        },
+        {
+          "Id": "0603",
+          "Omschrijving": "Astmaklinieken"
+        },
+        {
+          "Id": "0604",
+          "Omschrijving": "Beademingscentra"
+        },
+        {
+          "Id": "0606",
+          "Omschrijving": "Epilepsiecentra"
+        },
+        {
+          "Id": "0607",
+          "Omschrijving": "Kinderziekenhuizen"
+        },
+        {
+          "Id": "0608",
+          "Omschrijving": "Kankerklinieken"
+        },
+        {
+          "Id": "0610",
+          "Omschrijving": "Kraamklinieken"
+        },
+        {
+          "Id": "0612",
+          "Omschrijving": "Neurologische klinieken"
+        },
+        {
+          "Id": "0613",
+          "Omschrijving": "Oogziekenhuizen"
+        },
+        {
+          "Id": "0614",
+          "Omschrijving": "Orthopaedische klinieken"
+        },
+        {
+          "Id": "0615",
+          "Omschrijving": "Reumaklinieken"
+        },
+        {
+          "Id": "0616",
+          "Omschrijving": "Revalidatie-centra"
+        },
+        {
+          "Id": "0617",
+          "Omschrijving": "Sanatoria met longklinieken"
+        },
+        {
+          "Id": "0621",
+          "Omschrijving": "Sanatoria"
+        },
+        {
+          "Id": "0628",
+          "Omschrijving": "Multi-categorale ziekenhuizen"
+        },
+        {
+          "Id": "0629",
+          "Omschrijving": "Psychiatrische ziekenhuizen"
+        },
+        {
+          "Id": "0630",
+          "Omschrijving": "Militaire ziekenhuizen"
+        },
+        {
+          "Id": "0650",
+          "Omschrijving": "Ziekenhuizen Buitenland"
+        },
+        {
+          "Id": "0700",
+          "Omschrijving": "Oefentherapeuten "
+        },
+        {
+          "Id": "0701",
+          "Omschrijving": "Methode cesar"
+        },
+        {
+          "Id": "0702",
+          "Omschrijving": "Methode mensendieck"
+        },
+        {
+          "Id": "0703",
+          "Omschrijving": "Kinderoefentherapie"
+        },
+        {
+          "Id": "0704",
+          "Omschrijving": "Psychosomatische oefentherapie"
+        },
+        {
+          "Id": "0705",
+          "Omschrijving": "Methode cesar, kinderoefentherapie"
+        },
+        {
+          "Id": "0706",
+          "Omschrijving": "Methode mensendieck, kinderoefentherapie"
+        },
+        {
+          "Id": "0707",
+          "Omschrijving": "Methode cesar, psychosomatische oefentherapie"
+        },
+        {
+          "Id": "0708",
+          "Omschrijving": "Methode mensendieck, psychosomatische oefentherapie"
+        },
+        {
+          "Id": "0709",
+          "Omschrijving": "Dir. Toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "0800",
+          "Omschrijving": "Verloskundige"
+        },
+        {
+          "Id": "0801",
+          "Omschrijving": "Met bevoegdheid echoscopie"
+        },
+        {
+          "Id": "0802",
+          "Omschrijving": "Echoscopie NT"
+        },
+        {
+          "Id": "0803",
+          "Omschrijving": "Echoscopie SEO"
+        },
+        {
+          "Id": "0804",
+          "Omschrijving": "Echoscopie Uitwendig"
+        },
+        {
+          "Id": "1100",
+          "Omschrijving": "Mondziekten en kaakchirurgie"
+        },
+        {
+          "Id": "1101",
+          "Omschrijving": "Implantoloog"
+        },
+        {
+          "Id": "1200",
+          "Omschrijving": "Tandartsen, Algemeen practicus"
+        },
+        {
+          "Id": "1201",
+          "Omschrijving": "Implantoloog"
+        },
+        {
+          "Id": "1202",
+          "Omschrijving": "Pedodontoloog"
+        },
+        {
+          "Id": "1203",
+          "Omschrijving": "Endodontoloog"
+        },
+        {
+          "Id": "1299",
+          "Omschrijving": "Tandarts "
+        },
+        {
+          "Id": "1300",
+          "Omschrijving": "Dentomaxilliaire orthopaedie"
+        },
+        {
+          "Id": "1301",
+          "Omschrijving": "Dentomaxilliaire orthodopaedie, Implantologie"
+        },
+        {
+          "Id": "1400",
+          "Omschrijving": "arts arbeid en gezondheid"
+        },
+        {
+          "Id": "1401",
+          "Omschrijving": "arts arbeid en gezondheid"
+        },
+        {
+          "Id": "1402",
+          "Omschrijving": "bedrijfsgeneeskunde"
+        },
+        {
+          "Id": "1403",
+          "Omschrijving": "verzekeringsgeneeskunde"
+        },
+        {
+          "Id": "1700",
+          "Omschrijving": "Rechtspersonen"
+        },
+        {
+          "Id": "1800",
+          "Omschrijving": "Dialysecentra"
+        },
+        {
+          "Id": "1900",
+          "Omschrijving": "Audiologische centra"
+        },
+        {
+          "Id": "2000",
+          "Omschrijving": "Radiotherapeutische centra"
+        },
+        {
+          "Id": "2100",
+          "Omschrijving": "Dienstenstructuren (anw-diensten)"
+        },
+        {
+          "Id": "2200",
+          "Omschrijving": "Zelfstandige behandelcentra (ZBC)"
+        },
+        {
+          "Id": "2270",
+          "Omschrijving": "Zelfstandige behandelcentra (EMS)"
+        },
+        {
+          "Id": "2300",
+          "Omschrijving": "Inrichtingen voor revalidatiedagbehandeling"
+        },
+        {
+          "Id": "2400",
+          "Omschrijving": "Dietisten"
+        },
+        {
+          "Id": "2401",
+          "Omschrijving": "Direct toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "2410",
+          "Omschrijving": "Diëtisten, Direct toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "2499",
+          "Omschrijving": "Diëtisten "
+        },
+        {
+          "Id": "2500",
+          "Omschrijving": "Inrichtingen voor psychiatrische deeltijdbehandeling"
+        },
+        {
+          "Id": "2600",
+          "Omschrijving": "Podotherapeuten"
+        },
+        {
+          "Id": "2699",
+          "Omschrijving": "Podotherapeuten "
+        },
+        {
+          "Id": "3000",
+          "Omschrijving": "Instelling voor verstandelijk gehandicapten"
+        },
+        {
+          "Id": "3100",
+          "Omschrijving": "Bloedbanken"
+        },
+        {
+          "Id": "3200",
+          "Omschrijving": "GGD's (instellingen)"
+        },
+        {
+          "Id": "3300",
+          "Omschrijving": "Kraamcentra"
+        },
+        {
+          "Id": "3400",
+          "Omschrijving": "Trombosediensten"
+        },
+        {
+          "Id": "3500",
+          "Omschrijving": "Instellingen voor visueel gehandicapten"
+        },
+        {
+          "Id": "3600",
+          "Omschrijving": "Ambulancevervoerders"
+        },
+        {
+          "Id": "3700",
+          "Omschrijving": "Gezondheidscentra"
+        },
+        {
+          "Id": "3800",
+          "Omschrijving": "Instellingen voor bijzondere tandheelkunde en mondzorg"
+        },
+        {
+          "Id": "3801",
+          "Omschrijving": "Instelling voor bijzondere tandheelkunde, collectief tijdsta"
+        },
+        {
+          "Id": "3802",
+          "Omschrijving": "Instelling voor bijzondere tandheelkunde, individueel tijdst"
+        },
+        {
+          "Id": "3803",
+          "Omschrijving": "Instelling voor Mondzorg"
+        },
+        {
+          "Id": "3900",
+          "Omschrijving": "Regionale instellingen voor jeugdtandverzorging"
+        },
+        {
+          "Id": "4000",
+          "Omschrijving": "Instellingen voor auditief gehandicapten"
+        },
+        {
+          "Id": "4100",
+          "Omschrijving": "Beheerstichtingen"
+        },
+        {
+          "Id": "4101",
+          "Omschrijving": "ZZP-ers in wijkverpleging"
+        },
+        {
+          "Id": "4102",
+          "Omschrijving": "PGB aanbieders"
+        },
+        {
+          "Id": "4200",
+          "Omschrijving": "Verzorgingstehuizen"
+        },
+        {
+          "Id": "4300",
+          "Omschrijving": "Beheerstichtingen verzorgingshuizen"
+        },
+        {
+          "Id": "4400",
+          "Omschrijving": "Optometristen"
+        },
+        {
+          "Id": "4401",
+          "Omschrijving": "Direct toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "4402",
+          "Omschrijving": "Orthoptisten"
+        },
+        {
+          "Id": "4500",
+          "Omschrijving": "Verpleeginrichtingen somatische zieken"
+        },
+        {
+          "Id": "4600",
+          "Omschrijving": "Verpleeginrichtingen psycho-geriatrische patienten"
+        },
+        {
+          "Id": "4700",
+          "Omschrijving": "Gecombineerde verpleeginrichtingen"
+        },
+        {
+          "Id": "4800",
+          "Omschrijving": "Overige instellingen"
+        },
+        {
+          "Id": "4801",
+          "Omschrijving": "Gemeenten"
+        },
+        {
+          "Id": "4900",
+          "Omschrijving": "\"Abortusklinieken"
+        },
+        {
+          "Id": "5000",
+          "Omschrijving": "Laboratoria"
+        },
+        {
+          "Id": "5100",
+          "Omschrijving": "Klinisch-genetisch centra"
+        },
+        {
+          "Id": "5200",
+          "Omschrijving": "Eurotransplant"
+        },
+        {
+          "Id": "5300",
+          "Omschrijving": "Niet nader gespecificeerd."
+        },
+        {
+          "Id": "5301",
+          "Omschrijving": "DM type 2"
+        },
+        {
+          "Id": "5302",
+          "Omschrijving": "CVR"
+        },
+        {
+          "Id": "5303",
+          "Omschrijving": "COPD"
+        },
+        {
+          "Id": "5400",
+          "Omschrijving": "GGZ instellingen (puk/paaz)"
+        },
+        {
+          "Id": "5600",
+          "Omschrijving": "Consultatiebureaus voor alcohol en drugs"
+        },
+        {
+          "Id": "5700",
+          "Omschrijving": "Physician assistant"
+        },
+        {
+          "Id": "5800",
+          "Omschrijving": "Centrale posten ambulancediensten (CPA's)"
+        },
+        {
+          "Id": "6000",
+          "Omschrijving": "Instellingen voor dagverpleging voor ouderen"
+        },
+        {
+          "Id": "6100",
+          "Omschrijving": "Beheerstichtingen dagverblijven"
+        },
+        {
+          "Id": "6500",
+          "Omschrijving": "Gezinsvervangende tehuizen"
+        },
+        {
+          "Id": "6600",
+          "Omschrijving": "Beheerstichtingen gezinsvervangende tehuizen, dagverblijven "
+        },
+        {
+          "Id": "7000",
+          "Omschrijving": "Kinderdagverblijven"
+        },
+        {
+          "Id": "7200",
+          "Omschrijving": "Regionale instellingen beschermd wonen (RIBW)"
+        },
+        {
+          "Id": "7300",
+          "Omschrijving": "AWBZ gecombineerd"
+        },
+        {
+          "Id": "7400",
+          "Omschrijving": "Arbo-diensten"
+        },
+        {
+          "Id": "7500",
+          "Omschrijving": "Thuiszorg"
+        },
+        {
+          "Id": "7600",
+          "Omschrijving": "Niet nader gespecificeerd"
+        },
+        {
+          "Id": "7601",
+          "Omschrijving": "Ledemaatprothesen"
+        },
+        {
+          "Id": "7602",
+          "Omschrijving": "Mammaprothesen"
+        },
+        {
+          "Id": "7603",
+          "Omschrijving": "Oogprothesen"
+        },
+        {
+          "Id": "7604",
+          "Omschrijving": "Prothetische voorzieningen voor onder- en bovenkaak"
+        },
+        {
+          "Id": "7605",
+          "Omschrijving": "Gelaatsprothesen"
+        },
+        {
+          "Id": "7606",
+          "Omschrijving": "Corsetten"
+        },
+        {
+          "Id": "7607",
+          "Omschrijving": "Orthopedisch schoeisel"
+        },
+        {
+          "Id": "7608",
+          "Omschrijving": "Overige orthesen"
+        },
+        {
+          "Id": "7609",
+          "Omschrijving": "Verbandschoenen"
+        },
+        {
+          "Id": "7611",
+          "Omschrijving": "Brillenglazen"
+        },
+        {
+          "Id": "7612",
+          "Omschrijving": "Contactlenzen"
+        },
+        {
+          "Id": "7613",
+          "Omschrijving": "Bijzondere gezichtshulpmiddelen"
+        },
+        {
+          "Id": "7614",
+          "Omschrijving": "Bijzondere gezichtshulpmiddelen algemeen"
+        },
+        {
+          "Id": "7615",
+          "Omschrijving": "Bijzondere gezichtshulpmiddelen maatwerk"
+        },
+        {
+          "Id": "7616",
+          "Omschrijving": "Hoortoestellen"
+        },
+        {
+          "Id": "7617",
+          "Omschrijving": "Extern hoortoestel in combinatie met implantaat (baha)"
+        },
+        {
+          "Id": "7618",
+          "Omschrijving": "Maskeerder ter behandeling van oorsuizen (tinnetusmaskeerder"
+        },
+        {
+          "Id": "7619",
+          "Omschrijving": "Gehoorhulpmiddelen (inclusief maskeerder)"
+        },
+        {
+          "Id": "7620",
+          "Omschrijving": "Solo apparatuur"
+        },
+        {
+          "Id": "7621",
+          "Omschrijving": "Incontinentie-absorptiemateriaal"
+        },
+        {
+          "Id": "7622",
+          "Omschrijving": "Overige verzorgingsmiddelen"
+        },
+        {
+          "Id": "7623",
+          "Omschrijving": "Draagbare uitwendige infuuspomp"
+        },
+        {
+          "Id": "7624",
+          "Omschrijving": "Incontinentie afvoerend materiaal"
+        },
+        {
+          "Id": "7625",
+          "Omschrijving": "Stoma materialen"
+        },
+        {
+          "Id": "7626",
+          "Omschrijving": "Slijmuitzuigapparatuur"
+        },
+        {
+          "Id": "7627",
+          "Omschrijving": "Confectie orthesen"
+        },
+        {
+          "Id": "7628",
+          "Omschrijving": "Maatwerk orthesen"
+        },
+        {
+          "Id": "7629",
+          "Omschrijving": "Tracheacanule en stemprothesen"
+        },
+        {
+          "Id": "7630",
+          "Omschrijving": "Steunzolen"
+        },
+        {
+          "Id": "7631",
+          "Omschrijving": "Loophulpmiddelen"
+        },
+        {
+          "Id": "7632",
+          "Omschrijving": "Eenvoudige hulpmiddelen voor mobiliteit van personen"
+        },
+        {
+          "Id": "7633",
+          "Omschrijving": "Overige hulpmiddelen voor mobiliteit van personen"
+        },
+        {
+          "Id": "7634",
+          "Omschrijving": "Blindegeleidehonden"
+        },
+        {
+          "Id": "7635",
+          "Omschrijving": "Hulphonden"
+        },
+        {
+          "Id": "7636",
+          "Omschrijving": "Pruiken"
+        },
+        {
+          "Id": "7637",
+          "Omschrijving": "Arm-, hand-, vingerfunctievervullers (robotarm)"
+        },
+        {
+          "Id": "7638",
+          "Omschrijving": "Anaalspoelapparatuur"
+        },
+        {
+          "Id": "7639",
+          "Omschrijving": "Plaswekker"
+        },
+        {
+          "Id": "7640",
+          "Omschrijving": "Bewakingsmonitor voor baby"
+        },
+        {
+          "Id": "7641",
+          "Omschrijving": "Elastische kousen"
+        },
+        {
+          "Id": "7642",
+          "Omschrijving": "Allergeenvrije hoezen"
+        },
+        {
+          "Id": "7643",
+          "Omschrijving": "Verbandmiddelen"
+        },
+        {
+          "Id": "7644",
+          "Omschrijving": "UV-B lichttherapie"
+        },
+        {
+          "Id": "7645",
+          "Omschrijving": "Allergeenvrije schoenen"
+        },
+        {
+          "Id": "7646",
+          "Omschrijving": "Anti-conceptionele hulpmiddelen"
+        },
+        {
+          "Id": "7647",
+          "Omschrijving": "Kappen ter bescherming van de schedel"
+        },
+        {
+          "Id": "7649",
+          "Omschrijving": "Thuisdialyse apparatuur"
+        },
+        {
+          "Id": "7650",
+          "Omschrijving": "Zelfmeetapparatuur voor bloedstollingstijden"
+        },
+        {
+          "Id": "7651",
+          "Omschrijving": "Injectiespuiten"
+        },
+        {
+          "Id": "7656",
+          "Omschrijving": "Insuline-infuuspompen"
+        },
+        {
+          "Id": "7657",
+          "Omschrijving": "Overige hulpmiddelen bij diabetes"
+        },
+        {
+          "Id": "7661",
+          "Omschrijving": "Zuurstofapparaten en -concentrators"
+        },
+        {
+          "Id": "7662",
+          "Omschrijving": "Apparatuur voor verzekerden met ademhalingsstoornissen (CPAP"
+        },
+        {
+          "Id": "7663",
+          "Omschrijving": "Apparatuur voor positieve uitademingsdruk"
+        },
+        {
+          "Id": "7666",
+          "Omschrijving": "Longvibrators"
+        },
+        {
+          "Id": "7671",
+          "Omschrijving": "Vernevelaars"
+        },
+        {
+          "Id": "7676",
+          "Omschrijving": "Beeldschermloep"
+        },
+        {
+          "Id": "7677",
+          "Omschrijving": "Tactiel leesapparatuur"
+        },
+        {
+          "Id": "7681",
+          "Omschrijving": "Elektrastimulator"
+        },
+        {
+          "Id": "7682",
+          "Omschrijving": "Botgroei-stimulators"
+        },
+        {
+          "Id": "7685",
+          "Omschrijving": "Hulpmiddelen voor het toedienen van voeding"
+        },
+        {
+          "Id": "7686",
+          "Omschrijving": "Dieetpreparaten"
+        },
+        {
+          "Id": "7687",
+          "Omschrijving": "Voeding"
+        },
+        {
+          "Id": "7688",
+          "Omschrijving": "Eetapparaten"
+        },
+        {
+          "Id": "7689",
+          "Omschrijving": "hulpmiddelen voor communicatie voor lichamelijk gehandicapte"
+        },
+        {
+          "Id": "7690",
+          "Omschrijving": "Inrichtingselementen van woningen"
+        },
+        {
+          "Id": "7691",
+          "Omschrijving": "Inrichtingselementen van woningen"
+        },
+        {
+          "Id": "7692",
+          "Omschrijving": "Hulpmiddelen voor communiatie persoonlijke alarmering"
+        },
+        {
+          "Id": "7693",
+          "Omschrijving": "Hulpmiddelen voor communiatie-, wek- en waarschuwing"
+        },
+        {
+          "Id": "7694",
+          "Omschrijving": "Hulpmiddelen voor communiatie bij revalidatie"
+        },
+        {
+          "Id": "7695",
+          "Omschrijving": "Hulpmiddelen voor communicatie, informatie en signalering"
+        },
+        {
+          "Id": "7696",
+          "Omschrijving": "Fax-apparatuur voor auditief gehandicapten"
+        },
+        {
+          "Id": "7697",
+          "Omschrijving": "Hulpmiddelen voor communicatie grootlettersystemen"
+        },
+        {
+          "Id": "7698",
+          "Omschrijving": "Hulpmiddelen voor communicatie-, opname- en voorleesapparatu"
+        },
+        {
+          "Id": "7699",
+          "Omschrijving": "Hulpmiddelen voor communicatie-, telefoons en telefoneerhulp"
+        },
+        {
+          "Id": "7800",
+          "Omschrijving": "Sociaal pedagogische diensten"
+        },
+        {
+          "Id": "7900",
+          "Omschrijving": "RIAGG's"
+        },
+        {
+          "Id": "8000",
+          "Omschrijving": "Niet erkende verpleeginrichtingen"
+        },
+        {
+          "Id": "8100",
+          "Omschrijving": "Niet erkende zwakzinnigeninrichtingen"
+        },
+        {
+          "Id": "8200",
+          "Omschrijving": "Bejaardenoorden"
+        },
+        {
+          "Id": "8300",
+          "Omschrijving": "Overige niet erkende instellingen"
+        },
+        {
+          "Id": "8400",
+          "Omschrijving": "Overige artsen "
+        },
+        {
+          "Id": "8401",
+          "Omschrijving": "Chiropractie"
+        },
+        {
+          "Id": "8402",
+          "Omschrijving": "Orthomanuele geneeskunde"
+        },
+        {
+          "Id": "8403",
+          "Omschrijving": "Acupunctuur"
+        },
+        {
+          "Id": "8404",
+          "Omschrijving": "Irisscopie"
+        },
+        {
+          "Id": "8405",
+          "Omschrijving": "Homeopathie"
+        },
+        {
+          "Id": "8406",
+          "Omschrijving": "Natuurgeneeskunde"
+        },
+        {
+          "Id": "8407",
+          "Omschrijving": "Anthroposofische geneeskunde"
+        },
+        {
+          "Id": "8408",
+          "Omschrijving": "Moermantherapie"
+        },
+        {
+          "Id": "8409",
+          "Omschrijving": "Enzymtherapie"
+        },
+        {
+          "Id": "8410",
+          "Omschrijving": "Manuele geneeskunde"
+        },
+        {
+          "Id": "8411",
+          "Omschrijving": "Haptotherapie"
+        },
+        {
+          "Id": "8412",
+          "Omschrijving": "Osteopathie"
+        },
+        {
+          "Id": "8413",
+          "Omschrijving": "Flebologie/proctologie"
+        },
+        {
+          "Id": "8414",
+          "Omschrijving": "Orthomoleculaire geneeskunde"
+        },
+        {
+          "Id": "8415",
+          "Omschrijving": "Neurale therapie"
+        },
+        {
+          "Id": "8416",
+          "Omschrijving": "Sportgeneeskunde"
+        },
+        {
+          "Id": "8417",
+          "Omschrijving": "SEH-arts"
+        },
+        {
+          "Id": "8418",
+          "Omschrijving": "Specialist ouderengeneeskunde"
+        },
+        {
+          "Id": "8419",
+          "Omschrijving": "Schoolartsen"
+        },
+        {
+          "Id": "8420",
+          "Omschrijving": "Consultatiebureau-artsen"
+        },
+        {
+          "Id": "8421",
+          "Omschrijving": "Scen-arts"
+        },
+        {
+          "Id": "8422",
+          "Omschrijving": "Orthopedische geneeskunde"
+        },
+        {
+          "Id": "8423",
+          "Omschrijving": "GGD artsen (TBC artsen)"
+        },
+        {
+          "Id": "8424",
+          "Omschrijving": "Verslavingsartsen"
+        },
+        {
+          "Id": "8425",
+          "Omschrijving": "Basisarts"
+        },
+        {
+          "Id": "8426",
+          "Omschrijving": "Arts verstandelijk gehandicapten (avg)"
+        },
+        {
+          "Id": "8427",
+          "Omschrijving": "Arts Palliatieve geneeskunde"
+        },
+        {
+          "Id": "8428",
+          "Omschrijving": "Jeugdarts"
+        },
+        {
+          "Id": "8429",
+          "Omschrijving": "Klinisch fysicus audioloog"
+        },
+        {
+          "Id": "8430",
+          "Omschrijving": "Arts maatschappij en gezondheid / Infectieziektebestrijding"
+        },
+        {
+          "Id": "8431",
+          "Omschrijving": "Medisch seksuoloog"
+        },
+        {
+          "Id": "8500",
+          "Omschrijving": "Taxivervoerders"
+        },
+        {
+          "Id": "8600",
+          "Omschrijving": "Instellingen voor maatschappelijke dienstverlening"
+        },
+        {
+          "Id": "8700",
+          "Omschrijving": "Mondhygienisten"
+        },
+        {
+          "Id": "8800",
+          "Omschrijving": "Ergotherapeuten"
+        },
+        {
+          "Id": "8801",
+          "Omschrijving": "Direct toegankelijk / 1e lijn"
+        },
+        {
+          "Id": "8900",
+          "Omschrijving": "Schoonheidsspecialist "
+        },
+        {
+          "Id": "8904",
+          "Omschrijving": "Algemeen (geen specificatie), anbos geregistreerd "
+        },
+        {
+          "Id": "8905",
+          "Omschrijving": "Acne, anbos geregistreerd                         "
+        },
+        {
+          "Id": "8906",
+          "Omschrijving": "Camouflage, anbos geregistreerd                   "
+        },
+        {
+          "Id": "8907",
+          "Omschrijving": "Elektrisch epileren, anbos geregistreerd          "
+        },
+        {
+          "Id": "8912",
+          "Omschrijving": "Niet anbos geregistreerd"
+        },
+        {
+          "Id": "8913",
+          "Omschrijving": "Ontharingstechnieken, anbos geregistreerd"
+        },
+        {
+          "Id": "9000",
+          "Omschrijving": "Overige therapeuten en Complementair en Aanvullende zorg"
+        },
+        {
+          "Id": "9001",
+          "Omschrijving": "Chiropractie"
+        },
+        {
+          "Id": "9002",
+          "Omschrijving": "Orthomanuele geneeskunde"
+        },
+        {
+          "Id": "9003",
+          "Omschrijving": "Acupunctuur"
+        },
+        {
+          "Id": "9004",
+          "Omschrijving": "Irisscopie"
+        },
+        {
+          "Id": "9005",
+          "Omschrijving": "Homeopathie"
+        },
+        {
+          "Id": "9006",
+          "Omschrijving": "Natuurgeneeskunde"
+        },
+        {
+          "Id": "9007",
+          "Omschrijving": "Antroposofische geneeskunde"
+        },
+        {
+          "Id": "9008",
+          "Omschrijving": "Moerman therapie"
+        },
+        {
+          "Id": "9009",
+          "Omschrijving": "Enzymtherapie"
+        },
+        {
+          "Id": "9010",
+          "Omschrijving": "Manuele geneeskunde"
+        },
+        {
+          "Id": "9011",
+          "Omschrijving": "Haptotherapie"
+        },
+        {
+          "Id": "9012",
+          "Omschrijving": "Osteopathie"
+        },
+        {
+          "Id": "9013",
+          "Omschrijving": "Huidtherapie"
+        },
+        {
+          "Id": "9014",
+          "Omschrijving": "Kunstzinnige therapie"
+        },
+        {
+          "Id": "9015",
+          "Omschrijving": "Podologie"
+        },
+        {
+          "Id": "9016",
+          "Omschrijving": "Orthomoleculaire geneeskunde"
+        },
+        {
+          "Id": "9017",
+          "Omschrijving": "Shiatsu therapie"
+        },
+        {
+          "Id": "9018",
+          "Omschrijving": "Echoscopie"
+        },
+        {
+          "Id": "9020",
+          "Omschrijving": "Seksuologen, lid nvvs"
+        },
+        {
+          "Id": "9021",
+          "Omschrijving": "Genezers, overigen"
+        },
+        {
+          "Id": "9022",
+          "Omschrijving": "Cranio sacraal therapie"
+        },
+        {
+          "Id": "9023",
+          "Omschrijving": "Adem- en ontspanningstherapie methode van dixhoorn"
+        },
+        {
+          "Id": "9024",
+          "Omschrijving": "Kindertherapie (NVVK)"
+        },
+        {
+          "Id": "9025",
+          "Omschrijving": "Vaktherapie"
+        },
+        {
+          "Id": "9026",
+          "Omschrijving": "Echoscopie NT"
+        },
+        {
+          "Id": "9027",
+          "Omschrijving": "Echoscopie SEO"
+        },
+        {
+          "Id": "9028",
+          "Omschrijving": "Echoscopie Uitwendig"
+        },
+        {
+          "Id": "9029",
+          "Omschrijving": "Gewichtsconsulent"
+        },
+        {
+          "Id": "9030",
+          "Omschrijving": "Lactatiekundige"
+        },
+        {
+          "Id": "9031",
+          "Omschrijving": "Huidtherapeut (direct toegankelijk)"
+        },
+        {
+          "Id": "9032",
+          "Omschrijving": "Reflexzonetherapie"
+        },
+        {
+          "Id": "9033",
+          "Omschrijving": "Doula"
+        },
+        {
+          "Id": "9034",
+          "Omschrijving": "Yogadocenten"
+        },
+        {
+          "Id": "9035",
+          "Omschrijving": "Sportmasseur"
+        },
+        {
+          "Id": "9100",
+          "Omschrijving": "Verpleegkundigen, niet nader gespecificeerd"
+        },
+        {
+          "Id": "9101",
+          "Omschrijving": "Specialisatie Diabetes"
+        },
+        {
+          "Id": "9102",
+          "Omschrijving": "Specialisatie Continentie"
+        },
+        {
+          "Id": "9103",
+          "Omschrijving": "Specialisatie Wijk"
+        },
+        {
+          "Id": "9104",
+          "Omschrijving": "Specialisatie Wond"
+        },
+        {
+          "Id": "9105",
+          "Omschrijving": "Specialisatie Stoma"
+        },
+        {
+          "Id": "9106",
+          "Omschrijving": "Specialisatie Long"
+        },
+        {
+          "Id": "9107",
+          "Omschrijving": "Specialisatie Oncologie"
+        },
+        {
+          "Id": "9108",
+          "Omschrijving": "Specialisatie Transfer"
+        },
+        {
+          "Id": "9109",
+          "Omschrijving": "Verpleegkundigen niveau 4"
+        },
+        {
+          "Id": "9110",
+          "Omschrijving": "Verpleegkundigen niveau 5"
+        },
+        {
+          "Id": "9111",
+          "Omschrijving": "Verzorgenden"
+        },
+        {
+          "Id": "9112",
+          "Omschrijving": "Verpleegkundigen niveau 4 PGB"
+        },
+        {
+          "Id": "9113",
+          "Omschrijving": "Verpleegkundigen niveau 5 PGB"
+        },
+        {
+          "Id": "9130",
+          "Omschrijving": "Verpleegkundig  specialist, Preventieve zorg bij somatische "
+        },
+        {
+          "Id": "9131",
+          "Omschrijving": "Verpleegkundig  specialist, Acute zorg bij somatische aandoe"
+        },
+        {
+          "Id": "9132",
+          "Omschrijving": "Verpleegkundig  specialist, Intensieve zorg bij somatische a"
+        },
+        {
+          "Id": "9133",
+          "Omschrijving": "Verpleegkundig  specialist, Chronische zorg bij somatische a"
+        },
+        {
+          "Id": "9134",
+          "Omschrijving": "Verpleegkundig  specialist, Geestelijke Gezondheidszorg"
+        },
+        {
+          "Id": "9180",
+          "Omschrijving": "Registratie Verzorgende ZZP"
+        },
+        {
+          "Id": "9181",
+          "Omschrijving": "Registratie Verpleegkundige ZZP"
+        },
+        {
+          "Id": "9190",
+          "Omschrijving": "Registratie Administratieve eenheid"
+        },
+        {
+          "Id": "9300",
+          "Omschrijving": "Tandtechnici/tandprothetici "
+        },
+        {
+          "Id": "9301",
+          "Omschrijving": "Tandprotheticus"
+        },
+        {
+          "Id": "9302",
+          "Omschrijving": "Tandtechnicus"
+        },
+        {
+          "Id": "9400",
+          "Omschrijving": "Psychologische zorgverlener "
+        },
+        {
+          "Id": "9401",
+          "Omschrijving": "Gz-psychologie met eerstelijnskwalificatie"
+        },
+        {
+          "Id": "9402",
+          "Omschrijving": "Psychotherapie"
+        },
+        {
+          "Id": "9404",
+          "Omschrijving": "K&J-psychologie"
+        },
+        {
+          "Id": "9405",
+          "Omschrijving": "Klinische psychologie"
+        },
+        {
+          "Id": "9406",
+          "Omschrijving": "Gz-psychologie"
+        },
+        {
+          "Id": "9416",
+          "Omschrijving": "Psycholoog NIP"
+        },
+        {
+          "Id": "9417",
+          "Omschrijving": "Orthopedagoog (generalist, specialist)"
+        },
+        {
+          "Id": "9418",
+          "Omschrijving": "Klinische neuropsychologie"
+        },
+        {
+          "Id": "9419",
+          "Omschrijving": "Orthopedagogen (overig)"
+        },
+        {
+          "Id": "9420",
+          "Omschrijving": "Orthopedagogen (basis)"
+        },
+        {
+          "Id": "9421",
+          "Omschrijving": "Therapeut NAP"
+        },
+        {
+          "Id": "9422",
+          "Omschrijving": "Therapeut NVPA"
+        },
+        {
+          "Id": "9423",
+          "Omschrijving": "Kinder en jeugdpsycholoog NIP"
+        },
+        {
+          "Id": "9462",
+          "Omschrijving": "Psycholoog Arbeid en Gezondheid (NIP)"
+        },
+        {
+          "Id": "9500",
+          "Omschrijving": "Orthopedagogen"
+        },
+        {
+          "Id": "9600",
+          "Omschrijving": "Pedicuren "
+        },
+        {
+          "Id": "9601",
+          "Omschrijving": "Pedicure"
+        },
+        {
+          "Id": "9602",
+          "Omschrijving": "Specialisatie reumatische voet"
+        },
+        {
+          "Id": "9603",
+          "Omschrijving": "Specialisatie diabetische voet"
+        },
+        {
+          "Id": "9605",
+          "Omschrijving": "Specialisatie medische pedicure"
+        },
+        {
+          "Id": "9606",
+          "Omschrijving": "Pedicure in de zorg"
+        },
+        {
+          "Id": "9607",
+          "Omschrijving": "Registerpedicure"
+        },
+        {
+          "Id": "9608",
+          "Omschrijving": "Paramedisch Chiropodist"
+        },
+        {
+          "Id": "9609",
+          "Omschrijving": "Specialisatie Risicovoet"
+        },
+        {
+          "Id": "9800",
+          "Omschrijving": "Declaranten"
+        },
+        {
+          "Id": "9801",
+          "Omschrijving": "Servicebureau"
+        },
+        {
+          "Id": "9802",
+          "Omschrijving": "Aanbieder van maatschappelijke ondersteuning"
+        },
+        {
+          "Id": "9803",
+          "Omschrijving": "Zorgverzekeraar"
+        }
+      ]
+    },
+    "ZorgpartijType": "1",
+    "NaamComparer": "1"
+  }
+}
