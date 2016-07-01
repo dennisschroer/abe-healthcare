@@ -1,6 +1,7 @@
 class CentralAuthority(object):
-    def __init__(self):
-        pass
+    def __init__(self, group):
+        self.group = group
+        self.global_parameters = None
 
     def setup(self):
-        pass
+        raise NotImplementedError

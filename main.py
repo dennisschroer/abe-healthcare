@@ -10,8 +10,8 @@ class ABEHealthCare(object):
 
         insurance_company = implementation.create_attribute_authority()
         national_database = implementation.create_attribute_authority()
-        insurance_company.setup(central_authority)
-        national_database.setup(central_authority)
+        insurance_company.setup(central_authority, ['reviewer', 'administration'])
+        national_database.setup(central_authority, ['doctor', 'radiologist'])
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
