@@ -16,6 +16,7 @@ class ABEHealthCare(object):
 
         doctor = User()
         doctor.issue_secret_keys(national_database.keygen(doctor, ['doctor']))
+        doctor.issue_secret_keys(insurance_company.keygen(doctor, ['reviewer']))
 
 if __name__ == '__main__':
     abe = ABEHealthCare()

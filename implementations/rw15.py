@@ -5,6 +5,13 @@ from scheme.central_authority import CentralAuthority
 
 
 class RW15(BaseImplementation):
+    """
+    The implementation according to "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
+
+    :paper:     Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption
+    :authors:   Rouselakis, Yannis and Waters, Brent
+    :year:      2015
+    """
     def __init__(self, group=None):
         super().__init__(group)
 
@@ -31,4 +38,5 @@ class RWAttributeAuthority(AttributeAuthority):
 
     def keygen(self, user, attributes):
         maabe = MaabeRW15(self.global_parameters.group)
+        return maabe.multiple_attributes_keygen(self.global_parameters, self.secret_keys, user.gid, attributes)
 

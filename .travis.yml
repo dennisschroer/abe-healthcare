@@ -27,4 +27,4 @@ install:
 - make -C ./charm
 - make install -C ./charm
 script:
-- nosetests
+- nosetests --with-doctest
