@@ -1,4 +1,5 @@
 from implementations.rw15 import RW15
+from scheme.user import User
 
 
 class ABEHealthCare(object):
@@ -12,6 +13,9 @@ class ABEHealthCare(object):
         national_database = implementation.create_attribute_authority()
         insurance_company.setup(central_authority, ['reviewer', 'administration'])
         national_database.setup(central_authority, ['doctor', 'radiologist'])
+
+        doctor = User()
+        doctor.issue_secret_keys(national_database.keygen(doctor, ['doctor']))
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
