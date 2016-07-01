@@ -1,0 +1,2 @@
+class AttributeAuthority(object):
+    pass
