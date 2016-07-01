@@ -21,8 +21,8 @@ before_install:
 - git clone git@github.com:denniss17/charm.git
 install:
 - pip install -r charm/requirements.txt
-- ./charm/configure.sh
-- ./charm/make
-- ./charm/make install
+- (cd ./charm && ./configure.sh)
+- make -C ./charm
+- make install -C ./charm
 script:
 - nosetests
