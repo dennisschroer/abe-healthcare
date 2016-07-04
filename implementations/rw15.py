@@ -12,31 +12,39 @@ class RW15(BaseImplementation):
     :authors:   Rouselakis, Yannis and Waters, Brent
     :year:      2015
     """
+
     def __init__(self, group=None):
         super().__init__(group)
 
     def create_attribute_authority(self, name):
-        central_authority = RWAttributeAuthority(self.group, name)
-        return central_authority
+        return RWAttributeAuthority(name)
 
     def create_central_authority(self):
-        central_authority = RW15CentralAuthority(self.group)
-        return central_authority
+        return RW15CentralAuthority(self.group)
+
+    def create_abe_encryption(self):
+        maabe = MaabeRW15(self.group)
+        return maabe.encrypt
+
+    def create_abe_decryption(self):
+        maabe = MaabeRW15(self.group)
+        return maabe.decrypt
 
 
 class RW15CentralAuthority(CentralAuthority):
     def setup(self):
-        maabe = MaabeRW15(self.group)
-        self.global_parameters.scheme = maabe.setup()
+        maabe = MaabeRW15(self.global_parameters.group)
+        self.global_parameters.scheme_parameters = maabe.setup()
 
 
 class RWAttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
         maabe = MaabeRW15(self.global_parameters.group)
-        self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme, self.name)
+        self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
+                                                             self.name)
 
     def keygen(self, user, attributes):
         maabe = MaabeRW15(self.global_parameters.group)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme, self.secret_keys, user.gid, attributes)
-
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, user.gid,
+                                                attributes)

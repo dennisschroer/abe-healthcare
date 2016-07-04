@@ -10,22 +10,26 @@ class ABEHealthCare(object):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
 
-        insurance_company = implementation.create_attribute_authority()
-        national_database = implementation.create_attribute_authority()
+        insurance_company = implementation.create_attribute_authority('Insurance')
+        national_database = implementation.create_attribute_authority('NationalDB')
         insurance_company.setup(central_authority, ['reviewer', 'administration'])
         national_database.setup(central_authority, ['doctor', 'radiologist'])
 
-        insurance_service = InsuranceService()
+        insurance_service = InsuranceService(central_authority.global_parameters)
 
-        doctor = User(insurance_service)
+        abe_encryption = implementation.create_abe_encryption()
+        abe_decryption = implementation.create_abe_decryption()
+
+        doctor = User(insurance_service, abe_encryption, abe_decryption)
         doctor.issue_secret_keys(national_database.keygen(doctor, ['doctor']))
         doctor.issue_secret_keys(insurance_company.keygen(doctor, ['reviewer']))
 
-        encrypter = implementation.create_encrypter()
-        decrypter = implementation.create_decrypter()
+
 
         bob = User(insurance_service, encrypter, decrypter)
         create_record = bob.create_record('doctor and reviewer', None, 'Hello World')
+
+        print(create_record)
 
 if __name__ == '__main__':
     abe = ABEHealthCare()

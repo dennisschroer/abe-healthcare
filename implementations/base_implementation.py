@@ -24,8 +24,8 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def create_encrypter(self):
+    def create_abe_encryption(self):
         raise NotImplementedError()
 
-    def create_decrypter(self):
+    def create_abe_decryption(self):
         raise NotImplementedError()
