@@ -26,5 +26,7 @@ install:
 - (cd ./charm && ./configure.sh)
 - make -C ./charm
 - make install -C ./charm
+# Install other requirements
+- pip install -r requirements.txt
 script:
 - nosetests --with-doctest
