@@ -23,3 +23,9 @@ class BaseImplementation(object):
         :return: An attribute authority of this implementation
         """
         raise NotImplementedError()
+
+    def create_encrypter(self):
+        raise NotImplementedError()
+
+    def create_decrypter(self):
+        raise NotImplementedError()

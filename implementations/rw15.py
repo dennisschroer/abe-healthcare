@@ -27,16 +27,16 @@ class RW15(BaseImplementation):
 class RW15CentralAuthority(CentralAuthority):
     def setup(self):
         maabe = MaabeRW15(self.group)
-        self.global_parameters = maabe.setup()
+        self.global_parameters.scheme = maabe.setup()
 
 
 class RWAttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
-        maabe = MaabeRW15(central_authority.group)
         self.global_parameters = central_authority.global_parameters
-        self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters, self.name)
+        maabe = MaabeRW15(self.global_parameters.group)
+        self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme, self.name)
 
     def keygen(self, user, attributes):
         maabe = MaabeRW15(self.global_parameters.group)
-        return maabe.multiple_attributes_keygen(self.global_parameters, self.secret_keys, user.gid, attributes)
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme, self.secret_keys, user.gid, attributes)
 
