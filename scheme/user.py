@@ -31,7 +31,7 @@ class User(object):
         :param secret_keys:
         :type secret_keys: dict
 
-        >>> user = User()
+        >>> user = User("bob", None, None, None)
         >>> user.secret_keys
         {}
         >>> user.issue_secret_keys({'a': {'foo': 'bar'}})
