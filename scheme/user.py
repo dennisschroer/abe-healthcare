@@ -69,6 +69,14 @@ class User(object):
         write_key_pair = create_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.create_owner_key_pair()
 
+        f = open('owner.pem', 'w')
+        f.write(owner_key_pair.exportKey('PEM').decode(encoding='UTF-8'))
+        f.close()
+
+        f = open('pk.pem', 'wb')
+        f.write(owner_key_pair.publickey().exportKey('DER'))
+        f.close()
+
         # Setup encryption
         abe_encryption = self.implementation.create_abe_encryption()
         symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
