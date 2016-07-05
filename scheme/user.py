@@ -30,7 +30,13 @@ class User(object):
         :param secret_keys:
         :type secret_keys: dict
 
-        >>> user = User("bob", None, None, None)
+        >>> class DummyImplementation(object):
+        ...     def update_secret_keys(self, base, secret_keys):
+        ...         base.update(secret_keys)
+        ...     def setup_secret_keys(self, user):
+        ...         return {}
+        >>> dummyImplementation = DummyImplementation()
+        >>> user = User("bob", None, dummyImplementation)
         >>> user.secret_keys
         {}
         >>> user.issue_secret_keys({'a': {'foo': 'bar'}})

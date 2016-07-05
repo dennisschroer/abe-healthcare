@@ -60,10 +60,6 @@ class ABEHealthCare(object):
         print('Decrypted data')
         print(data)
 
-
-
-
-
 if __name__ == '__main__':
     abe = ABEHealthCare()
     abe.rw15()
