@@ -20,7 +20,7 @@ class InsuranceService(object):
 
     def create(self, create_record):
         # In future possibly adapt and check the record
-        self.add(create_record)
+        return self.add(create_record)
 
     def add(self, record):
         # In future store the record

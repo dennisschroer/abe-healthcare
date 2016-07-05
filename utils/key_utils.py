@@ -12,7 +12,7 @@ def create_key_pair(size):
     :param size: The size in bits
     :return: A new key pair
 
-    >>> create_key_pair(512) is not None
+    >>> create_key_pair(1024) is not None
     True
     """
     return RSA.generate(size)
