@@ -21,28 +21,24 @@ class ABEHealthCare(object):
         # Setup attribute authorities
         insurance_company = self.implementation.create_attribute_authority('INSURANCE')
         national_database = self.implementation.create_attribute_authority('NDB')
-        insurance_company.setup(central_authority, ['reviewer', 'administration'])
-        national_database.setup(central_authority, ['doctor', 'radiologist'])
+        insurance_company.setup(central_authority, ['REVIEWER', 'ADMINISTRATION'])
+        national_database.setup(central_authority, ['DOCTOR', 'RADIOLOGIST'])
 
         # Setup service
         insurance_service = InsuranceService(central_authority.global_parameters)
         insurance_service.add_authority(insurance_company)
         insurance_service.add_authority(national_database)
 
-        # Get encryption and decryption method
-        abe_encryption = self.implementation.create_abe_encryption()
-        abe_decryption = self.implementation.create_abe_decryption()
-
         # Create doctor
-        doctor = User('doctor', insurance_service, abe_encryption, abe_decryption)
-        doctor.issue_secret_keys(national_database.keygen(doctor, ['doctor@NDB']))
-        doctor.issue_secret_keys(insurance_company.keygen(doctor, ['reviewer@INSURANCE']))
+        doctor = User('doctor', insurance_service, self.implementation)
+        doctor.issue_secret_keys(national_database.keygen(doctor, ['DOCTOR@NDB']))
+        doctor.issue_secret_keys(insurance_company.keygen(doctor, ['REVIEWER@INSURANCE']))
 
         # Create user
-        bob = User('bob', insurance_service, abe_encryption, abe_decryption)
+        bob = User('bob', insurance_service, self.implementation)
 
         # Encrypt a message
-        create_record = bob.create_record('doctor@NDB and reviewer@INSURANCE', 'administration@INSURANCE', 'Hello World     ')
+        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', 'Hello World     ')
 
         print('CreateRecord:')
         print(create_record)

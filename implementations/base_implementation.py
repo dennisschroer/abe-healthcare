@@ -29,3 +29,6 @@ class BaseImplementation(object):
 
     def create_abe_decryption(self):
         raise NotImplementedError()
+
+    def setup_secret_keys(self, user):
+        raise NotImplementedError()

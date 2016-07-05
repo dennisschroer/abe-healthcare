@@ -8,20 +8,19 @@ RSA_KEY_SIZE = 2048
 
 
 class User(object):
-    def __init__(self, gid, insurance_service, abe_encryption, abe_decryption):
+    def __init__(self, gid, insurance_service, implementation):
         """
         Create a new user
         :param gid: The global identifier of this user
         :param insurance_service: The insurance service
         :type insurance_service: scheme.insurance_service.InsuranceService
-        :param abe_encryption:
-        :param abe_decryption:
+        :param implementation:
+        :type implementation: implementations.base_implementation.BaseImplementation
         """
         self.gid = gid
         self.insurance_service = insurance_service
-        self.abe_encryption = abe_encryption
-        self.abe_decryption = abe_decryption
-        self.secret_keys = {}
+        self.implementation = implementation
+        self.secret_keys = implementation.setup_secret_keys(self)
         self.owner_key_pairs = []
         self._global_parameters = None
 
@@ -41,6 +40,7 @@ class User(object):
         >>> user.secret_keys == {'a': {'foo': 'bar'}, 'b': {'bla': 'bla'}}
         True
         """
+        self.implementation.update_secret_keys(self.secret_keys, secret_keys)
         self.secret_keys.update(secret_keys)
 
     @property
@@ -64,6 +64,7 @@ class User(object):
         owner_key_pair = self.create_owner_key_pair()
 
         # Setup encryption
+        abe_encryption = self.implementation.create_abe_encryption()
         symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
         owner_assymmetric_encryption = PKCS1_OAEP.new(owner_key_pair)
 
@@ -76,7 +77,7 @@ class User(object):
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=self.abe_encryption(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
+            encryption_key_read=abe_encryption(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
             encryption_key_owner=owner_assymmetric_encryption.encrypt(symmetric_key),
             write_private_key=None,
             # write_private_key=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, write_key_pair, write_policy),
@@ -96,7 +97,8 @@ class User(object):
         :type record: records.data_record.DataRecord
         :return:
         """
-        key = self.abe_decryption(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
+        abe_decryption = self.implementation.create_abe_decryption()
+        key = abe_decryption(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
         symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
-        return symmetric_encryption.decrypt(record.data, symmetric_key)
+        return symmetric_encryption.decrypt(record.data)

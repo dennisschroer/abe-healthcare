@@ -13,6 +13,23 @@ class RW15(BaseImplementation):
     :year:      2015
     """
 
+    def setup_secret_keys(self, user):
+        """
+        Setup the secret key store for the given user.
+        :param user:
+        :return:
+        """
+        return {'GID': user.gid, 'keys': {}}
+
+    def update_secret_keys(self, secret_keys_base, secret_keys):
+        """
+        Add new keys to the secret keys of a user.
+        :param secret_keys_base:
+        :param secret_keys:
+        :return:
+        """
+        secret_keys_base['keys'].update(secret_keys)
+
     def __init__(self, group=None):
         super().__init__(group)
 
