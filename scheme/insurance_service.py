@@ -34,10 +34,10 @@ class InsuranceService(object):
         :return: The record or None.
 
         >>> service = InsuranceService(None)
-        >>> location = service.add({data: 'TEST'})
+        >>> location = service.add({'data': 'TEST'})
         >>> service.get(location) is not None
         True
-        >>> service.get(location) == {data: 'TEST'}
+        >>> service.get(location) == {'data': 'TEST'}
         True
         """
         return self.records[location] if location in self.records else None
