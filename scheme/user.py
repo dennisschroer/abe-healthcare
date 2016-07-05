@@ -82,3 +82,21 @@ class User(object):
             # write_private_key=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, write_key_pair, write_policy),
             data=symmetric_encryption.encrypt(message)
         )
+
+    def send_create_record(self, create_record):
+        return self.insurance_service.create(create_record)
+
+    def request_record(self, location):
+        return self.insurance_service.get(location)
+
+    def decrypt_record(self, record):
+        """
+        Decrypt a data record if possible.
+        :param record: The data record to decrypt
+        :type record: records.data_record.DataRecord
+        :return:
+        """
+        key = self.abe_decryption(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
+        symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
+        return symmetric_encryption.decrypt(record.data, symmetric_key)
