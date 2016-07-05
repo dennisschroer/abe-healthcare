@@ -76,7 +76,7 @@ class User(object):
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, key, read_policy),
+            encryption_key_read=self.abe_encryption(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
             encryption_key_owner=owner_assymmetric_encryption.encrypt(symmetric_key),
             write_private_key=None,
             # write_private_key=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, write_key_pair, write_policy),
