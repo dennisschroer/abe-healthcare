@@ -1,7 +1,13 @@
 from scheme.storage import Storage
 import os
 
+
 class InsuranceService(object):
+    """
+    The insurance service is the main portal for the clients and is responsible for validating
+    signatures and storing the data records.
+    """
+
     def __init__(self, global_parameters, implementation):
         self.global_parameters = global_parameters
         self.implementation = implementation
@@ -24,12 +30,24 @@ class InsuranceService(object):
         return result
 
     def create(self, create_record):
+        """
+        Create a new data record
+        :param create_record: The data record to create.
+        :type create_record: records.data_record.DataRecord
+        :return: The location of the record.
+        """
         # In future possibly adapt and check the record
         name = self.add(create_record)
         self.store(name, create_record)
         return name
 
     def store(self, name, record):
+        """
+        Store the data record.
+        :param name: The location of the data record
+        :param record: The record to store
+        :type record: records.data_record.DataRecord
+        """
         if not os.path.exists('data/storage'):
             os.makedirs('data/storage')
         f = open('data/storage/%s.meta' % name, 'wb')
@@ -41,6 +59,12 @@ class InsuranceService(object):
         f.close()
 
     def add(self, record):
+        """
+        Add a data record.
+        :param record: The data record to add
+        :type record: records.data_record.DataRecord
+        :return: The location of the record
+        """
         name = 'test'
         self.records[name] = record
         return name

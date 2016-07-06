@@ -65,7 +65,8 @@ class User(object):
     def create_record(self, read_policy, write_policy, message):
         # Generate symmetric encryption key
         key = self.global_parameters.group.random(GT)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
+                                                       self.implementation.ske_key_size())
 
         # Generate key pairs for writers and data owner
         write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
@@ -82,7 +83,8 @@ class User(object):
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
+            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters,
+                                                                authority_public_keys, key, read_policy),
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=None,
             # write_private_key=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, write_key_pair, write_policy),
@@ -113,7 +115,8 @@ class User(object):
         :type record: records.data_record.DataRecord
         :return:
         """
-        key = self.implementation.abe_decrypt(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
+        key = self.implementation.abe_decrypt(self.global_parameters.scheme_parameters, self.secret_keys,
+                                              record.encryption_key_read)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
+                                                       self.implementation.ske_key_size())
         return self.implementation.ske_decrypt(record.data, symmetric_key)
-

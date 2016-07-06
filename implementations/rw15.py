@@ -18,20 +18,9 @@ class RW15(BaseImplementation):
         super().__init__(group)
 
     def setup_secret_keys(self, user):
-        """
-        Setup the secret key store for the given user.
-        :param user:
-        :return:
-        """
         return {'GID': user.gid, 'keys': {}}
 
     def update_secret_keys(self, secret_keys_base, secret_keys):
-        """
-        Add new keys to the secret keys of a user.
-        :param secret_keys_base:
-        :param secret_keys:
-        :return:
-        """
         secret_keys_base['keys'].update(secret_keys)
 
     def create_attribute_authority(self, name):
@@ -44,9 +33,9 @@ class RW15(BaseImplementation):
         maabe = MaabeRW15(self.group)
         return maabe.encrypt(global_parameters, public_keys, message, access_policy)
 
-    def abe_decrypt(self, global_parameters, secret_keys, message):
+    def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
         maabe = MaabeRW15(self.group)
-        return maabe.decrypt(global_parameters, secret_keys, message)
+        return maabe.decrypt(global_parameters, secret_keys, ciphertext)
 
     def serialize_abe_ciphertext(self, cp):
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
