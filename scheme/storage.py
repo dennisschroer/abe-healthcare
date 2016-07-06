@@ -19,7 +19,8 @@ class Storage(object):
         yield data_record.data
 
     def serialize_abe_encryption(self, ciphertext, group):
-        return json.dumps(ciphertext, default=lambda x: self.json_serialize_default(x, group))
+        return b''
+        # return json.dumps(ciphertext, default=lambda x: self.json_serialize_default(x, group))
 
     def json_serialize_default(self, o, group):
         return group.serialize(o)

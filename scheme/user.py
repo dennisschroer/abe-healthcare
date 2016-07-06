@@ -107,8 +107,7 @@ class User(object):
         :type record: records.data_record.DataRecord
         :return:
         """
-        abe_decryption = self.implementation.create_abe_decryption()
-        key = abe_decryption(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
+        key = self.implementation.abe_decrypt(self.global_parameters.scheme_parameters, self.secret_keys, record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
-        symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
-        return symmetric_encryption.decrypt(record.data)
+        return self.implementation.ske_decrypt(record.data, symmetric_key)
+

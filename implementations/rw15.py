@@ -41,9 +41,13 @@ class RW15(BaseImplementation):
     def create_central_authority(self):
         return RW15CentralAuthority(self.group)
 
-    def abe_encrypt(self, global_parameters, public_keys, key, access_policy):
+    def abe_encrypt(self, global_parameters, public_keys, message, access_policy):
         maabe = MaabeRW15(self.group)
-        return maabe.encrypt(global_parameters, public_keys, key, access_policy)
+        return maabe.encrypt(global_parameters, public_keys, message, access_policy)
+
+    def abe_decrypt(self, global_parameters, secret_keys, message):
+        maabe = MaabeRW15(self.group)
+        return maabe.decrypt(global_parameters, secret_keys, message)
 
 
 class RW15CentralAuthority(CentralAuthority):

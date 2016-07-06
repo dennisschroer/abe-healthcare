@@ -14,3 +14,14 @@ def pad_data_pksc5(data, block_size):
     True
     """
     return data + bytes([block_size - (len(data) % block_size)] * (block_size - (len(data) % block_size)))
+
+
+def unpad_data_pksc5(data):
+    """
+    Remove the additional padding
+    :param data: The data to remove the padding from
+    :return: The unpadded data
+    >>> pad_data_pksc5(b'Hello World\x05\x05\x05\x05\x05') == b'Hello World'
+    True
+    """
+    return data[:-data[-1]]

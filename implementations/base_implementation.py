@@ -1,5 +1,5 @@
 from charm.toolbox.pairinggroup import PairingGroup
-from utils.data_util import pad_data_pksc5
+from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto import Random
@@ -29,13 +29,28 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def abe_encrypt(self, global_parameters, public_keys, key, read_policy):
+    def setup_secret_keys(self, user):
+        raise NotImplementedError()
+
+    def update_secret_keys(self, base_keys, secret_keys):
+        raise NotImplementedError()
+
+    def abe_encrypt(self, global_parameters, public_keys, message, read_policy):
+        raise NotImplementedError()
+
+    def abe_decrypt(self, global_parameters, secret_keys, message):
         raise NotImplementedError()
 
     def ske_encrypt(self, message, key):
         iv = Random.new().read(AES.block_size)
         encryption = AES.new(key, AES.MODE_CBC, iv)
         return iv + encryption.encrypt(pad_data_pksc5(message, AES.block_size))
+
+    def ske_decrypt(self, ciphertext, key):
+        iv = ciphertext[:AES.block_size]
+        print(iv)
+        decryption = AES.new(key, AES.MODE_CBC, iv)
+        return unpad_data_pksc5(decryption.decrypt(ciphertext[AES.block_size:]))
 
     def pke_generate_key_pair(self, size):
         """
@@ -52,9 +67,3 @@ class BaseImplementation(object):
     def pke_encrypt(self, message, key):
         encryption = PKCS1_OAEP.new(key)
         return encryption.encrypt(message)
-
-    def setup_secret_keys(self, user):
-        raise NotImplementedError()
-
-    def update_secret_keys(self, base_keys, secret_keys):
-        raise NotImplementedError()
