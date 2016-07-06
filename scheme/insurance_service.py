@@ -51,7 +51,7 @@ class InsuranceService(object):
         :param location: The location of the record.
         :return: The record or None.
 
-        >>> service = InsuranceService(None)
+        >>> service = InsuranceService(None, None)
         >>> location = service.add({'data': 'TEST'})
         >>> service.get(location) is not None
         True
