@@ -1,9 +1,10 @@
 from scheme.storage import Storage
-
+import os
 
 class InsuranceService(object):
-    def __init__(self, global_parameters):
+    def __init__(self, global_parameters, implementation):
         self.global_parameters = global_parameters
+        self.implementation = implementation
         self.storage = Storage()
         self.authorities = {}
         self.records = {}
@@ -24,28 +25,24 @@ class InsuranceService(object):
 
     def create(self, create_record):
         # In future possibly adapt and check the record
-        return self.add(create_record)
+        name = self.add(create_record)
+        self.store(name, create_record)
+        return name
+
+    def store(self, name, record):
+        if not os.path.exists('data/storage'):
+            os.makedirs('data/storage')
+        f = open('data/storage/%s.meta' % name, 'wb')
+        f.write(self.storage.serialize_data_record_meta(record, self.implementation))
+        f.close()
+
+        f = open('data/storage/%s.dat' % name, 'wb')
+        f.write(record.data)
+        f.close()
 
     def add(self, record):
-        # In future store the record
         name = 'test'
-
         self.records[name] = record
-        generator = self.storage.serialize_data_record(record, self.global_parameters.group)
-
-        f = open('data/name.dat', 'wb')
-
-
-        print('== SERIALIZED RECORD ==')
-        try:
-            for line in generator:
-                print(line)
-                f.write(line)
-                f.write("\n".encode('UTF-8'))
-        except StopIteration:
-            pass
-        print('== END SERIALIZED RECORD ==')
-        f.close()
         return name
 
     def get(self, location):

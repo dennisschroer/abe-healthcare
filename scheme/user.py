@@ -4,6 +4,7 @@ from utils.key_utils import extract_key_from_group_element
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto import Random
+import os
 
 RSA_KEY_SIZE = 2048
 
@@ -70,13 +71,7 @@ class User(object):
         write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.create_owner_key_pair()
 
-        f = open('owner.pem', 'w')
-        f.write(owner_key_pair.exportKey('PEM').decode(encoding='UTF-8'))
-        f.close()
-
-        f = open('pk.pem', 'wb')
-        f.write(owner_key_pair.publickey().exportKey('DER'))
-        f.close()
+        self.save_owner_keys(owner_key_pair)
 
         # Retrieve authority public keys
         authority_public_keys = self.insurance_service.merge_public_keys()
@@ -90,9 +85,20 @@ class User(object):
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=None,
-            # write_private_key=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, write_key_pair, write_policy),
+            # write_private_key=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, write_key_pair, write_policy),
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
+
+    def save_owner_keys(self, owner_key_pair):
+        if not os.path.exists('data/users/%s' % self.gid):
+            os.makedirs('data/users/%s' % self.gid)
+        f = open('data/users/%s/owner_public.der' % self.gid, 'wb')
+        f.write(owner_key_pair.exportKey('DER'))
+        f.close()
+
+        f = open('data/users/%s/owner_secret.der' % self.gid, 'wb')
+        f.write(owner_key_pair.publickey().exportKey('DER'))
+        f.close()
 
     def send_create_record(self, create_record):
         return self.insurance_service.create(create_record)

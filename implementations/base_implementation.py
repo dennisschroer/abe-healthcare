@@ -38,6 +38,9 @@ class BaseImplementation(object):
     def abe_encrypt(self, global_parameters, public_keys, message, read_policy):
         raise NotImplementedError()
 
+    def serialize_abe_ciphertext(self):
+        raise NotImplementedError
+
     def abe_decrypt(self, global_parameters, secret_keys, message):
         raise NotImplementedError()
 
@@ -48,7 +51,6 @@ class BaseImplementation(object):
 
     def ske_decrypt(self, ciphertext, key):
         iv = ciphertext[:AES.block_size]
-        print(iv)
         decryption = AES.new(key, AES.MODE_CBC, iv)
         return unpad_data_pksc5(decryption.decrypt(ciphertext[AES.block_size:]))
 

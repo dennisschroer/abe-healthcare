@@ -25,7 +25,7 @@ class ABEHealthCare(object):
         national_database.setup(central_authority, ['DOCTOR', 'RADIOLOGIST'])
 
         # Setup service
-        insurance_service = InsuranceService(central_authority.global_parameters)
+        insurance_service = InsuranceService(central_authority.global_parameters, self.implementation)
         insurance_service.add_authority(insurance_company)
         insurance_service.add_authority(national_database)
 
@@ -38,27 +38,29 @@ class ABEHealthCare(object):
         bob = User('bob', insurance_service, self.implementation)
 
         # Encrypt a message
-        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello World')
+        file = open('data/input/photo.jpg', 'rb')
+        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', file.read())
+        file.close()
 
-        print('CreateRecord:')
-        print(create_record)
+        # print('CreateRecord:')
+        # print(create_record)
 
         # Send to insurance
         location = bob.send_create_record(create_record)
 
-        print('Location:')
-        print(location)
+        # print('Location:')
+        # print(location)
 
         # Give it to the doctor
         record = doctor.request_record(location)
 
-        print('Received record')
-        print(record)
+        # print('Received record')
+        # print(record)
 
         data = doctor.decrypt_record(record)
 
-        print('Decrypted data')
-        print(data)
+        # print('Decrypted data')
+        # print(data)
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
