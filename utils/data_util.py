@@ -10,7 +10,7 @@ def pad_data_pksc5(data, block_size):
     True
     >>> pad_data_pksc5(bytes([0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee]), 8) == bytes([0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08])
     True
-    >>> pad_data_pksc5(b'Hello world', 8) == b'Hello World\x05\x05\x05\x05\x05'
+    >>> pad_data_pksc5(b'Hello world', 8) == b'Hello world\x05\x05\x05\x05\x05'
     True
     """
     return data + bytes([block_size - (len(data) % block_size)] * (block_size - (len(data) % block_size)))
