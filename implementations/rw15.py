@@ -13,6 +13,8 @@ class RW15(BaseImplementation):
     :year:      2015
     """
 
+
+
     def setup_secret_keys(self, user):
         """
         Setup the secret key store for the given user.
@@ -39,13 +41,9 @@ class RW15(BaseImplementation):
     def create_central_authority(self):
         return RW15CentralAuthority(self.group)
 
-    def create_abe_encryption(self):
+    def abe_encrypt(self, global_parameters, public_keys, key, access_policy):
         maabe = MaabeRW15(self.group)
-        return maabe.encrypt
-
-    def create_abe_decryption(self):
-        maabe = MaabeRW15(self.group)
-        return maabe.decrypt
+        return maabe.encrypt(global_parameters, public_keys, key, access_policy)
 
 
 class RW15CentralAuthority(CentralAuthority):

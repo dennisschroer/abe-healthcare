@@ -1,4 +1,8 @@
 from charm.toolbox.pairinggroup import PairingGroup
+from utils.data_util import pad_data_pksc5
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.PublicKey import RSA
+from Crypto import Random
 
 
 class BaseImplementation(object):
@@ -6,6 +10,7 @@ class BaseImplementation(object):
     The base implementation provider for different ABE implementations. Acts as an abstract factory for
     implementation specific subclasses of various scheme classes.
     """
+
     def __init__(self, group=None):
         self.group = PairingGroup('SS512') if group is None else group
 
@@ -24,11 +29,32 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def create_abe_encryption(self):
+    def abe_encrypt(self, global_parameters, public_keys, key, read_policy):
         raise NotImplementedError()
 
-    def create_abe_decryption(self):
-        raise NotImplementedError()
+    def ske_encrypt(self, message, key):
+        iv = Random.new().read(AES.block_size)
+        encryption = AES.new(key, AES.MODE_CBC, iv)
+        return iv + encryption.encrypt(pad_data_pksc5(message, AES.block_size))
+
+    def pke_generate_key_pair(self, size):
+        """
+        Create a new public and private key pair
+        :param size: The size in bits
+        :return: A new key pair
+
+        >>> i = BaseImplementation()
+        >>> i.pke_generate_key_pair(1024) is not None
+        True
+        """
+        return RSA.generate(size)
+
+    def pke_encrypt(self, message, key):
+        encryption = PKCS1_OAEP.new(key)
+        return encryption.encrypt(message)
 
     def setup_secret_keys(self, user):
+        raise NotImplementedError()
+
+    def update_secret_keys(self, base_keys, secret_keys):
         raise NotImplementedError()

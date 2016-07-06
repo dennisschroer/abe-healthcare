@@ -38,7 +38,7 @@ class ABEHealthCare(object):
         bob = User('bob', insurance_service, self.implementation)
 
         # Encrypt a message
-        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', 'Hello World     ')
+        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello World')
 
         print('CreateRecord:')
         print(create_record)

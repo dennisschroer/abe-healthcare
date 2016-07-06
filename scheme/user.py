@@ -1,8 +1,9 @@
 from records.create_record import CreateRecord
 from charm.core.math.pairing import GT
-from utils.key_utils import extract_key_from_group_element, create_key_pair
+from utils.key_utils import extract_key_from_group_element
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
+from Crypto import Random
 
 RSA_KEY_SIZE = 2048
 
@@ -56,7 +57,7 @@ class User(object):
         return self._global_parameters
 
     def create_owner_key_pair(self):
-        key_pair = create_key_pair(RSA_KEY_SIZE)
+        key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
         self.owner_key_pairs.append(key_pair)
         return key_pair
 
@@ -66,7 +67,7 @@ class User(object):
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, 32)
 
         # Generate key pairs for writers and data owner
-        write_key_pair = create_key_pair(RSA_KEY_SIZE)
+        write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.create_owner_key_pair()
 
         f = open('owner.pem', 'w')
@@ -77,11 +78,6 @@ class User(object):
         f.write(owner_key_pair.publickey().exportKey('DER'))
         f.close()
 
-        # Setup encryption
-        abe_encryption = self.implementation.create_abe_encryption()
-        symmetric_encryption = AES.new(symmetric_key, AES.MODE_CBC, 'This is an IV456')
-        owner_assymmetric_encryption = PKCS1_OAEP.new(owner_key_pair)
-
         # Retrieve authority public keys
         authority_public_keys = self.insurance_service.merge_public_keys()
 
@@ -91,11 +87,11 @@ class User(object):
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=abe_encryption(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
-            encryption_key_owner=owner_assymmetric_encryption.encrypt(symmetric_key),
+            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, key, read_policy),
+            encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=None,
             # write_private_key=self.abe_encryption(authority_public_keys, self.global_parameters.scheme_parameters, write_key_pair, write_policy),
-            data=symmetric_encryption.encrypt(message)
+            data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
     def send_create_record(self, create_record):
