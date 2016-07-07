@@ -70,7 +70,7 @@ class InsuranceService(object):
 
         >>> from records.data_record import DataRecord
         >>> service = InsuranceService(None, None)
-        >>> location = service.add(DataRecord(data=b'TEST'})
+        >>> location = service.add(DataRecord(data=b'TEST'))
         >>> service.get(location) is not None
         True
         >>> service.get(location).data == b'TEST'
