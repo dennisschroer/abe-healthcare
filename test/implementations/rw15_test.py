@@ -28,7 +28,7 @@ class MyTestCase(unittest.TestCase):
         user = User('bob', service, self.subject)
         sk = self.subject.setup_secret_keys(user)
         self.subject.update_secret_keys(sk, ma1.keygen(user, ['ONE@A1']))
-        self.subject.update_secret_keys(sk, ma1.keygen(user, ['THREE@A2', 'FOUR@A2']))
+        self.subject.update_secret_keys(sk, ma2.keygen(user, ['THREE@A2', 'FOUR@A2']))
 
         # Encrypt
         for m in ['Hello world']:
