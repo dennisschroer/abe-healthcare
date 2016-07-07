@@ -90,7 +90,7 @@ class BaseImplementation(object):
         :param key: The key to use in the encryption.
         :return: The encrypted message
 
-        >>> i = BaseImplementation(None, None)
+        >>> i = BaseImplementation()
         >>> i.ske_encrypt("Hello world", 'a'*i.ske_key_size()) != "Hello world"
         True
         """
@@ -105,7 +105,7 @@ class BaseImplementation(object):
         :param key: The key to use.
         :return: The plaintext, or some random bytes.
 
-        >>> i = BaseImplementation(None, None)
+        >>> i = BaseImplementation()
         >>> m = "Hello world"
         >>> c = i.ske_encrypt(m, 'a'*i.ske_key_size())
         >>> d = i.ske_decrypt(c, 'a'*i.ske_key_size())
@@ -122,7 +122,7 @@ class BaseImplementation(object):
         :param size: The size in bits
         :return: A new key pair
 
-        >>> i = BaseImplementation(None, None)
+        >>> i = BaseImplementation()
         >>> i.pke_generate_key_pair(1024) is not None
         True
         """
@@ -146,7 +146,7 @@ class BaseImplementation(object):
         :param keyword: The keyword to replace.
         :return: int The replacement keyword. The dict is also updated.
 
-        >>> i = BaseImplementation(None, None)
+        >>> i = BaseImplementation()
         >>> d = dict()
         >>> a = i.attribute_replacement(d, 'TEST123')
         >>> b = i.attribute_replacement(d, 'TEST123')
