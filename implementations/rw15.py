@@ -44,13 +44,19 @@ class RW15(BaseImplementation):
         # C2[i] = gp['g1'] ** (-tx)
         # C3[i] = pks[auth]['gy'] ** tx * gp['g1'] ** zero_shares[i]
         # C4[i] = gp['F'](attr) ** tx
+        dictionary = dict()
         return {
-            'policy': cp['policy'],
-            'C0': self.group.serialize(cp['C0']),
-            'C1': {k: base64.decodebytes(self.group.serialize(v)) for k, v in cp['C1'].items()},
-            'C2': {k: base64.decodebytes(self.group.serialize(v)) for k, v in cp['C2'].items()},
-            'C3': {k: base64.decodebytes(self.group.serialize(v)) for k, v in cp['C3'].items()},
-            'C4': {k: base64.decodebytes(self.group.serialize(v)) for k, v in cp['C4'].items()}
+            'p': cp['policy'],
+            '0': self.group.serialize(cp['C0']),
+            '1': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+                  cp['C1'].items()},
+            '2': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+                  cp['C2'].items()},
+            '3': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+                  cp['C3'].items()},
+            '4': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+                  cp['C4'].items()},
+            'd': dictionary
         }
 
 
