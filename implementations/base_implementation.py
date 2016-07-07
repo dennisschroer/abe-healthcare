@@ -91,7 +91,7 @@ class BaseImplementation(object):
         :return: The encrypted message
 
         >>> i = BaseImplementation()
-        >>> i.ske_encrypt("Hello world", b'a'*i.ske_key_size()) != "Hello world"
+        >>> i.ske_encrypt(b'Hello world', 'a'*i.ske_key_size()) != b'Hello world'
         True
         """
         iv = Random.new().read(AES.block_size)
@@ -106,9 +106,9 @@ class BaseImplementation(object):
         :return: The plaintext, or some random bytes.
 
         >>> i = BaseImplementation()
-        >>> m = "Hello world"
-        >>> c = i.ske_encrypt(m, b'a'*i.ske_key_size())
-        >>> d = i.ske_decrypt(c, b'a'*i.ske_key_size())
+        >>> m = b'Hello world'
+        >>> c = i.ske_encrypt(m, 'a'*i.ske_key_size())
+        >>> d = i.ske_decrypt(c, 'a'*i.ske_key_size())
         >>> d == m
         True
         """
@@ -168,6 +168,6 @@ class BaseImplementation(object):
                 return key
         # Not in dict
         key = len(dict)
-        dict[key] = value
+        dict[key] = keyword
         return key
 
