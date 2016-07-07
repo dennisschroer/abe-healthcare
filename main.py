@@ -1,16 +1,17 @@
 from implementations.rw15 import RW15
 from scheme.user import User
 from scheme.insurance_service import InsuranceService
-import os
+from os import listdir, path, makedirs
+from os.path import isfile, join
 
 
 class ABEHealthCare(object):
     def __init__(self):
         self.implementation = None
-        if not os.path.exists('data/input'):
-            os.makedirs('data/input')
-        if not os.path.exists('data/output'):
-            os.makedirs('data/output')
+        if not path.exists('data/input'):
+            makedirs('data/input')
+        if not path.exists('data/output'):
+            makedirs('data/output')
 
     def rw15(self):
         self.implementation = RW15()
@@ -42,36 +43,39 @@ class ABEHealthCare(object):
         # Create user
         bob = User('bob', insurance_service, self.implementation)
 
-        # Encrypt a message
-        file = open('data/input/photo.jpg', 'rb')
-        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', file.read())
-        file.close()
+        for filename in [f for f in listdir('data/input') if isfile(join('data/input', f))]:
+            print('Reading %s' % join('data/input', filename))
+            # Encrypt a message
+            file = open(join('data/input', filename), 'rb')
+            create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', file.read())
+            file.close()
 
-        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello world')
+            # create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello world')
 
-        # print('CreateRecord:')
-        # print(create_record.encryption_key_read)
+            # print('CreateRecord:')
+            # print(create_record.encryption_key_read)
 
-        # Send to insurance
-        location = bob.send_create_record(create_record)
+            # Send to insurance
+            location = bob.send_create_record(create_record)
 
-        # print('Location:')
-        # print(location)
+            # print('Location:')
+            # print(location)
 
-        # Give it to the doctor
-        record = doctor.request_record(location)
+            # Give it to the doctor
+            record = doctor.request_record(location)
 
-        # print('Received record')
-        # print(record.encryption_key_read)
+            # print('Received record')
+            # print(record.encryption_key_read)
 
-        data = doctor.decrypt_record(record)
+            data = doctor.decrypt_record(record)
 
-        file = open('data/output/photo.jpg', 'wb')
-        file.write(data)
-        file.close()
+            print('Writing %s' % join('data/output', filename))
+            file = open(join('data/output', filename), 'wb')
+            file.write(data)
+            file.close()
 
-        # print('Decrypted data')
-        # print(data)
+            # print('Decrypted data')
+            # print(data)
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
