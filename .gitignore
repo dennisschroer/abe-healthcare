@@ -1,0 +1,4 @@
+__pycache__/
+data/storage/
+data/users/
+*.pyc
