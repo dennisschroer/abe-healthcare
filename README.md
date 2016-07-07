@@ -1,5 +1,7 @@
 # ABE in Health Care
 
+[![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=master)](https://travis-ci.com/denniss17/abe-healthcare)
+
 ![Overview](detailed-use-case.png)
 
 ## Requirements
