@@ -84,6 +84,7 @@ class RW15CentralAuthority(CentralAuthority):
     def setup(self):
         maabe = MaabeRW15(self.global_parameters.group)
         self.global_parameters.scheme_parameters = maabe.setup()
+        return self.global_parameters
 
 
 class RWAttributeAuthority(AttributeAuthority):
