@@ -91,7 +91,7 @@ class BaseImplementation(object):
         :return: The encrypted message
 
         >>> i = BaseImplementation()
-        >>> i.ske_encrypt("Hello world", 'a'*i.ske_key_size()) != "Hello world"
+        >>> i.ske_encrypt("Hello world", b'a'*i.ske_key_size()) != "Hello world"
         True
         """
         iv = Random.new().read(AES.block_size)
@@ -107,8 +107,8 @@ class BaseImplementation(object):
 
         >>> i = BaseImplementation()
         >>> m = "Hello world"
-        >>> c = i.ske_encrypt(m, 'a'*i.ske_key_size())
-        >>> d = i.ske_decrypt(c, 'a'*i.ske_key_size())
+        >>> c = i.ske_encrypt(m, b'a'*i.ske_key_size())
+        >>> d = i.ske_decrypt(c, b'a'*i.ske_key_size())
         >>> d == m
         True
         """
@@ -162,7 +162,7 @@ class BaseImplementation(object):
         >>> d[c]
         'TEST'
         """
-        for (key, value) in dict.iteritems():
+        for (key, value) in dict.items():
             if value == keyword:
                 # Already in the dictionary
                 return key

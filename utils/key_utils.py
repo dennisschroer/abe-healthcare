@@ -1,5 +1,4 @@
 import base64
-from Crypto.PublicKey import RSA
 
 
 def extract_key_from_group_element(group, group_element, length):
