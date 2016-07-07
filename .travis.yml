@@ -11,13 +11,17 @@ before_install:
 - sudo apt-get install -y python3-dev python3-setuptools
 # Install GMP (The GNU Multiple Precision Arithmetic Library)
 - sudo apt-get install -y libgmp10 libgmp-dev libgmp3c2
+# On newer systems (for example linux mint 18):
+# - sudo apt-get install -y libgmp10 libgmp-dev
+# - wget http://security.ubuntu.com/ubuntu/pool/universe/g/gmp4/libgmp3c2_4.3.2+dfsg-2ubuntu1_amd64.deb
+# - sudo dpkg -i libgmp3c2_4.3.2+dfsg-2ubuntu1_amd64.deb
 # Install PBC (The Pairing-Based Cryptography Library)
 - wget http://voltar.org/pbcfiles/libpbc0_0.5.12_amd64.deb
 - wget http://voltar.org/pbcfiles/libpbc-dev_0.5.12_amd64.deb
 - sudo dpkg -i libpbc0_0.5.12_amd64.deb
 - sudo dpkg -i libpbc-dev_0.5.12_amd64.deb
 # Install OpenSSL
-- sudo apt-get install -y openssl
+- sudo apt-get install -y openssl libssl-dev
 # Download charm
 - git clone git@github.com:denniss17/charm.git
 install:
