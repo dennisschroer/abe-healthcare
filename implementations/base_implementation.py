@@ -122,7 +122,7 @@ class BaseImplementation(object):
         :param size: The size in bits
         :return: A new key pair
 
-        >>> i = BaseImplementation()
+        >>> i = BaseImplementation(None, None)
         >>> i.pke_generate_key_pair(1024) is not None
         True
         """
@@ -137,3 +137,37 @@ class BaseImplementation(object):
         """
         encryption = PKCS1_OAEP.new(key)
         return encryption.encrypt(message)
+
+    def attribute_replacement(self, dict, keyword):
+        """
+        Determine a shorter identifier for the given keyword, and store it in the dict. If a keyword is already
+        in the dictionary, the existing replacement identifier is used.
+        :param dict: The dictionary with existing replacements.
+        :param keyword: The keyword to replace.
+        :return: int The replacement keyword. The dict is also updated.
+
+        >>> i = BaseImplementation(None, None)
+        >>> d = dict()
+        >>> a = i.attribute_replacement(d, 'TEST123')
+        >>> b = i.attribute_replacement(d, 'TEST123')
+        >>> c = i.attribute_replacement(d, 'TEST')
+        >>> a == b
+        True
+        >>> b == c
+        False
+        >>> d[a]
+        'TEST123'
+        >>> d[b]
+        'TEST123'
+        >>> d[c]
+        'TEST'
+        """
+        for (key, value) in dict.iteritems():
+            if value == keyword:
+                # Already in the dictionary
+                return key
+        # Not in dict
+        key = len(dict)
+        dict[key] = value
+        return key
+
