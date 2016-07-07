@@ -56,12 +56,20 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def serialize_abe_ciphertext(self):
+    def serialize_abe_ciphertext(self, ciphertext):
         """
         Serialize the ciphertext resulting form an attribute based encryption to an object which can be pickled.
 
         This is required because by default, instances of pairing.Element can not be pickled but have to be serialized.
         :return: An object, probably a dict, which can be pickled
+        """
+        raise NotImplementedError
+
+    def deserialize_abe_ciphertext(self, dictionary):
+        """
+        Deserialize a (pickleable) dictionary back to a (non-pickleable) ciphertext.
+
+        :return: The deserialized ciphertext.
         """
         raise NotImplementedError
 
@@ -128,6 +136,9 @@ class BaseImplementation(object):
         """
         return RSA.generate(size)
 
+    def pke_import_key(self, data):
+        return RSA.importKey(data)
+
     def pke_encrypt(self, message, key):
         """
         Encrypt a message using public key encryption.
@@ -170,4 +181,26 @@ class BaseImplementation(object):
         key = len(dict)
         dict[key] = keyword
         return key
+
+    def undo_attribute_replacement(self, dict, replacement):
+        """
+        Undo the attribute replacement as result from the attribute replacement.
+        :param dict: The dictionary with the replacements.
+        :param replacement: The replacement to revert to the original keyword.
+        :return: The original keyword.
+
+        >>> i = BaseImplementation()
+        >>> d = dict()
+        >>> a = i.attribute_replacement(d, 'TEST123')
+        >>> b = i.attribute_replacement(d, 'TEST')
+        >>> i.undo_attribute_replacement(d, a) == 'TEST123'
+        True
+        >>> i.undo_attribute_replacement(d, b) == 'TEST'
+        True
+        >>> i.undo_attribute_replacement(d, 123)
+        Traceback (most recent call last):
+        ...
+        KeyError: 123
+        """
+        return dict[replacement]
 

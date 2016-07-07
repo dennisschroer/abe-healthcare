@@ -1,5 +1,4 @@
 from scheme.storage import Storage
-import os
 
 
 class InsuranceService(object):
@@ -38,25 +37,8 @@ class InsuranceService(object):
         """
         # In future possibly adapt and check the record
         name = self.add(create_record)
-        self.store(name, create_record)
+        self.storage.store(name, create_record, self.implementation)
         return name
-
-    def store(self, name, record):
-        """
-        Store the data record.
-        :param name: The location of the data record
-        :param record: The record to store
-        :type record: records.data_record.DataRecord
-        """
-        if not os.path.exists('data/storage'):
-            os.makedirs('data/storage')
-        f = open('data/storage/%s.meta' % name, 'wb')
-        f.write(self.storage.serialize_data_record_meta(record, self.implementation))
-        f.close()
-
-        f = open('data/storage/%s.dat' % name, 'wb')
-        f.write(record.data)
-        f.close()
 
     def add(self, record):
         """
@@ -83,3 +65,7 @@ class InsuranceService(object):
         True
         """
         return self.records[location] if location in self.records else None
+
+    def load(self, location):
+        return self.storage.load(location, self.implementation)
+

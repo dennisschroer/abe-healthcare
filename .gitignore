@@ -2,3 +2,4 @@ __pycache__/
 data/storage/
 data/users/
 *.pyc
+data/output/photo.jpg

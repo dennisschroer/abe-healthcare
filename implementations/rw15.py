@@ -48,15 +48,35 @@ class RW15(BaseImplementation):
         return {
             'p': cp['policy'],
             '0': self.group.serialize(cp['C0']),
-            '1': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C1'].items()},
-            '2': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C2'].items()},
-            '3': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '3': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C3'].items()},
-            '4': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '4': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C4'].items()},
             'd': dictionary
+        }
+
+    def deserialize_abe_ciphertext(self, d):
+        """
+        >>> from charm.toolbox.pairinggroup import PairingGroup
+        >>> group = PairingGroup('SS512')
+        >>> i = RW15(group)
+        >>>
+        """
+        return {
+            'policy': d['p'],
+            'C0': self.group.deserialize(d['0']),
+            'C1': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['1'].items()},
+            'C2': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['2'].items()},
+            'C3': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['3'].items()},
+            'C4': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['4'].items()},
         }
 
 

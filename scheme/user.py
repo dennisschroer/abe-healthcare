@@ -106,7 +106,7 @@ class User(object):
         return self.insurance_service.create(create_record)
 
     def request_record(self, location):
-        return self.insurance_service.get(location)
+        return self.insurance_service.load(location)
 
     def decrypt_record(self, record):
         """

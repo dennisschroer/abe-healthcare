@@ -1,11 +1,16 @@
 from implementations.rw15 import RW15
 from scheme.user import User
 from scheme.insurance_service import InsuranceService
+import os
 
 
 class ABEHealthCare(object):
     def __init__(self):
         self.implementation = None
+        if not os.path.exists('data/input'):
+            os.makedirs('data/input')
+        if not os.path.exists('data/output'):
+            os.makedirs('data/output')
 
     def rw15(self):
         self.implementation = RW15()
@@ -42,8 +47,10 @@ class ABEHealthCare(object):
         create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', file.read())
         file.close()
 
+        create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello world')
+
         # print('CreateRecord:')
-        # print(create_record)
+        # print(create_record.encryption_key_read)
 
         # Send to insurance
         location = bob.send_create_record(create_record)
@@ -55,9 +62,13 @@ class ABEHealthCare(object):
         record = doctor.request_record(location)
 
         # print('Received record')
-        # print(record)
+        # print(record.encryption_key_read)
 
         data = doctor.decrypt_record(record)
+
+        file = open('data/output/photo.jpg', 'wb')
+        file.write(data)
+        file.close()
 
         # print('Decrypted data')
         # print(data)
