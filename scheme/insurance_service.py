@@ -68,11 +68,12 @@ class InsuranceService(object):
         :param location: The location of the record.
         :return: The record or None.
 
+        >>> from records.data_record import DataRecord
         >>> service = InsuranceService(None, None)
-        >>> location = service.add({'data': 'TEST'})
+        >>> location = service.add(DataRecord(data=b'TEST'})
         >>> service.get(location) is not None
         True
-        >>> service.get(location) == {'data': 'TEST'}
+        >>> service.get(location).data == b'TEST'
         True
         """
         return self.records[location] if location in self.records else None
