@@ -90,7 +90,7 @@ class BaseImplementation(object):
         :param key: The key to use in the encryption.
         :return: The encrypted message
 
-        >>> i = Implementation(None, None)
+        >>> i = BaseImplementation(None, None)
         >>> i.ske_encrypt("Hello world", 'a'*i.ske_key_size()) != "Hello world"
         True
         """
@@ -105,7 +105,7 @@ class BaseImplementation(object):
         :param key: The key to use.
         :return: The plaintext, or some random bytes.
 
-        >>> i = Implementation(None, None)
+        >>> i = BaseImplementation(None, None)
         >>> m = "Hello world"
         >>> c = i.ske_encrypt(m, 'a'*i.ske_key_size())
         >>> d = i.ske_decrypt(c, 'a'*i.ske_key_size())
