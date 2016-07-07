@@ -1,4 +1,5 @@
 from scheme.storage import Storage
+from Crypto.Hash import SHA
 
 
 class InsuranceService(object):
@@ -36,9 +37,19 @@ class InsuranceService(object):
         :return: The location of the record.
         """
         # In future possibly adapt and check the record
+
         name = self.add(create_record)
         self.storage.store(name, create_record, self.implementation)
         return name
+
+    def determine_record_location(self, record):
+        """
+        Determine a unique location for a data record
+        :param record: The data record
+        :type record: records.data_record.DataRecord
+        :return: A unique location
+        """
+        return SHA.new(record).hexdigest()
 
     def add(self, record):
         """
@@ -47,7 +58,7 @@ class InsuranceService(object):
         :type record: records.data_record.DataRecord
         :return: The location of the record
         """
-        name = 'test'
+        name = self.determine_record_location(record.data)
         self.records[name] = record
         return name
 
