@@ -83,7 +83,7 @@ class User(object):
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters,
+            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
                                                                 authority_public_keys, key, read_policy),
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=None,
@@ -115,7 +115,7 @@ class User(object):
         :type record: records.data_record.DataRecord
         :return:
         """
-        key = self.implementation.abe_decrypt(self.global_parameters.scheme_parameters, self.secret_keys,
+        key = self.implementation.abe_decrypt(self.global_parameters, self.secret_keys,
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())

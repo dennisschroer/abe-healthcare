@@ -31,11 +31,11 @@ class RW15(BaseImplementation):
 
     def abe_encrypt(self, global_parameters, public_keys, message, access_policy):
         maabe = MaabeRW15(self.group)
-        return maabe.encrypt(global_parameters, public_keys, message, access_policy)
+        return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, access_policy)
 
     def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
         maabe = MaabeRW15(self.group)
-        return maabe.decrypt(global_parameters, secret_keys, ciphertext)
+        return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
 
     def serialize_abe_ciphertext(self, cp):
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}

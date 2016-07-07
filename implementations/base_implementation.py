@@ -48,11 +48,24 @@ class BaseImplementation(object):
     def abe_encrypt(self, global_parameters, public_keys, message, policy):
         """
         Encrypt the message using attribute based encrpytion.
-        :param global_parameters: The global parameters of the scheme
+        :param global_parameters: The global parameters.
+        :type global_parameters: records.global_parameters.GlobalParameters
         :param public_keys: The public keys of the authorities
         :param message: The message to encrypt.
         :param policy: The policy to encrypt under.
         :return: The encrypted message.
+        """
+        raise NotImplementedError()
+
+    def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
+        """
+        Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
+        :param global_parameters: The global parameters.
+        :type global_parameters: records.global_parameters.GlobalParameters
+        :param secret_keys: The secret keys of the user.
+        :param ciphertext: The ciphertext to decrypt.
+        :raise Exception: raised when the secret keys do not satisfy the access policy
+        :return: The plaintext
         """
         raise NotImplementedError()
 
@@ -72,17 +85,6 @@ class BaseImplementation(object):
         :return: The deserialized ciphertext.
         """
         raise NotImplementedError
-
-    def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
-        """
-        Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
-        :param global_parameters: The global parameters of the scheme.
-        :param secret_keys: The secret keys of the user.
-        :param ciphertext: The ciphertext to decrypt.
-        :raise Exception: raised when the secret keys do not satisfy the access policy
-        :return: The plaintext
-        """
-        raise NotImplementedError()
 
     def ske_key_size(self):
         """
