@@ -3,6 +3,8 @@ from scheme.user import User
 from scheme.insurance_service import InsuranceService
 from os import listdir, path, makedirs
 from os.path import isfile, join
+# import psutil
+import cProfile
 
 
 class ABEHealthCare(object):
@@ -12,7 +14,14 @@ class ABEHealthCare(object):
         self.insurance_company = None
         self.national_database = None
         self.insurance_service = None
+        self.doctor = None
+        self.bob = None
+        self.check_paths()
+
+    def check_paths(self):
         if not path.exists('data/input'):
+            makedirs('data/input')
+        if not path.exists('data/storage'):
             makedirs('data/input')
         if not path.exists('data/output'):
             makedirs('data/output')
@@ -46,60 +55,85 @@ class ABEHealthCare(object):
         self.insurance_service.add_authority(self.insurance_company)
         self.insurance_service.add_authority(self.national_database)
 
+    def create_user(self, name, insurance_attributes=None, national_attributes=None):
+        user = User(name, self.insurance_service, self.implementation)
+        if insurance_attributes is not None:
+            user.issue_secret_keys(self.insurance_company.keygen(user, insurance_attributes))
+        if national_attributes is not None:
+            user.issue_secret_keys(self.national_database.keygen(user, national_attributes))
+        return user
+
     def run(self):
+        self.setup()
+        locations = self.run_encryptions()
+        self.run_decryptions(locations)
+
+    def setup(self):
         assert self.implementation is not None
 
-        insurance_attributes = ['REVIEWER', 'ADMINISTRATION']
-        national_attributes = ['DOCTOR', 'RADIOLOGIST']
+        insurance_attributes = ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE']
+        national_attributes = ['DOCTOR@NDB', 'RADIOLOGIST@NDB']
 
         self.setup_central_authority()
         self.setup_attribute_authorities(insurance_attributes, national_attributes)
         self.setup_service()
 
-        # Create doctor
-        doctor = User('doctor', self.insurance_service, self.implementation)
-        doctor.issue_secret_keys(self.national_database.keygen(doctor, ['DOCTOR@NDB']))
-        doctor.issue_secret_keys(self.insurance_company.keygen(doctor, ['REVIEWER@INSURANCE']))
+        self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
+        self.bob = self.create_user('bob')
 
-        # Create user
-        bob = User('bob', self.insurance_service, self.implementation)
+    def encrypt_file(self, filename):
+        """
+        Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
+        The first line is the read policy, the second line the write policy.
+        :param filename: The filename (relative to /data/input) to encrypt
+        :return: The name of the encrypted data (in /data/storage/)
+        """
+        # if filename.endswith(".policy"):
+        #     continue
+        policy_filename = '%s.policy' % filename
+        # Read input
+        print('Reading %s' % join('data/input', filename))
+        print('Reading %s' % join('data/input', policy_filename))
+        file = open(join('data/input', filename), 'rb')
+        policy_file = open(join('data/input', policy_filename), 'r')
+        read_policy = policy_file.readline()
+        write_policy = policy_file.readline()
+        # Encrypt a message
+        create_record = self.bob.create_record(read_policy, write_policy, file.read(), {'name': filename})
+        file.close()
+        # Send to insurance (this also stores the record)
+        return self.bob.send_create_record(create_record)
 
-        for filename in [f for f in listdir('data/input') if isfile(join('data/input', f))]:
-            print('Reading %s' % join('data/input', filename))
-            # Encrypt a message
-            file = open(join('data/input', filename), 'rb')
-            create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', file.read())
-            file.close()
+    def decrypt_file(self, location):
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        """
+        # Give it to the doctor
+        record = self.doctor.request_record(location)
 
-            # create_record = bob.create_record('DOCTOR@NDB and REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE', b'Hello world')
+        # print('Received record')
+        # print(record.encryption_key_read)
 
-            # print('CreateRecord:')
-            # print(create_record.encryption_key_read)
+        info, data = self.doctor.decrypt_record(record)
 
-            # Send to insurance
-            location = bob.send_create_record(create_record)
+        print('Writing %s' % join('data/output', info['name']))
+        file = open(join('data/output', info['name']), 'wb')
+        file.write(data)
+        file.close()
 
-            # print('Location:')
-            # print(location)
+    def run_encryptions(self):
+        return list(map(self.encrypt_file,
+                   [f for f in listdir('data/input') if not f.endswith(".policy") and isfile(join('data/input', f))]))
 
-            # Give it to the doctor
-            record = doctor.request_record(location)
-
-            # print('Received record')
-            # print(record.encryption_key_read)
-
-            data = doctor.decrypt_record(record)
-
-            print('Writing %s' % join('data/output', filename))
-            file = open(join('data/output', filename), 'wb')
-            file.write(data)
-            file.close()
-
-            # print('Decrypted data')
-            # print(data)
-
-            # https://pypi.python.org/pypi/psutil
+    def run_decryptions(self, locations):
+        return list(map(self.decrypt_file, locations))
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
-    abe.rw15()
+    pr = cProfile.Profile()
+    pr.runcall(abe.rw15)
+    pr.print_stats(sort='cumtime')
+    # pr.enable()
+    # abe.rw15()
+    # pr.disable()
+    # pr.print_stats(sort='cumtime')

@@ -5,6 +5,7 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto import Random
 import os
+import pickle
 
 RSA_KEY_SIZE = 2048
 
@@ -62,7 +63,7 @@ class User(object):
         self.owner_key_pairs.append(key_pair)
         return key_pair
 
-    def create_record(self, read_policy, write_policy, message):
+    def create_record(self, read_policy, write_policy, message, info):
         # Generate symmetric encryption key
         key = self.global_parameters.group.random(GT)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
@@ -88,6 +89,7 @@ class User(object):
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=None,
             # write_private_key=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, write_key_pair, write_policy),
+            info=self.implementation.ske_encrypt(pickle.dumps(info), symmetric_key),
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
@@ -113,10 +115,10 @@ class User(object):
         Decrypt a data record if possible.
         :param record: The data record to decrypt
         :type record: records.data_record.DataRecord
-        :return:
+        :return: info, data
         """
         key = self.implementation.abe_decrypt(self.global_parameters, self.secret_keys,
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
-        return self.implementation.ske_decrypt(record.data, symmetric_key)
+        return pickle.loads(self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(record.data, symmetric_key)

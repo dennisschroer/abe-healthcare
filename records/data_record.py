@@ -1,6 +1,7 @@
 class DataRecord(object):
     def __init__(self, read_policy=None, write_policy=None, owner_public_key=None, write_public_key=None,
-                 encryption_key_read=None, encryption_key_owner=None, write_private_key=None, data=None):
+                 encryption_key_read=None, encryption_key_owner=None, write_private_key=None, info=None, data=None):
+        self.info = info
         self.read_policy = read_policy
         self.write_policy = write_policy
         self.owner_public_key = owner_public_key

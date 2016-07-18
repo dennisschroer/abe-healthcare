@@ -49,7 +49,7 @@ class InsuranceService(object):
         :type record: records.data_record.DataRecord
         :return: A unique location
         """
-        return SHA.new(record).hexdigest()
+        return SHA.new(record.info).hexdigest()
 
     def add(self, record):
         """
@@ -58,7 +58,7 @@ class InsuranceService(object):
         :type record: records.data_record.DataRecord
         :return: The location of the record
         """
-        name = self.determine_record_location(record.data)
+        name = self.determine_record_location(record)
         self.records[name] = record
         return name
 

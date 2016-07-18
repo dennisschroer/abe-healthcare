@@ -10,6 +10,7 @@ DATA_RECORD_WRITE_PUBLIC_KEY = 'wpk'
 DATA_RECORD_ENCRYPTION_KEY_READ = 'ekr'
 DATA_RECORD_ENCRYPTION_KEY_OWNER = 'eko'
 DATA_RECORD_WRITE_SECRET_KEY = 'wsk'
+DATA_RECORD_INFO = 'i'
 
 
 class Storage(object):
@@ -33,7 +34,8 @@ class Storage(object):
             DATA_RECORD_WRITE_PUBLIC_KEY: data_record.write_public_key.exportKey('DER'),
             DATA_RECORD_ENCRYPTION_KEY_READ: implementation.serialize_abe_ciphertext(data_record.encryption_key_read),
             DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
-            DATA_RECORD_WRITE_SECRET_KEY: ''
+            DATA_RECORD_WRITE_SECRET_KEY: '',
+            DATA_RECORD_INFO: data_record.info
             # DATA_RECORD_WRITE_SECRET_KEY: implementation.serialize_abe_ciphertext(data_record.write_private_key)
         })
 
@@ -47,6 +49,7 @@ class Storage(object):
             encryption_key_read=implementation.deserialize_abe_ciphertext(d[DATA_RECORD_ENCRYPTION_KEY_READ]),
             encryption_key_owner=d[DATA_RECORD_ENCRYPTION_KEY_OWNER],
             write_private_key=d[DATA_RECORD_WRITE_SECRET_KEY],
+            info=d[DATA_RECORD_INFO],
             data=None
         )
 
@@ -59,10 +62,12 @@ class Storage(object):
         :param record: The record to store
         :type record: records.data_record.DataRecord
         """
+        print('Storing %s' % 'data/storage/%s.meta' % name)
         f = open('data/storage/%s.meta' % name, 'wb')
         f.write(self.serialize_data_record_meta(record, implementation))
         f.close()
 
+        print('Storing %s' % 'data/storage/%s.dat' % name)
         f = open('data/storage/%s.dat' % name, 'wb')
         f.write(record.data)
         f.close()
