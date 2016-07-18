@@ -8,6 +8,10 @@ from os.path import isfile, join
 class ABEHealthCare(object):
     def __init__(self):
         self.implementation = None
+        self.central_authority = None
+        self.insurance_company = None
+        self.national_database = None
+        self.insurance_service = None
         if not path.exists('data/input'):
             makedirs('data/input')
         if not path.exists('data/output'):
@@ -17,31 +21,48 @@ class ABEHealthCare(object):
         self.implementation = RW15()
         self.run()
 
+    def setup_central_authority(self):
+        """
+        Setup central authority
+        :return:
+        """
+        self.central_authority = self.implementation.create_central_authority()
+        self.central_authority.setup()
+
+    def setup_attribute_authorities(self, insurance_attributes, national_attributes):
+        """
+        Setup attribute authorities
+        """
+        self.insurance_company = self.implementation.create_attribute_authority('INSURANCE')
+        self.national_database = self.implementation.create_attribute_authority('NDB')
+        self.insurance_company.setup(self.central_authority, insurance_attributes)
+        self.national_database.setup(self.central_authority, national_attributes)
+
+    def setup_service(self):
+        """
+        Setup service
+        """
+        self.insurance_service = InsuranceService(self.central_authority.global_parameters, self.implementation)
+        self.insurance_service.add_authority(self.insurance_company)
+        self.insurance_service.add_authority(self.national_database)
+
     def run(self):
         assert self.implementation is not None
 
-        # Setup central authority
-        central_authority = self.implementation.create_central_authority()
-        central_authority.setup()
+        insurance_attributes = ['REVIEWER', 'ADMINISTRATION']
+        national_attributes = ['DOCTOR', 'RADIOLOGIST']
 
-        # Setup attribute authorities
-        insurance_company = self.implementation.create_attribute_authority('INSURANCE')
-        national_database = self.implementation.create_attribute_authority('NDB')
-        insurance_company.setup(central_authority, ['REVIEWER', 'ADMINISTRATION'])
-        national_database.setup(central_authority, ['DOCTOR', 'RADIOLOGIST'])
-
-        # Setup service
-        insurance_service = InsuranceService(central_authority.global_parameters, self.implementation)
-        insurance_service.add_authority(insurance_company)
-        insurance_service.add_authority(national_database)
+        self.setup_central_authority()
+        self.setup_attribute_authorities(insurance_attributes, national_attributes)
+        self.setup_service()
 
         # Create doctor
-        doctor = User('doctor', insurance_service, self.implementation)
-        doctor.issue_secret_keys(national_database.keygen(doctor, ['DOCTOR@NDB']))
-        doctor.issue_secret_keys(insurance_company.keygen(doctor, ['REVIEWER@INSURANCE']))
+        doctor = User('doctor', self.insurance_service, self.implementation)
+        doctor.issue_secret_keys(self.national_database.keygen(doctor, ['DOCTOR@NDB']))
+        doctor.issue_secret_keys(self.insurance_company.keygen(doctor, ['REVIEWER@INSURANCE']))
 
         # Create user
-        bob = User('bob', insurance_service, self.implementation)
+        bob = User('bob', self.insurance_service, self.implementation)
 
         for filename in [f for f in listdir('data/input') if isfile(join('data/input', f))]:
             print('Reading %s' % join('data/input', filename))
