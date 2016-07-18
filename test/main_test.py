@@ -46,8 +46,10 @@ class ABEHealthCareTestCase(unittest.TestCase):
         self.assertIsNotNone(self.subject.insurance_service)
         self.assertIsInstance(self.subject.insurance_service, InsuranceService)
         self.assertEqual(len(self.subject.insurance_service.authorities), 2)
-        self.assertIn(self.subject.insurance_company, self.subject.insurance_service.authorities)
-        self.assertIn(self.subject.national_database, self.subject.insurance_service.authorities)
+        self.assertIn('INSURANCE', self.subject.insurance_service.authorities)
+        self.assertIn('NDB', self.subject.insurance_service.authorities)
+        self.assertEqual(self.subject.insurance_company, self.subject.insurance_service.authorities['INSURANCE'])
+        self.assertEqual(self.subject.national_database, self.subject.insurance_service.authorities['NDB'])
 
 
 if __name__ == '__main__':
