@@ -104,7 +104,7 @@ class ABEHealthCare(object):
         create_record = user.create_record(read_policy, write_policy, file.read(), {'name': filename})
         file.close()
         # Send to insurance (this also stores the record)
-        return self.bob.send_create_record(create_record)
+        return user.send_create_record(create_record)
 
     def decrypt_file(self, user, location):
         """
