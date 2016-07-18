@@ -34,7 +34,7 @@ class MyTestCase(unittest.TestCase):
 
         # Encrypt and decrypt a message
         for m in [b'Hello world', lorem]:
-            create_record = user.create_record('ONE@A1 AND THREE@A2', 'ONE@A1 AND THREE@A2', m)
+            create_record = user.create_record('ONE@A1 AND THREE@A2', 'ONE@A1 AND THREE@A2', m, {'name': 'test'})
             location = user.send_create_record(create_record)
             record = user.request_record(location)
             m2 = user.decrypt_record(record)
