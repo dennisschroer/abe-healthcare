@@ -6,7 +6,7 @@ from scheme.insurance_service import InsuranceService
 from scheme.user import User
 
 
-class MyTestCase(unittest.TestCase):
+class RW15TestCase(unittest.TestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = RW15(self.group)
@@ -37,7 +37,8 @@ class MyTestCase(unittest.TestCase):
             create_record = user.create_record('ONE@A1 AND THREE@A2', 'ONE@A1 AND THREE@A2', m, {'name': 'test'})
             location = user.send_create_record(create_record)
             record = user.request_record(location)
-            m2 = user.decrypt_record(record)
+            info, m2 = user.decrypt_record(record)
+            self.assertEqual({'name': 'test'}, info)
             self.assertEqual(m, m2)
 
 if __name__ == '__main__':
