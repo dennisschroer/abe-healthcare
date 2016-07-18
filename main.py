@@ -94,8 +94,8 @@ class ABEHealthCare(object):
         #     continue
         policy_filename = '%s.policy' % filename
         # Read input
-        print('Reading %s' % join('data/input', filename))
-        print('Reading %s' % join('data/input', policy_filename))
+        print('Encrypting %s' % join('data/input', filename))
+        print('           %s' % join('data/input', policy_filename))
         file = open(join('data/input', filename), 'rb')
         policy_file = open(join('data/input', policy_filename), 'r')
         read_policy = policy_file.readline()
@@ -117,12 +117,14 @@ class ABEHealthCare(object):
         # Give it to the user
         record = user.request_record(location)
 
+        print('Decrypting %s' % join('data/storage', location))
+
         # print('Received record')
         # print(record.encryption_key_read)
 
         info, data = self.doctor.decrypt_record(record)
 
-        print('Writing %s' % join('data/output', info['name']))
+        print('Writing    %s' % join('data/output', info['name']))
         file = open(join('data/output', info['name']), 'wb')
         file.write(data)
         file.close()
@@ -142,7 +144,3 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     pr.runcall(abe.rw15)
     pr.print_stats(sort='cumtime')
-    # pr.enable()
-    # abe.rw15()
-    # pr.disable()
-    # pr.print_stats(sort='cumtime')

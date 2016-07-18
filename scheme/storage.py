@@ -62,12 +62,10 @@ class Storage(object):
         :param record: The record to store
         :type record: records.data_record.DataRecord
         """
-        print('Storing %s' % 'data/storage/%s.meta' % name)
         f = open('data/storage/%s.meta' % name, 'wb')
         f.write(self.serialize_data_record_meta(record, implementation))
         f.close()
 
-        print('Storing %s' % 'data/storage/%s.dat' % name)
         f = open('data/storage/%s.dat' % name, 'wb')
         f.write(record.data)
         f.close()
