@@ -114,8 +114,8 @@ class ABEHealthCare(object):
         :param location: The location of the file to decrypt (in /data/storage)
         :return: The name of the output file (in /data/output)
         """
-        # Give it to the doctor
-        record = self.doctor.request_record(location)
+        # Give it to the user
+        record = user.request_record(location)
 
         # print('Received record')
         # print(record.encryption_key_read)
