@@ -54,16 +54,38 @@ class User(object):
 
     @property
     def global_parameters(self):
+        """
+        Gets the global parameters.
+        :return: The global parameters
+        """
         if self._global_parameters is None:
             self._global_parameters = self.insurance_service.global_parameters
         return self._global_parameters
 
     def create_owner_key_pair(self):
+        """
+        Create a new key pair for this user, to be used for proving ownership.
+        :return: A new key pair.
+
+        >>> from implementations.base_implementation import BaseImplementation
+        >>> user = User("bob", None, BaseImplementation())
+        >>> key_pair = user.create_owner_key_pair()
+        >>> key_pair is not None
+        True
+        """
         key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
         self.owner_key_pairs.append(key_pair)
         return key_pair
 
     def create_record(self, read_policy, write_policy, message, info):
+        """
+        Create a new record containing the encrypted message.
+        :param read_policy: The read policy to encrypt with.
+        :param write_policy: The write policy to encrypt with.
+        :param message: The message to encrypt.
+        :param info: Additional info to encrypt with the message.
+        :return: records.create_record.CreateRecord The resulting record containing the encrypted message.
+        """
         # Generate symmetric encryption key
         key = self.global_parameters.group.random(GT)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
@@ -93,21 +115,36 @@ class User(object):
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
-    def save_owner_keys(self, owner_key_pair):
+    def save_owner_keys(self, key_pair):
+        """
+        Save the given key pair.
+        :param key_pair: The key pair to save.
+        """
         if not os.path.exists('data/users/%s' % self.gid):
             os.makedirs('data/users/%s' % self.gid)
         f = open('data/users/%s/owner_public.der' % self.gid, 'wb')
-        f.write(owner_key_pair.exportKey('DER'))
+        f.write(key_pair.exportKey('DER'))
         f.close()
 
         f = open('data/users/%s/owner_secret.der' % self.gid, 'wb')
-        f.write(owner_key_pair.publickey().exportKey('DER'))
+        f.write(key_pair.publickey().exportKey('DER'))
         f.close()
 
     def send_create_record(self, create_record):
+        """
+        Send a CreateRecord to the insurance company.
+        :param create_record: The CreateRecord to send.
+        :type create_record: records.create_record.CreateRecord
+        :return: The location of the created record.
+        """
         return self.insurance_service.create(create_record)
 
     def request_record(self, location):
+        """
+        Request the DataRecord on the given location from the insurance company.
+        :param location: The location of the DataRecord to request
+        :return: records.data_record.DataRecord the DataRecord, or None.
+        """
         return self.insurance_service.load(location)
 
     def decrypt_record(self, record):
