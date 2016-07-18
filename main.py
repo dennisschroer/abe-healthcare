@@ -81,10 +81,12 @@ class ABEHealthCare(object):
         self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
         self.bob = self.create_user('bob')
 
-    def encrypt_file(self, filename):
+    def encrypt_file(self, user, filename):
         """
         Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
         The first line is the read policy, the second line the write policy.
+        :param user: The user to encrypt with
+        :type user: scheme.user.User
         :param filename: The filename (relative to /data/input) to encrypt
         :return: The name of the encrypted data (in /data/storage/)
         """
@@ -99,14 +101,18 @@ class ABEHealthCare(object):
         read_policy = policy_file.readline()
         write_policy = policy_file.readline()
         # Encrypt a message
-        create_record = self.bob.create_record(read_policy, write_policy, file.read(), {'name': filename})
+        create_record = user.create_record(read_policy, write_policy, file.read(), {'name': filename})
         file.close()
         # Send to insurance (this also stores the record)
         return self.bob.send_create_record(create_record)
 
-    def decrypt_file(self, location):
+    def decrypt_file(self, user, location):
         """
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param user: The user to decrypt with
+        :type user: scheme.user.User
+        :param location: The location of the file to decrypt (in /data/storage)
+        :return: The name of the output file (in /data/output)
         """
         # Give it to the doctor
         record = self.doctor.request_record(location)
@@ -120,13 +126,16 @@ class ABEHealthCare(object):
         file = open(join('data/output', info['name']), 'wb')
         file.write(data)
         file.close()
+        return info['name']
 
     def run_encryptions(self):
-        return list(map(self.encrypt_file,
-                   [f for f in listdir('data/input') if not f.endswith(".policy") and isfile(join('data/input', f))]))
+        return list(map(lambda f: self.encrypt_file(self.bob, f),
+                        [f for f in listdir('data/input') if
+                         not f.endswith(".policy") and isfile(join('data/input', f))]))
 
     def run_decryptions(self, locations):
-        return list(map(self.decrypt_file, locations))
+        return list(map(lambda f: self.decrypt_file(self.doctor, f), locations))
+
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
