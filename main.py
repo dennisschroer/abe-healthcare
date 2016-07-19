@@ -22,7 +22,7 @@ class ABEHealthCare(object):
         if not path.exists('data/input'):
             makedirs('data/input')
         if not path.exists('data/storage'):
-            makedirs('data/input')
+            makedirs('data/storage')
         if not path.exists('data/output'):
             makedirs('data/output')
 
