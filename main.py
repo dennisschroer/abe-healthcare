@@ -60,9 +60,9 @@ class ABEHealthCare(object):
     def create_user(self, name, insurance_attributes=None, national_attributes=None):
         user = User(name, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen(user, insurance_attributes))
+            user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen(user, national_attributes))
+            user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes))
         return user
 
     def run(self):
