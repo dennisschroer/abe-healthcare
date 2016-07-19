@@ -17,8 +17,8 @@ class RW15(BaseImplementation):
     def __init__(self, group=None):
         super().__init__(group)
 
-    def setup_secret_keys(self, user):
-        return {'GID': user.gid, 'keys': {}}
+    def setup_secret_keys(self, gid):
+        return {'GID': gid, 'keys': {}}
 
     def update_secret_keys(self, secret_keys_base, secret_keys):
         secret_keys_base['keys'].update(secret_keys)
@@ -94,7 +94,7 @@ class RWAttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, user, attributes):
+    def keygen(self, gid, attributes):
         maabe = MaabeRW15(self.global_parameters.group)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, user.gid,
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)

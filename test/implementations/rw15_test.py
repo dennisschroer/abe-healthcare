@@ -10,11 +10,19 @@ class RW15TestCase(unittest.TestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = RW15(self.group)
+
+    def test_ske_encrypt_decrypt(self):
+        key = b'a' * self.subject.ske_key_size()
+        for m in [b'Hello world', lorem]:
+            c = self.subject.ske_encrypt(m, key)
+            self.assertNotEqual(c, m)
+            d = self.subject.ske_decrypt(c, key)
+            self.assertEqual(m, d)
+            r = self.subject.ske_decrypt(c, b'a' * self.subject.ske_key_size())
+            self.assertNotEqual(m, r)
     
-    def test_encrypt_decrypt(self):
+    def test_encrypt_decrypt_abe_wrapped(self):
         # Setup authorities
-        self.group = PairingGroup('SS512')
-        self.subject = RW15(self.group)
         ca = self.subject.create_central_authority()
         ma1 = self.subject.create_attribute_authority('A1')
         ma2 = self.subject.create_attribute_authority('A2')
@@ -22,24 +30,50 @@ class RW15TestCase(unittest.TestCase):
         ma1.setup(ca, ['ONE@A1', 'TWO@A1'])
         ma2.setup(ca, ['THREE@A2', 'FOUR@A2'])
 
-        # Setup service
-        service = InsuranceService(global_parameters, self.subject)
-        service.add_authority(ma1)
-        service.add_authority(ma2)
+        # Setup keys
+        public_keys = self.subject.merge_public_keys({ma1.name: ma1, ma2.name: ma2})
+        valid_secret_keys = []
+        invalid_secret_keys = []
 
-        # Get secret keys
-        user = User('bob', service, self.subject)
-        user.issue_secret_keys(ma1.keygen(user, ['ONE@A1']))
-        user.issue_secret_keys(ma2.keygen(user, ['THREE@A2', 'FOUR@A2']))
+        # Just enough secret keys
+        secret_keys = self.subject.setup_secret_keys('alice')
+        self.subject.update_secret_keys(secret_keys, ma1.keygen('alice', ['ONE@A1']))
+        self.subject.update_secret_keys(secret_keys, ma2.keygen('alice', ['THREE@A2']))
+        valid_secret_keys.append(secret_keys)
 
-        # Encrypt and decrypt a message
+        # All secret keys
+        all_secret_keys = self.subject.setup_secret_keys('alice')
+        self.subject.update_secret_keys(all_secret_keys, ma1.keygen('alice', ['ONE@A1', 'TWO@A1']))
+        self.subject.update_secret_keys(all_secret_keys, ma2.keygen('alice', ['THREE@A2', 'FOUR@A2']))
+        valid_secret_keys.append(all_secret_keys)
+
+        # No secret keys
+        invalid_secret_keys.append(self.subject.setup_secret_keys('charlie'))
+
+        # Not enough secret keys
+        not_enough_secret_keys = self.subject.setup_secret_keys('dennis')
+        self.subject.update_secret_keys(not_enough_secret_keys, ma1.keygen('dennis', ['ONE@A1']))
+        invalid_secret_keys.append(not_enough_secret_keys)
+
+        policy = 'ONE@A1 AND THREE@A2'
+
+        # Attempt to decrypt the messages
         for m in [b'Hello world', lorem]:
-            create_record = user.create_record('ONE@A1 AND THREE@A2', 'ONE@A1 AND THREE@A2', m, {'name': 'test'})
-            location = user.send_create_record(create_record)
-            record = user.request_record(location)
-            info, m2 = user.decrypt_record(record)
-            self.assertEqual({'name': 'test'}, info)
-            self.assertEqual(m, m2)
+            # Encrypt message
+            key, ciphertext = self.subject.abe_encrypt_wrapped(global_parameters, public_keys, m, policy)
+            self.assertNotEqual(m, ciphertext)
+
+            for secret_keys in valid_secret_keys:
+                decrypted = self.subject.abe_decrypt_wrapped(global_parameters, secret_keys, (key, ciphertext))
+                self.assertEqual(m, decrypted)
+
+            for secret_keys in invalid_secret_keys:
+                try:
+                    self.subject.abe_decrypt_wrapped(global_parameters, secret_keys, (key, ciphertext))
+                    self.fail("Should throw an Exception because of insufficient secret keys")
+                except Exception:
+                    pass
+
 
 if __name__ == '__main__':
     unittest.main()

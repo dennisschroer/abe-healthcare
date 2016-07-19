@@ -22,7 +22,7 @@ class User(object):
         self.gid = gid
         self.insurance_service = insurance_service
         self.implementation = implementation
-        self.secret_keys = implementation.setup_secret_keys(self)
+        self.secret_keys = implementation.setup_secret_keys(self.gid)
         self._owner_key_pair = None
         self._global_parameters = None
 
@@ -101,7 +101,7 @@ class User(object):
         self.save_owner_keys(owner_key_pair)
 
         # Retrieve authority public keys
-        authority_public_keys = self.insurance_service.merge_public_keys()
+        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities)
 
         # Encrypt data and create a record
         return CreateRecord(

@@ -23,12 +23,6 @@ class InsuranceService(object):
         """
         self.authorities[attribute_authority.name] = attribute_authority
 
-    def merge_public_keys(self):
-        result = {}
-        for name in self.authorities:
-            result[name] = self.authorities[name].public_keys
-        return result
-
     def create(self, create_record):
         """
         Create a new data record

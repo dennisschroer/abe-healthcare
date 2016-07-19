@@ -48,6 +48,25 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
+    def merge_public_keys(self, authorities):
+        """
+        Merge the public keys of the attribute authorities to a single entity containing all
+        public keys.
+        :param authorities: A dict from authority name to authority
+        :return: A dict containing the public keys of the authorities.
+
+        >>> from scheme.attribute_authority import AttributeAuthority
+        >>> a1 = AttributeAuthority('A1')
+        >>> a2 = AttributeAuthority('A2')
+        >>> a1.public_keys = {'foo': 'bar'}
+        >>> a2.public_keys = {'a': 'b'}
+        >>> base_implementation = BaseImplementation()
+        >>> public_keys = base_implementation.merge_public_keys({a1.name: a1, a2.name: a2})
+        >>> public_keys == {'A1': {'foo': 'bar'}, 'A2': {'a': 'b'}}
+        True
+        """
+        return {name: authority.public_keys for name, authority in authorities.items()}
+
     def generate_abe_key(self, global_parameters):
         """
         Generate a random key and the extracted symmetric key to be used in attribute based encryption.
