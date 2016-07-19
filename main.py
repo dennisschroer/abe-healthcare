@@ -6,6 +6,8 @@ from os.path import isfile, join
 # import psutil
 import cProfile
 
+from utils.random_file_generator import RandomFileGenerator
+
 
 class ABEHealthCare(object):
     def __init__(self):
@@ -140,6 +142,8 @@ class ABEHealthCare(object):
 
 
 if __name__ == '__main__':
+    RandomFileGenerator.clear()
+    RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
     pr.runcall(abe.rw15)
