@@ -35,8 +35,8 @@ class Storage(object):
             DATA_RECORD_ENCRYPTION_KEY_READ: implementation.serialize_abe_ciphertext(data_record.encryption_key_read),
             DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
             DATA_RECORD_WRITE_SECRET_KEY: '',
-            DATA_RECORD_INFO: data_record.info
-            # DATA_RECORD_WRITE_SECRET_KEY: implementation.serialize_abe_ciphertext(data_record.write_private_key)
+            DATA_RECORD_INFO: data_record.info,
+            DATA_RECORD_WRITE_SECRET_KEY: (implementation.serialize_abe_ciphertext(data_record.write_private_key[0]), data_record.write_private_key[1])
         })
 
     def deserialize_data_record_meta(self, byte_object, implementation):

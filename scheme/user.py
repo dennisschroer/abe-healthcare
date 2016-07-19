@@ -1,9 +1,5 @@
 from records.create_record import CreateRecord
-from charm.core.math.pairing import GT
 from utils.key_utils import extract_key_from_group_element
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.PublicKey import RSA
-from Crypto import Random
 import os
 import pickle
 
@@ -92,9 +88,7 @@ class User(object):
         :return: records.create_record.CreateRecord The resulting record containing the encrypted message.
         """
         # Generate symmetric encryption key
-        key = self.global_parameters.group.random(GT)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                                       self.implementation.ske_key_size())
+        key, symmetric_key = self.implementation.generate_abe_key(self.global_parameters)
 
         # Generate key pairs for writers and data owner
         write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
@@ -114,8 +108,8 @@ class User(object):
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
                                                                 authority_public_keys, key, read_policy),
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
-            write_private_key=None,
-            # write_private_key=self.implementation.abe_encrypt(self.global_parameters.scheme_parameters, authority_public_keys, write_key_pair, write_policy),
+            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
+                                                                      write_key_pair.exportKey('DER'), write_policy),
             info=self.implementation.ske_encrypt(pickle.dumps(info), symmetric_key),
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
@@ -163,4 +157,6 @@ class User(object):
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
-        return pickle.loads(self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(record.data, symmetric_key)
+        return pickle.loads(
+            self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(record.data,
+                                                                                                          symmetric_key)
