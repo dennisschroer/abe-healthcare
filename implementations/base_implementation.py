@@ -102,6 +102,24 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
+    def abe_decrypt_wrapped(self, global_parameters, secret_keys, ciphertext_tuple):
+        """
+        Decrypt some ciphertext resulting from a wrapped attribute based encryption
+        (encrypted with symmetric key encryption and attribute based encryption) to the plaintext.
+        :param global_parameters: The global parameters.
+        :type global_parameters: records.global_parameters.GlobalParameters
+        :param secret_keys: The secret keys of the user.
+        :param ciphertext_tuple: The ciphertext to decrypt. This is a tuple containing the encrypted key and the ciphertext
+        encrypted using symmetric key encryption.
+        :raise Exception: raised when the secret keys do not satisfy the access policy
+        :return: The plaintext
+        """
+        encrypted_key, ciphertext = ciphertext_tuple
+        key = self.abe_decrypt(global_parameters, secret_keys, encrypted_key)
+        symmetric_key = extract_key_from_group_element(global_parameters.group, key,
+                                                       self.ske_key_size())
+        return self.ske_decrypt(ciphertext, symmetric_key)
+
     def serialize_abe_ciphertext(self, ciphertext):
         """
         Serialize the ciphertext resulting form an attribute based encryption to an object which can be pickled.

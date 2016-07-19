@@ -167,6 +167,28 @@ class User(object):
         """
         return self.insurance_service.load(location)
 
+    def update_record(self, record, message):
+        """
+        Update the content of a record
+        :param record: The data record to update
+        :type record: records.data_record.DataRecord
+        :param message: The new message
+        :return: records.update_record.UpdateRecord An record containing the updated data
+        """
+        # Retrieve the encryption key
+        key = self.implementation.abe_decrypt(self.global_parameters, self.secret_keys,
+                                              record.encryption_key_read)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
+                                                       self.implementation.ske_key_size())
+        # Retrieve the write secret key
+        write_secret_key = RSA.importKey(
+            self.implementation.abe_decrypt_wrapped(self.global_parameters, self.secret_keys, record.write_private_key))
+        # Encrypt the updated data
+        data = self.implementation.ske_encrypt(message, symmetric_key)
+        # Sign the data
+        signature = write_secret_key.sign(data)
+        return UpdateRecord(data, signature)
+
     def decrypt_record(self, record):
         """
         Decrypt a data record if possible.
