@@ -68,7 +68,12 @@ class User(object):
         :return: A new key pair.
 
         >>> from implementations.base_implementation import BaseImplementation
-        >>> user = User("bob", None, BaseImplementation())
+        >>> class DummyImplementation(BaseImplementation):
+        ...     def update_secret_keys(self, base, secret_keys):
+        ...         base.update(secret_keys)
+        ...     def setup_secret_keys(self, user):
+        ...         return {}
+        >>> user = User("bob", None, DummyImplementation())
         >>> key_pair = user.create_owner_key_pair()
         >>> key_pair is not None
         True
