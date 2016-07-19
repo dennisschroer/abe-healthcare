@@ -18,7 +18,7 @@ class RW15TestCase(unittest.TestCase):
             self.assertNotEqual(c, m)
             d = self.subject.ske_decrypt(c, key)
             self.assertEqual(m, d)
-            r = self.subject.ske_decrypt(c, b'a' * self.subject.ske_key_size())
+            r = self.subject.ske_decrypt(c, b'b' * self.subject.ske_key_size())
             self.assertNotEqual(m, r)
     
     def test_encrypt_decrypt_abe_wrapped(self):
