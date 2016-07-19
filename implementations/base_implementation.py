@@ -1,8 +1,11 @@
 from charm.toolbox.pairinggroup import PairingGroup
+from charm.core.math.pairing import GT
 from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from Crypto import Random
+
+from utils.key_utils import extract_key_from_group_element
 
 
 class BaseImplementation(object):
@@ -45,9 +48,23 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
+    def generate_abe_key(self, global_parameters):
+        """
+        Generate a random key and the extracted symmetric key to be used in attribute based encryption.
+        The first key can be encrypted using attribute based encryption, while the second can be applied in symmetric encryption.
+        :param global_parameters: The global parameters
+        :type global_parameters: records.global_parameters.GlobalParameters
+        :return: The key (element of group) and the extracted symmetric key
+        """
+        key = global_parameters.group.random(GT)
+        symmetric_key = extract_key_from_group_element(global_parameters.group, key,
+                                                       self.ske_key_size())
+        return key, symmetric_key
+
     def abe_encrypt(self, global_parameters, public_keys, message, policy):
         """
-        Encrypt the message using attribute based encrpytion.
+        Encrypt the message using attribute based encrpytion. This only works if message can be encrypted
+        by the underlying implementation (in practice: element of a group).
         :param global_parameters: The global parameters.
         :type global_parameters: records.global_parameters.GlobalParameters
         :param public_keys: The public keys of the authorities
@@ -56,6 +73,22 @@ class BaseImplementation(object):
         :return: The encrypted message.
         """
         raise NotImplementedError()
+
+    def abe_encrypt_wrapped(self, global_parameters, public_keys, message, policy):
+        """
+        Encrypt the message using attribute based encryption, by encrypting the message with symmetric encryption and
+        the key with attribute based encryption.
+        :param global_parameters: The global parameters.
+        :type global_parameters: records.global_parameters.GlobalParameters
+        :param public_keys: The public keys of the authorities
+        :param message: The message to encrypt.
+        :param policy: The policy to encrypt under.
+        :return: The encrypted key and the encrypted message.
+        """
+        key, symmetric_key = self.generate_abe_key(global_parameters)
+        ciphertext = self.ske_encrypt(message, symmetric_key)
+        encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy)
+        return encrypted_key, ciphertext
 
     def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
         """
@@ -205,4 +238,3 @@ class BaseImplementation(object):
         KeyError: 123
         """
         return dict[replacement]
-
