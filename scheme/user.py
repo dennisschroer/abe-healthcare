@@ -194,12 +194,10 @@ class User(object):
         # Retrieve the write secret key
         write_secret_key = RSA.importKey(
             self.implementation.abe_decrypt_wrapped(self.global_parameters, self.secret_keys, record.write_private_key))
-        print(write_secret_key)
         # Encrypt the updated data
         data = self.implementation.ske_encrypt(message, symmetric_key)
         # Sign the data
         signature = self.implementation.pke_sign(write_secret_key, data)
-        print(signature)
         return UpdateRecord(data, signature)
 
     def decrypt_record(self, record):

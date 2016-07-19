@@ -44,7 +44,6 @@ class InsuranceService(object):
         """
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
-        print(update_record.signature)
         assert self.implementation.pke_verify(current_record.write_public_key, update_record.signature,
                                               update_record.data), 'Signature should be valid'
         current_record.update(update_record)

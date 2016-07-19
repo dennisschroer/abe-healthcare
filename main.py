@@ -65,12 +65,6 @@ class ABEHealthCare(object):
             user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes))
         return user
 
-    def run(self):
-        self.setup()
-        locations = self.run_encryptions()
-        self.run_updates(locations)
-        self.run_decryptions(locations)
-
     def setup(self):
         assert self.implementation is not None
 
@@ -160,6 +154,12 @@ class ABEHealthCare(object):
     def run_decryptions(self, locations):
         return list(map(lambda f: self.decrypt_file(self.doctor, f), locations))
 
+    def run(self):
+        self.setup()
+        locations = self.run_encryptions()
+        # self.run_updates(locations)
+        self.run_decryptions(locations)
+
 
 if __name__ == '__main__':
     # RandomFileGenerator.clear()
@@ -167,4 +167,4 @@ if __name__ == '__main__':
     abe = ABEHealthCare()
     pr = cProfile.Profile()
     pr.runcall(abe.rw15)
-    pr.print_stats(sort='cumtime')
+    # pr.print_stats(sort='cumtime')

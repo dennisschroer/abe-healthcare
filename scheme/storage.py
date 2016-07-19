@@ -28,8 +28,8 @@ class Storage(object):
         :return: A generator which yields the serialized fields
         """
         return pickle.dumps({
-            DATA_RECORD_READ_POLICY: data_record.read_policy.encode('UTF-8'),
-            DATA_RECORD_WRITE_POLICY: data_record.write_policy.encode('UTF-8'),
+            DATA_RECORD_READ_POLICY: data_record.read_policy,
+            DATA_RECORD_WRITE_POLICY: data_record.write_policy,
             DATA_RECORD_OWNER_PUBLIC_KEY: data_record.owner_public_key.exportKey('DER'),
             DATA_RECORD_WRITE_PUBLIC_KEY: data_record.write_public_key.exportKey('DER'),
             DATA_RECORD_ENCRYPTION_KEY_READ: implementation.serialize_abe_ciphertext(data_record.encryption_key_read),
