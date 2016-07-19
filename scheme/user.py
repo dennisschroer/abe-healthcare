@@ -1,5 +1,7 @@
+from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
 from utils.key_utils import extract_key_from_group_element
+from Crypto.PublicKey import RSA
 import os
 import pickle
 
@@ -29,11 +31,6 @@ class User(object):
         :param secret_keys:
         :type secret_keys: dict
 
-        >>> class DummyImplementation(object):
-        ...     def update_secret_keys(self, base, secret_keys):
-        ...         base.update(secret_keys)
-        ...     def setup_secret_keys(self, user):
-        ...         return {}
         >>> dummyImplementation = DummyImplementation()
         >>> user = User("bob", None, dummyImplementation)
         >>> user.secret_keys
@@ -63,12 +60,6 @@ class User(object):
         Create a new key pair for this user, to be used for proving ownership.
         :return: A new key pair.
 
-        >>> from implementations.base_implementation import BaseImplementation
-        >>> class DummyImplementation(BaseImplementation):
-        ...     def update_secret_keys(self, base, secret_keys):
-        ...         base.update(secret_keys)
-        ...     def setup_secret_keys(self, user):
-        ...         return {}
         >>> user = User("bob", None, DummyImplementation())
         >>> key_pair = user.create_owner_key_pair()
         >>> key_pair is not None
@@ -118,16 +109,33 @@ class User(object):
         """
         Save the given key pair.
         :param key_pair: The key pair to save.
+
+        >>> user = User("bob", None, DummyImplementation())
+        >>> key_pair = user.create_owner_key_pair()
+        >>> user.save_owner_keys(key_pair)
+        >>> os.path.exists('data/users/%s/owner.der' % user.gid)
+        True
         """
         if not os.path.exists('data/users/%s' % self.gid):
             os.makedirs('data/users/%s' % self.gid)
-        f = open('data/users/%s/owner_public.der' % self.gid, 'wb')
-        f.write(key_pair.exportKey('DER'))
-        f.close()
+        with open('data/users/%s/owner.der' % self.gid, 'wb') as f:
+            f.write(key_pair.exportKey('DER'))
 
-        f = open('data/users/%s/owner_secret.der' % self.gid, 'wb')
-        f.write(key_pair.publickey().exportKey('DER'))
-        f.close()
+    def load_owner_keys(self):
+        """
+        Load the owner key pair for this user.
+        :return: The owner key pair.
+
+        >>> user = User("bob", None, DummyImplementation())
+        >>> key_pair = user.create_owner_key_pair()
+        >>> user.save_owner_keys(key_pair)
+        >>> loaded = user.load_owner_keys()
+        >>> loaded == key_pair
+        True
+        """
+        with open('data/users/%s/owner.der' % self.gid, 'rb') as f:
+            key_pair = RSA.importKey(f.read())
+        return key_pair
 
     def send_create_record(self, create_record):
         """
@@ -160,3 +168,11 @@ class User(object):
         return pickle.loads(
             self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(record.data,
                                                                                                           symmetric_key)
+
+
+class DummyImplementation(BaseImplementation):
+    def update_secret_keys(self, base, secret_keys):
+        base.update(secret_keys)
+
+    def setup_secret_keys(self, user):
+        return {}
