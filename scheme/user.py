@@ -1,5 +1,6 @@
 from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
+from records.update_record import UpdateRecord
 from utils.key_utils import extract_key_from_group_element
 from Crypto.PublicKey import RSA
 import os
@@ -22,7 +23,7 @@ class User(object):
         self.insurance_service = insurance_service
         self.implementation = implementation
         self.secret_keys = implementation.setup_secret_keys(self)
-        self.owner_key_pair = []
+        self._owner_key_pair = None
         self._global_parameters = None
 
     def issue_secret_keys(self, secret_keys):
@@ -55,6 +56,20 @@ class User(object):
             self._global_parameters = self.insurance_service.global_parameters
         return self._global_parameters
 
+    @property
+    def owner_key_pair(self):
+        """
+        Loads the keys from storage, or creates them if they do not exist
+        :return: The owner key pair
+        """
+        if self._owner_key_pair is None:
+            try:
+                self._owner_key_pair = self.load_owner_keys()
+            except IOError:
+                self._owner_key_pair = self.create_owner_key_pair()
+                self.save_owner_keys(self._owner_key_pair)
+        return self._owner_key_pair
+
     def create_owner_key_pair(self):
         """
         Create a new key pair for this user, to be used for proving ownership.
@@ -65,9 +80,7 @@ class User(object):
         >>> key_pair is not None
         True
         """
-        key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
-        self.owner_key_pairs.append(key_pair)
-        return key_pair
+        return self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
 
     def create_record(self, read_policy, write_policy, message, info):
         """
@@ -83,7 +96,7 @@ class User(object):
 
         # Generate key pairs for writers and data owner
         write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
-        owner_key_pair = self.create_owner_key_pair()
+        owner_key_pair = self.owner_key_pair
 
         self.save_owner_keys(owner_key_pair)
 
@@ -174,6 +187,7 @@ class MockImplementation(BaseImplementation):
     """
     Mock implementation for testing purposes
     """
+
     def update_secret_keys(self, base, secret_keys):
         base.update(secret_keys)
 
