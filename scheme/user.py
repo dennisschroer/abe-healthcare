@@ -22,7 +22,7 @@ class User(object):
         self.insurance_service = insurance_service
         self.implementation = implementation
         self.secret_keys = implementation.setup_secret_keys(self)
-        self.owner_key_pairs = []
+        self.owner_key_pair = []
         self._global_parameters = None
 
     def issue_secret_keys(self, secret_keys):
@@ -31,7 +31,7 @@ class User(object):
         :param secret_keys:
         :type secret_keys: dict
 
-        >>> dummyImplementation = DummyImplementation()
+        >>> dummyImplementation = MockImplementation()
         >>> user = User("bob", None, dummyImplementation)
         >>> user.secret_keys
         {}
@@ -60,7 +60,7 @@ class User(object):
         Create a new key pair for this user, to be used for proving ownership.
         :return: A new key pair.
 
-        >>> user = User("bob", None, DummyImplementation())
+        >>> user = User("bob", None, MockImplementation())
         >>> key_pair = user.create_owner_key_pair()
         >>> key_pair is not None
         True
@@ -110,7 +110,7 @@ class User(object):
         Save the given key pair.
         :param key_pair: The key pair to save.
 
-        >>> user = User("bob", None, DummyImplementation())
+        >>> user = User("bob", None, MockImplementation())
         >>> key_pair = user.create_owner_key_pair()
         >>> user.save_owner_keys(key_pair)
         >>> os.path.exists('data/users/%s/owner.der' % user.gid)
@@ -126,7 +126,7 @@ class User(object):
         Load the owner key pair for this user.
         :return: The owner key pair.
 
-        >>> user = User("bob", None, DummyImplementation())
+        >>> user = User("bob", None, MockImplementation())
         >>> key_pair = user.create_owner_key_pair()
         >>> user.save_owner_keys(key_pair)
         >>> loaded = user.load_owner_keys()
@@ -170,7 +170,10 @@ class User(object):
                                                                                                           symmetric_key)
 
 
-class DummyImplementation(BaseImplementation):
+class MockImplementation(BaseImplementation):
+    """
+    Mock implementation for testing purposes
+    """
     def update_secret_keys(self, base, secret_keys):
         base.update(secret_keys)
 
