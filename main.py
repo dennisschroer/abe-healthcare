@@ -68,6 +68,7 @@ class ABEHealthCare(object):
     def run(self):
         self.setup()
         locations = self.run_encryptions()
+        self.run_updates(locations)
         self.run_decryptions(locations)
 
     def setup(self):
@@ -80,7 +81,7 @@ class ABEHealthCare(object):
         self.setup_attribute_authorities(insurance_attributes, national_attributes)
         self.setup_service()
 
-        self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
+        self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
         self.bob = self.create_user('bob')
 
     def encrypt_file(self, user, filename):
@@ -124,7 +125,7 @@ class ABEHealthCare(object):
         # print('Received record')
         # print(record.encryption_key_read)
 
-        info, data = self.doctor.decrypt_record(record)
+        info, data = user.decrypt_record(record)
 
         print('Writing    %s' % join('data/output', info['name']))
         file = open(join('data/output', info['name']), 'wb')
@@ -132,18 +133,37 @@ class ABEHealthCare(object):
         file.close()
         return info['name']
 
+    def update_file(self, user, location):
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param user: The user to decrypt with
+        :type user: scheme.user.User
+        :param location: The location of the file to decrypt (in /data/storage)
+        :return: The name of the output file (in /data/output)
+        """
+        # Give it to the user
+        record = user.request_record(location)
+        print('Updating   %s' % join('data/storage', location))
+        # Update the content
+        update_record = user.update_record(record, b'updated content')
+        # Send it to the insurance
+        user.send_update_record(location, update_record)
+
     def run_encryptions(self):
         return list(map(lambda f: self.encrypt_file(self.bob, f),
                         [f for f in listdir('data/input') if
                          not f.endswith(".policy") and isfile(join('data/input', f))]))
+
+    def run_updates(self, locations):
+        list(map(lambda f: self.update_file(self.doctor, f), locations))
 
     def run_decryptions(self, locations):
         return list(map(lambda f: self.decrypt_file(self.doctor, f), locations))
 
 
 if __name__ == '__main__':
-    RandomFileGenerator.clear()
-    RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
+    # RandomFileGenerator.clear()
+    # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
     pr.runcall(abe.rw15)

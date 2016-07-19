@@ -13,7 +13,6 @@ class InsuranceService(object):
         self.implementation = implementation
         self.storage = Storage()
         self.authorities = {}
-        self.records = {}
 
     def add_authority(self, attribute_authority):
         """
@@ -32,9 +31,24 @@ class InsuranceService(object):
         """
         # In future possibly adapt and check the record
 
-        name = self.add(create_record)
-        self.storage.store(name, create_record, self.implementation)
-        return name
+        location = self.determine_record_location(create_record)
+        self.storage.store(location, create_record, self.implementation)
+        return location
+
+    def update(self, location, update_record):
+        """
+        Update the data on the given location
+        :param location: The location to update the
+        :param update_record: The UpdateRecord containing the updated data
+        :type update_record: records.update_record.UpdateRecord
+        """
+        current_record = self.load(location)
+        assert current_record is not None, 'Only existing records can be updated'
+        print(update_record.signature)
+        assert self.implementation.pke_verify(current_record.write_public_key, update_record.data,
+                                              update_record.signature), 'Signature should be valid'
+        current_record.update(update_record)
+        self.storage.store(location, current_record, self.implementation)
 
     def determine_record_location(self, record):
         """
@@ -45,33 +59,5 @@ class InsuranceService(object):
         """
         return SHA.new(record.info).hexdigest()
 
-    def add(self, record):
-        """
-        Add a data record.
-        :param record: The data record to add
-        :type record: records.data_record.DataRecord
-        :return: The location of the record
-        """
-        name = self.determine_record_location(record)
-        self.records[name] = record
-        return name
-
-    def get(self, location):
-        """
-        Get a data record from the given location.
-        :param location: The location of the record.
-        :return: The record or None.
-
-        >>> from records.data_record import DataRecord
-        >>> service = InsuranceService(None, None)
-        >>> location = service.add(DataRecord(data=b'TEST'))
-        >>> service.get(location) is not None
-        True
-        >>> service.get(location).data == b'TEST'
-        True
-        """
-        return self.records[location] if location in self.records else None
-
     def load(self, location):
         return self.storage.load(location, self.implementation)
-

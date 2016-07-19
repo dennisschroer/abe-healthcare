@@ -34,9 +34,9 @@ class Storage(object):
             DATA_RECORD_WRITE_PUBLIC_KEY: data_record.write_public_key.exportKey('DER'),
             DATA_RECORD_ENCRYPTION_KEY_READ: implementation.serialize_abe_ciphertext(data_record.encryption_key_read),
             DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
-            DATA_RECORD_WRITE_SECRET_KEY: '',
             DATA_RECORD_INFO: data_record.info,
-            DATA_RECORD_WRITE_SECRET_KEY: (implementation.serialize_abe_ciphertext(data_record.write_private_key[0]), data_record.write_private_key[1])
+            DATA_RECORD_WRITE_SECRET_KEY: (
+            implementation.serialize_abe_ciphertext(data_record.write_private_key[0]), data_record.write_private_key[1])
         })
 
     def deserialize_data_record_meta(self, byte_object, implementation):
@@ -48,7 +48,8 @@ class Storage(object):
             write_public_key=implementation.pke_import_key(d[DATA_RECORD_WRITE_PUBLIC_KEY]),
             encryption_key_read=implementation.deserialize_abe_ciphertext(d[DATA_RECORD_ENCRYPTION_KEY_READ]),
             encryption_key_owner=d[DATA_RECORD_ENCRYPTION_KEY_OWNER],
-            write_private_key=d[DATA_RECORD_WRITE_SECRET_KEY],
+            write_private_key=(implementation.deserialize_abe_ciphertext(d[DATA_RECORD_WRITE_SECRET_KEY][0]),
+                               d[DATA_RECORD_WRITE_SECRET_KEY][1]),
             info=d[DATA_RECORD_INFO],
             data=None
         )

@@ -20,6 +20,13 @@ class RW15TestCase(unittest.TestCase):
             self.assertEqual(m, d)
             r = self.subject.ske_decrypt(c, b'b' * self.subject.ske_key_size())
             self.assertNotEqual(m, r)
+
+    def test_pke_sign_verify(self):
+        key = self.subject.pke_generate_key_pair(1024)
+        for m in [b'Hello world', lorem]:
+            s = self.subject.pke_sign(key, m)
+            self.assertNotEqual(s, m)
+            self.assertTrue(self.subject.pke_verify(key, s, m))
     
     def test_encrypt_decrypt_abe_wrapped(self):
         # Setup authorities

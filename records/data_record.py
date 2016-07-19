@@ -10,3 +10,13 @@ class DataRecord(object):
         self.encryption_key_owner = encryption_key_owner
         self.write_private_key = write_private_key
         self.data = data
+
+    def update(self, update_record):
+        """
+        Update this record with new data from an UpdateRecord
+
+        :param update_record:
+        :type update_record: records.update_record.UpdateRecord
+        :return:
+        """
+        self.data = update_record.data

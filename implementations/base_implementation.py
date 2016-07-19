@@ -3,8 +3,9 @@ from charm.core.math.pairing import GT
 from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA
 from Crypto import Random
-
+from Crypto.Signature import PKCS1_v1_5
 from utils.key_utils import extract_key_from_group_element
 
 
@@ -220,6 +221,43 @@ class BaseImplementation(object):
         """
         encryption = PKCS1_OAEP.new(key)
         return encryption.encrypt(message)
+
+    def pke_sign(self, secret_key, data):
+        """
+        Sign the data using the secret key
+        :param secret_key:
+        :param data:
+        :return:
+
+        >>> i = BaseImplementation()
+        >>> m = b'Hello world'
+        >>> key = i.pke_generate_key_pair(1024)
+        >>> s = i.pke_sign(key, m)
+        >>> s != m
+        True
+        """
+        h = SHA.new(data)
+        signer = PKCS1_v1_5.new(secret_key)
+        return signer.sign(h)
+
+    def pke_verify(self, public_key, signature, data):
+        """
+        Verify a signature over data with the given key.
+        :param public_key:
+        :param signature:
+        :param data:
+        :return:
+
+        >>> i = BaseImplementation()
+        >>> m = b'Hello world'
+        >>> key = i.pke_generate_key_pair(1024)
+        >>> s = i.pke_sign(key, m)
+        >>> i.pke_verify(key.publickey(), s, m)
+        True
+        """
+        h = SHA.new(data)
+        signer = PKCS1_v1_5.new(public_key)
+        return signer.verify(h, signature)
 
     def attribute_replacement(self, dict, keyword):
         """

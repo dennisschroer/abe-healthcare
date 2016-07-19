@@ -3,6 +3,7 @@ from records.create_record import CreateRecord
 from records.update_record import UpdateRecord
 from utils.key_utils import extract_key_from_group_element
 from Crypto.PublicKey import RSA
+
 import os
 import pickle
 
@@ -159,6 +160,16 @@ class User(object):
         """
         return self.insurance_service.create(create_record)
 
+    def send_update_record(self, location, update_record):
+        """
+        Send an UpdateRecord to the insurance company.
+        :param location: The location of the original record.
+        :param update_record: The UpdateRecord to send.
+        :type update_record: records.update_record.UpdateRecord
+        :return: The location of the created record.
+        """
+        return self.insurance_service.update(location, update_record)
+
     def request_record(self, location):
         """
         Request the DataRecord on the given location from the insurance company.
@@ -183,10 +194,12 @@ class User(object):
         # Retrieve the write secret key
         write_secret_key = RSA.importKey(
             self.implementation.abe_decrypt_wrapped(self.global_parameters, self.secret_keys, record.write_private_key))
+        print(write_secret_key)
         # Encrypt the updated data
         data = self.implementation.ske_encrypt(message, symmetric_key)
         # Sign the data
-        signature = write_secret_key.sign(data)
+        signature = self.implementation.pke_sign(write_secret_key, data)
+        print(signature)
         return UpdateRecord(data, signature)
 
     def decrypt_record(self, record):
