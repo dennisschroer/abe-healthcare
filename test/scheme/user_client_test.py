@@ -16,6 +16,7 @@ class UserClientTestCase(unittest.TestCase):
         attribute_authority = implementation.create_attribute_authority('TEST')
         attribute_authority.setup(central_authority, ['TEST@TEST', 'TEST2@TEST'])
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
+        insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, ['TEST@TEST']))
         self.subject = UserClient(user, insurance_service, implementation)
