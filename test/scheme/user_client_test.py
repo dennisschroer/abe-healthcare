@@ -39,6 +39,21 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(message, b'Hello world')
         self.assertEqual(info, {'test': 'info'})
 
+    def test_update_record(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        update_record = self.subject.update_record(create_record, b'Goodbye world')
+        self.assertIsNotNone(update_record.data)
+        self.assertIsNotNone(update_record.signature)
+        self.assertTrue(self.subject.implementation.pke_verify(create_record.write_public_key, update_record.signature, update_record.data))
+
+        # Update the original record
+        create_record.update(update_record)
+
+        # Attempt to decrypt
+        info, message = self.subject.decrypt_record(create_record)
+        self.assertEqual(message, b'Goodbye world')
+
     def test_decrypt_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
