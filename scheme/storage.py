@@ -20,7 +20,7 @@ class Storage(object):
             os.makedirs('data/storage')
 
     @staticmethod
-    def serialize_data_record_meta(data_record: DataRecord, implementation: BaseImplementation) -> str:
+    def serialize_data_record_meta(data_record: DataRecord, implementation: BaseImplementation) -> bytes:
         """
         Serialize a data record
         :param data_record:
@@ -42,7 +42,7 @@ class Storage(object):
         })
 
     @staticmethod
-    def deserialize_data_record_meta(byte_object: str, implementation: BaseImplementation) -> DataRecord:
+    def deserialize_data_record_meta(byte_object: bytes, implementation: BaseImplementation) -> DataRecord:
         d = pickle.loads(byte_object)
         return DataRecord(
             read_policy=d[DATA_RECORD_READ_POLICY],

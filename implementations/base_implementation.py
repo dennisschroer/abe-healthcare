@@ -313,3 +313,15 @@ class BaseImplementation(object):
         KeyError: 123
         """
         return dict[replacement]
+
+
+class MockImplementation(BaseImplementation):
+    """
+    Mock implementation for testing purposes
+    """
+
+    def update_secret_keys(self, base, secret_keys):
+        base.update(secret_keys)
+
+    def setup_secret_keys(self, user):
+        return {}

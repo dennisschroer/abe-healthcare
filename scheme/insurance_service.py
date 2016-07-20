@@ -1,3 +1,5 @@
+from typing import Dict
+
 from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
@@ -14,11 +16,11 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, global_parameters: GlobalParameters, implementation: BaseImplementation):
+    def __init__(self, global_parameters: GlobalParameters, implementation: BaseImplementation) -> None:
         self.global_parameters = global_parameters
         self.implementation = implementation
         self.storage = Storage()
-        self.authorities = {}
+        self.authorities = dict()  # type: Dict[str, AttributeAuthority]
 
     def add_authority(self, attribute_authority: AttributeAuthority):
         """

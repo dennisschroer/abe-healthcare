@@ -6,6 +6,7 @@ from os.path import isfile, join
 # import psutil
 import cProfile
 
+from scheme.user_client import UserClient
 from utils.random_file_generator import RandomFileGenerator
 
 
@@ -57,13 +58,14 @@ class ABEHealthCare(object):
         self.insurance_service.add_authority(self.insurance_company)
         self.insurance_service.add_authority(self.national_database)
 
-    def create_user(self, name, insurance_attributes=None, national_attributes=None):
-        user = User(name, self.insurance_service, self.implementation)
+    def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
+        user = User(name, self.implementation)
+        user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
             user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes))
         if national_attributes is not None:
             user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes))
-        return user
+        return user_client
 
     def setup(self):
         assert self.implementation is not None
@@ -78,12 +80,11 @@ class ABEHealthCare(object):
         self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
         self.bob = self.create_user('bob')
 
-    def encrypt_file(self, user, filename):
+    def encrypt_file(self, user: UserClient, filename:str) -> str:
         """
         Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
         The first line is the read policy, the second line the write policy.
         :param user: The user to encrypt with
-        :type user: scheme.user.User
         :param filename: The filename (relative to /data/input) to encrypt
         :return: The name of the encrypted data (in /data/storage/)
         """
@@ -103,11 +104,10 @@ class ABEHealthCare(object):
         # Send to insurance (this also stores the record)
         return user.send_create_record(create_record)
 
-    def decrypt_file(self, user, location):
+    def decrypt_file(self, user: UserClient, location: str) -> str:
         """
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
         :param user: The user to decrypt with
-        :type user: scheme.user.User
         :param location: The location of the file to decrypt (in /data/storage)
         :return: The name of the output file (in /data/output)
         """
@@ -127,11 +127,10 @@ class ABEHealthCare(object):
         file.close()
         return info['name']
 
-    def update_file(self, user, location):
+    def update_file(self, user: UserClient, location: str):
         """
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
         :param user: The user to decrypt with
-        :type user: scheme.user.User
         :param location: The location of the file to decrypt (in /data/storage)
         :return: The name of the output file (in /data/output)
         """
