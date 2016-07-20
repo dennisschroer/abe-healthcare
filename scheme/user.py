@@ -36,4 +36,3 @@ class User(object):
         True
         """
         self.implementation.update_secret_keys(self.secret_keys, secret_keys)
-        self.secret_keys.update(secret_keys)
