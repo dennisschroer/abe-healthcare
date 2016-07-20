@@ -11,7 +11,6 @@ from charm.toolbox.pairinggroup import PairingGroup
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
-from scheme.user import User
 from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from utils.key_utils import extract_key_from_group_element
 
@@ -120,7 +119,8 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy)
         return encrypted_key, ciphertext
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, ciphertext: AbeEncryption) -> bytes:
+    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+                    ciphertext: AbeEncryption) -> bytes:
         """
         Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
         :param global_parameters: The global parameters.
@@ -131,7 +131,8 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def abe_decrypt_wrapped(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, ciphertext_tuple: Tuple[AbeEncryption, bytes]):
+    def abe_decrypt_wrapped(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+                            ciphertext_tuple: Tuple[AbeEncryption, bytes]):
         """
         Decrypt some ciphertext resulting from a wrapped attribute based encryption
         (encrypted with symmetric key encryption and attribute based encryption) to the plaintext.

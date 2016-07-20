@@ -2,7 +2,6 @@ from typing import Any
 
 from records.global_parameters import GlobalParameters
 from scheme.central_authority import CentralAuthority
-from scheme.user import User
 
 
 class AttributeAuthority(object):

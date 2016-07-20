@@ -1,6 +1,3 @@
-from typing import List
-
-
 def merge_dicts(*dict_args: dict) -> dict:
     """
     Given any number of dicts, shallow copy and merge into a new dict,
