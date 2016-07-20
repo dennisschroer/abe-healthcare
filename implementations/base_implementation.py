@@ -117,7 +117,7 @@ class BaseImplementation(object):
         :type global_parameters: records.global_parameters.GlobalParameters
         :param secret_keys: The secret keys of the user.
         :param ciphertext: The ciphertext to decrypt.
-        :raise Exception: raised when the secret keys do not satisfy the access policy
+        :raise exception.policy_not_satisfied_exception.PolicyNotSatisfiedException: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
         raise NotImplementedError()

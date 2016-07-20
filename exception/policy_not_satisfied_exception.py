@@ -1,0 +1,2 @@
+class PolicyNotSatisfiedException(BaseException):
+    pass

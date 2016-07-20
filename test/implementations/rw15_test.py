@@ -2,6 +2,7 @@ import unittest
 
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
+from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.rw15 import RW15
 
 
@@ -80,8 +81,8 @@ class RW15TestCase(unittest.TestCase):
         for secret_keys in self.invalid_secret_keys:
             try:
                 self.subject.abe_decrypt(self.global_parameters, secret_keys, (key, ciphertext))
-                self.fail("Should throw an Exception because of insufficient secret keys")
-            except Exception:
+                self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
+            except PolicyNotSatisfiedException:
                 pass
     
     def test_encrypt_decrypt_abe_wrapped(self):
@@ -100,8 +101,8 @@ class RW15TestCase(unittest.TestCase):
             for secret_keys in self.invalid_secret_keys:
                 try:
                     self.subject.abe_decrypt_wrapped(self.global_parameters, secret_keys, (key, ciphertext))
-                    self.fail("Should throw an Exception because of insufficient secret keys")
-                except Exception:
+                    self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
+                except PolicyNotSatisfiedException:
                     pass
 
 

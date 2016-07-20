@@ -1,3 +1,4 @@
+from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15
 from scheme.attribute_authority import AttributeAuthority
@@ -35,7 +36,10 @@ class RW15(BaseImplementation):
 
     def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
         maabe = MaabeRW15(self.group)
-        return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
+        try:
+            return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
+        except Exception:
+            raise PolicyNotSatisfiedException()
 
     def serialize_abe_ciphertext(self, cp):
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
