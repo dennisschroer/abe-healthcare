@@ -70,17 +70,17 @@ class RW15TestCase(unittest.TestCase):
         m = self.global_parameters.group.random(GT)
 
         # Encrypt message
-        key, ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy)
+        ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy)
         self.assertNotEqual(m, ciphertext)
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
-            decrypted = self.subject.abe_decrypt(self.global_parameters, secret_keys, (key, ciphertext))
+            decrypted = self.subject.abe_decrypt(self.global_parameters, secret_keys, ciphertext)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
             try:
-                self.subject.abe_decrypt(self.global_parameters, secret_keys, (key, ciphertext))
+                self.subject.abe_decrypt(self.global_parameters, secret_keys, ciphertext)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
