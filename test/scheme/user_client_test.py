@@ -1,3 +1,4 @@
+import pickle
 import unittest
 
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
@@ -13,11 +14,11 @@ class UserClientTestCase(unittest.TestCase):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
         attribute_authority = implementation.create_attribute_authority('TEST')
-        attribute_authority.setup(central_authority, ['TEST@TEST', 'TEST2@TEST'])
+        attribute_authority.setup(central_authority, ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST'])
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
-        user.issue_secret_keys(attribute_authority.keygen(user.gid, ['TEST@TEST']))
+        user.issue_secret_keys(attribute_authority.keygen(user.gid, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']))
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record(self):
@@ -38,6 +39,65 @@ class UserClientTestCase(unittest.TestCase):
         info, message = self.subject.decrypt_record(create_record)
         self.assertEqual(message, b'Hello world')
         self.assertEqual(info, {'test': 'info'})
+
+    def test_update_record(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        update_record = self.subject.update_record(create_record, b'Goodbye world')
+        self.assertIsNotNone(update_record.data)
+        self.assertIsNotNone(update_record.signature)
+        self.assertTrue(self.subject.implementation.pke_verify(create_record.write_public_key, update_record.signature,
+                                                               update_record.data))
+
+        # Update the original record
+        create_record.update(update_record)
+
+        # Attempt to decrypt
+        info, message = self.subject.decrypt_record(create_record)
+        self.assertEqual(message, b'Goodbye world')
+
+    def test_update_policy(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST')
+
+        self.assertIsNotNone(update_record.info)
+        self.assertIsNotNone(update_record.write_policy)
+        self.assertIsNotNone(update_record.read_policy)
+        self.assertIsNotNone(update_record.write_public_key)
+        self.assertIsNotNone(update_record.encryption_key_read)
+        self.assertIsNotNone(update_record.encryption_key_owner)
+        self.assertIsNotNone(update_record.write_private_key)
+        self.assertIsNotNone(update_record.data)
+        self.assertIsNotNone(update_record.signature)
+        self.assertTrue(self.subject.implementation.pke_verify(create_record.owner_public_key, update_record.signature,
+                                                               pickle.dumps((update_record.read_policy,
+                                                                             update_record.write_policy))))
+
+        # Update the original record
+        create_record.update_policy(update_record)
+
+        self.assertEqual('TEST3@TEST', create_record.read_policy)
+        self.assertEqual('TEST4@TEST', create_record.write_policy)
+
+        # Attempt to decrypt
+        info, message = self.subject.decrypt_record(create_record)
+        self.assertEqual(message, b'Hello world')
+
+        # Now update to policies which the user can not satisfy
+        update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST')
+        # Update the original record
+        create_record.update_policy(update_record)
+
+        self.assertEqual('TEST2@TEST', create_record.read_policy)
+        self.assertEqual('TEST2@TEST', create_record.write_policy)
+
+        # Attempt to decrypt
+        try:
+            self.subject.decrypt_record(create_record)
+            self.fail('PolicyNotSatisfiedException expected')
+        except PolicyNotSatisfiedException:
+            pass
 
     def test_decrypt_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()

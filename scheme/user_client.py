@@ -1,6 +1,6 @@
 import os
 import pickle
-from typing import Tuple
+from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
 
@@ -8,6 +8,7 @@ from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
 from records.global_parameters import GlobalParameters
+from records.policy_update_record import PolicyUpdateRecord
 from records.update_record import UpdateRecord
 from scheme.insurance_service import InsuranceService
 from scheme.user import User
@@ -69,6 +70,23 @@ class UserClient(object):
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
+    def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
+        """
+        Decrypt a data record if possible.
+        :param record: The data record to decrypt
+        :type record: records.data_record.DataRecord
+        :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
+        :return: info, data
+        """
+        key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
+                                              record.encryption_key_read)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
+                                                       self.implementation.ske_key_size())
+        return pickle.loads(
+            self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(
+            record.data,
+            symmetric_key)
+
     def update_record(self, record: DataRecord, message: bytes) -> UpdateRecord:
         """
         Update the content of a record
@@ -91,21 +109,42 @@ class UserClient(object):
         signature = self.implementation.pke_sign(write_secret_key, data)
         return UpdateRecord(data, signature)
 
-    def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
+    def update_policy(self, record: DataRecord, read_policy: str, write_policy: str) -> PolicyUpdateRecord:
         """
-        Decrypt a data record if possible.
-        :param record: The data record to decrypt
-        :type record: records.data_record.DataRecord
-        :return: info, data
+        Update the policies of a DataRecord
+        :param record: The DataRecord to update the policies of
+        :param read_policy: The new read policy
+        :param write_policy: The new write_policy
+        :return: A PolicyUpdateRecord containing the updated policies
         """
+        # Retrieve the encryption key
         key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                                       self.implementation.ske_key_size())
-        return pickle.loads(
-            self.implementation.ske_decrypt(record.info, symmetric_key)), self.implementation.ske_decrypt(
-            record.data,
-            symmetric_key)
+                                               self.implementation.ske_key_size())
+        # Find the correct owner key
+        owner_key_pair = self.find_owner_keys(record.owner_public_key)
+        # Generate new encryption keys
+        new_key, new_symmetric_key = self.implementation.generate_abe_key(self.global_parameters)
+        # Generate new write keys
+        write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
+
+        # Retrieve authority public keys
+        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities)
+
+        return PolicyUpdateRecord(
+            read_policy=read_policy,
+            write_policy=write_policy,
+            write_public_key=write_key_pair.publickey(),
+            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
+                                                                authority_public_keys, new_key, read_policy),
+            encryption_key_owner=self.implementation.pke_encrypt(new_symmetric_key, owner_key_pair),
+            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
+                                                                      write_key_pair.exportKey('DER'), write_policy),
+            info=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.info, symmetric_key), new_symmetric_key),
+            data=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.data, symmetric_key), new_symmetric_key),
+            signature=self.implementation.pke_sign(owner_key_pair, pickle.dumps((read_policy, write_policy)))
+        )
 
     def request_record(self, location: str) -> DataRecord:
         """
@@ -124,7 +163,7 @@ class UserClient(object):
         """
         return self.insurance_service.create(create_record)
 
-    def send_update_record(self, location: str, update_record: UpdateRecord):
+    def send_update_record(self, location: str, update_record: UpdateRecord) -> None:
         """
         Send an UpdateRecord to the insurance company.
         :param location: The location of the original record.
@@ -132,7 +171,15 @@ class UserClient(object):
         """
         self.insurance_service.update(location, update_record)
 
-    def get_owner_key(self):
+    def send_policy_update_record(self, location: str, policy_update_record: PolicyUpdateRecord) -> None:
+        """
+        Send an PolicyUpdateRecord to the insurance company.
+        :param location: The location of the original record.
+        :param policy_update_record: The UpdateRecord to send.
+        """
+        self.insurance_service.policy_update(location, policy_update_record)
+
+    def get_owner_key(self) -> Any:
         """
         Loads the keys from storage, or creates them if they do not exist
         :return: The owner key pair
@@ -145,7 +192,7 @@ class UserClient(object):
                 self.save_owner_keys(self.user.owner_key_pair)
         return self.user.owner_key_pair
 
-    def create_owner_key(self):
+    def create_owner_key(self) -> Any:
         """
         Create a new key pair for this user, to be used for proving ownership.
         :return: A new key pair.
@@ -158,7 +205,7 @@ class UserClient(object):
         """
         return self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
 
-    def save_owner_keys(self, key_pair):
+    def save_owner_keys(self, key_pair: Any) -> Any:
         """
         Save the given key pair.
         :param key_pair: The key pair to save.
@@ -177,7 +224,7 @@ class UserClient(object):
         with open('data/users/%s/owner.der' % self.user.gid, 'wb') as f:
             f.write(key_pair.exportKey('DER'))
 
-    def load_owner_keys(self):
+    def load_owner_keys(self) -> Any:
         """
         Load the owner key pair for this user.
         :return: The owner key pair.
@@ -195,3 +242,12 @@ class UserClient(object):
         with open('data/users/%s/owner.der' % self.user.gid, 'rb') as f:
             key_pair = RSA.importKey(f.read())
         return key_pair
+
+    def find_owner_keys(self, public_key: Any) -> Any:
+        """
+        Find the owner keys belonging to the given public key
+        :param public_key: The public key
+        :return: The key pair beloning to the public key
+        """
+        # For now there is only one owner pair -> return that one
+        return self.get_owner_key()

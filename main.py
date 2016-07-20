@@ -82,7 +82,7 @@ class ABEHealthCare(object):
         self.setup_service()
 
         self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
-        self.bob = self.create_user('bob')
+        self.bob = self.create_user('bob', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
 
     def encrypt_file(self, user: UserClient, filename: str) -> str:
         """
@@ -146,6 +146,15 @@ class ABEHealthCare(object):
         # Send it to the insurance
         user.send_update_record(location, update_record)
 
+    def update_policy_file(self, user: UserClient, location: str, read_policy: str, write_policy: str):
+        # Give it to the user
+        record = user.request_record(location)
+        print('Policy update %s' % join('data/storage', location))
+        # Update the content
+        policy_update_record = user.update_policy(record, read_policy, write_policy)
+        # Send it to the insurance
+        user.send_policy_update_record(location, policy_update_record)
+
     def run_encryptions(self):
         return list(map(lambda f: self.encrypt_file(self.bob, f),
                         [f for f in listdir('data/input') if
@@ -154,6 +163,12 @@ class ABEHealthCare(object):
     def run_updates(self, locations):
         list(map(lambda f: self.update_file(self.doctor, f), locations))
 
+    def run_policy_updates(self, locations):
+        list(map(
+            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE',
+                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)'),
+            locations))
+
     def run_decryptions(self, locations):
         return list(map(lambda f: self.decrypt_file(self.doctor, f), locations))
 
@@ -161,6 +176,7 @@ class ABEHealthCare(object):
         self.setup()
         locations = self.run_encryptions()
         # self.run_updates(locations)
+        self.run_policy_updates(locations)
         self.run_decryptions(locations)
 
 

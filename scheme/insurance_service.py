@@ -1,3 +1,4 @@
+import pickle
 from typing import Dict
 
 from Crypto.Hash import SHA
@@ -6,6 +7,7 @@ from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
 from records.global_parameters import GlobalParameters
+from records.policy_update_record import PolicyUpdateRecord
 from records.update_record import UpdateRecord
 from scheme.attribute_authority import AttributeAuthority
 from scheme.storage import Storage
@@ -45,7 +47,7 @@ class InsuranceService(object):
     def update(self, location: str, update_record: UpdateRecord):
         """
         Update the data on the given location
-        :param location: The location to update the
+        :param location: The location of the record to update the data of
         :param update_record: The UpdateRecord containing the updated data
         """
         current_record = self.load(location)
@@ -53,6 +55,20 @@ class InsuranceService(object):
         assert self.implementation.pke_verify(current_record.write_public_key, update_record.signature,
                                               update_record.data), 'Signature should be valid'
         current_record.update(update_record)
+        self.storage.store(location, current_record, self.implementation)
+
+    def policy_update(self, location: str, policy_update_record: PolicyUpdateRecord):
+        """
+        Update the data on the given location
+        :param location: The location of the record to update the policies of
+        :param policy_update_record: The PolicyUpdateRecord containing the updated policies
+        """
+        current_record = self.load(location)
+        assert current_record is not None, 'Only existing records can be updated'
+        assert self.implementation.pke_verify(current_record.owner_public_key, policy_update_record.signature,
+                                              pickle.dumps((policy_update_record.read_policy,
+                                                            policy_update_record.write_policy))), 'Signature should be valid'
+        current_record.update_policy(policy_update_record)
         self.storage.store(location, current_record, self.implementation)
 
     @staticmethod
