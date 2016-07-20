@@ -44,10 +44,10 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def setup_secret_keys(self, username: str) -> SecretKeyStore:
+    def setup_secret_keys(self, gid: str) -> SecretKeyStore:
         """
         Setup the secret key store for the given user.
-        :param username: The name of the user
+        :param gid: The gid of the user
         :return: The key store for the given user.
         """
         raise NotImplementedError()
@@ -332,5 +332,5 @@ class MockImplementation(BaseImplementation):
     def update_secret_keys(self, base: SecretKeyStore, secret_keys: SecretKeys) -> None:
         base.update(secret_keys)
 
-    def setup_secret_keys(self, username: str) -> SecretKeyStore:
+    def setup_secret_keys(self, gid: str) -> SecretKeyStore:
         return {}

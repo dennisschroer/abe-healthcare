@@ -1,7 +1,10 @@
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
+from implementations.base_implementation import BaseImplementation
 from implementations.rw15 import RW15
+from scheme.attribute_authority import AttributeAuthority
+from scheme.central_authority import CentralAuthority
 from scheme.insurance_service import InsuranceService
 from scheme.user import User
 
@@ -13,13 +16,13 @@ from scheme.user_client import UserClient
 
 class ABEHealthCare(object):
     def __init__(self):
-        self.implementation = None
-        self.central_authority = None
-        self.insurance_company = None
-        self.national_database = None
-        self.insurance_service = None
-        self.doctor = None
-        self.bob = None
+        self.implementation = None  # type: BaseImplementation
+        self.central_authority = None  # type: CentralAuthority
+        self.insurance_company = None  # type: AttributeAuthority
+        self.national_database = None  # type: AttributeAuthority
+        self.insurance_service = None  # type: InsuranceService
+        self.doctor = None  # type: UserClient
+        self.bob = None  # type: UserClient
         self.check_paths()
 
     def check_paths(self):

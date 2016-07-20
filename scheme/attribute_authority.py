@@ -1,3 +1,6 @@
+from typing import Any
+
+from records.global_parameters import GlobalParameters
 from scheme.central_authority import CentralAuthority
 from scheme.user import User
 
@@ -8,15 +11,15 @@ class AttributeAuthority(object):
     The authority is able to issue secret keys to users for these attributes.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         """
         Create a new attribute authority.
         :param name: The name of the authority.
         """
         self.name = name
-        self.public_keys = None
-        self.secret_keys = None
-        self.global_parameters = None
+        self.public_keys = None  # type: Any
+        self.secret_keys = None  # type: Any
+        self.global_parameters = None  # type: GlobalParameters
 
     def setup(self, central_authority: CentralAuthority, attributes: list):
         """
@@ -26,10 +29,10 @@ class AttributeAuthority(object):
         """
         raise NotImplementedError
 
-    def keygen(self, user: User, attributes: list):
+    def keygen(self, gid: str, attributes: list):
         """
         Generate secret keys for a user.
-        :param user: The user to generate the keys for.
+        :param gid: The gid of the user
         :param attributes: The attributes to embed in the secret key.
         :return: The secret keys.
 

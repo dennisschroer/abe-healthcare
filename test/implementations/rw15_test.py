@@ -39,8 +39,8 @@ class RW15TestCase(unittest.TestCase):
 
         # Setup keys
         self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2})
-        self.valid_secret_keys = []
-        self.invalid_secret_keys = []
+        self.valid_secret_keys = []  # type: list
+        self.invalid_secret_keys = []  # type:list
 
         # Just enough secret keys
         self.secret_keys = self.subject.setup_secret_keys('alice')

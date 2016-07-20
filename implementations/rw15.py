@@ -47,7 +47,7 @@ class RW15(BaseImplementation):
         # C2[i] = gp['g1'] ** (-tx)
         # C3[i] = pks[auth]['gy'] ** tx * gp['g1'] ** zero_shares[i]
         # C4[i] = gp['F'](attr) ** tx
-        dictionary = dict()
+        dictionary = dict()  # type: dict
         return {
             'p': cp['policy'],
             '0': self.group.serialize(cp['C0']),
