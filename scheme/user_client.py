@@ -163,7 +163,9 @@ class UserClient(object):
         :param key_pair: The key pair to save.
 
         >>> from implementations.base_implementation import MockImplementation
-        >>> user_client = UserClient(None, None, MockImplementation())
+        >>> implementation = MockImplementation()
+        >>> user = User('bob', implementation)
+        >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
         >>> os.path.exists('data/users/%s/owner.der' % user_client.user.gid)
@@ -180,7 +182,9 @@ class UserClient(object):
         :return: The owner key pair.
 
         >>> from implementations.base_implementation import MockImplementation
-        >>> user_client = UserClient(None, None, MockImplementation())
+        >>> implementation = MockImplementation()
+        >>> user = User('bob', implementation)
+        >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
         >>> loaded = user_client.load_owner_keys()

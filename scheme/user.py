@@ -25,7 +25,7 @@ class User(object):
 
         >>> from implementations.base_implementation import MockImplementation
         >>> dummyImplementation = MockImplementation()
-        >>> user = User("bob", None, dummyImplementation)
+        >>> user = User("bob", dummyImplementation)
         >>> user.secret_keys
         {}
         >>> user.issue_secret_keys({'a': {'foo': 'bar'}})
