@@ -1,5 +1,16 @@
+import pickle
+from typing import Dict
+
+from Crypto.Hash import SHA
+
+from implementations.base_implementation import BaseImplementation
+from records.create_record import CreateRecord
+from records.data_record import DataRecord
+from records.global_parameters import GlobalParameters
+from records.policy_update_record import PolicyUpdateRecord
+from records.update_record import UpdateRecord
+from scheme.attribute_authority import AttributeAuthority
 from scheme.storage import Storage
-import os
 
 
 class InsuranceService(object):
@@ -8,78 +19,67 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, global_parameters, implementation):
+    def __init__(self, global_parameters: GlobalParameters, implementation: BaseImplementation) -> None:
         self.global_parameters = global_parameters
         self.implementation = implementation
         self.storage = Storage()
-        self.authorities = {}
-        self.records = {}
+        self.authorities = dict()  # type: Dict[str, AttributeAuthority]
 
-    def add_authority(self, attribute_authority):
+    def add_authority(self, attribute_authority: AttributeAuthority):
         """
         Add an attribute authority.
         :param attribute_authority: The attribute authority to add.
-         :type attribute_authority: scheme.attribute_authority.AttributeAuthority
         """
         self.authorities[attribute_authority.name] = attribute_authority
 
-    def merge_public_keys(self):
-        result = {}
-        for name in self.authorities:
-            result[name] = self.authorities[name].public_keys
-        return result
-
-    def create(self, create_record):
+    def create(self, create_record: CreateRecord) -> str:
         """
         Create a new data record
         :param create_record: The data record to create.
-        :type create_record: records.data_record.DataRecord
         :return: The location of the record.
         """
         # In future possibly adapt and check the record
-        name = self.add(create_record)
-        self.store(name, create_record)
-        return name
 
-    def store(self, name, record):
+        location = InsuranceService.determine_record_location(create_record)
+        self.storage.store(location, create_record, self.implementation)
+        return location
+
+    def update(self, location: str, update_record: UpdateRecord):
         """
-        Store the data record.
-        :param name: The location of the data record
-        :param record: The record to store
+        Update the data on the given location
+        :param location: The location of the record to update the data of
+        :param update_record: The UpdateRecord containing the updated data
+        """
+        current_record = self.load(location)
+        assert current_record is not None, 'Only existing records can be updated'
+        assert self.implementation.pke_verify(current_record.write_public_key, update_record.signature,
+                                              update_record.data), 'Signature should be valid'
+        current_record.update(update_record)
+        self.storage.store(location, current_record, self.implementation)
+
+    def policy_update(self, location: str, policy_update_record: PolicyUpdateRecord):
+        """
+        Update the data on the given location
+        :param location: The location of the record to update the policies of
+        :param policy_update_record: The PolicyUpdateRecord containing the updated policies
+        """
+        current_record = self.load(location)
+        assert current_record is not None, 'Only existing records can be updated'
+        assert self.implementation.pke_verify(current_record.owner_public_key, policy_update_record.signature,
+                                              pickle.dumps((policy_update_record.read_policy,
+                                                            policy_update_record.write_policy))), 'Signature should be valid'
+        current_record.update_policy(policy_update_record)
+        self.storage.store(location, current_record, self.implementation)
+
+    @staticmethod
+    def determine_record_location(record: DataRecord) -> str:
+        """
+        Determine a unique location for a data record
+        :param record: The data record
         :type record: records.data_record.DataRecord
+        :return: A unique location
         """
-        if not os.path.exists('data/storage'):
-            os.makedirs('data/storage')
-        f = open('data/storage/%s.meta' % name, 'wb')
-        f.write(self.storage.serialize_data_record_meta(record, self.implementation))
-        f.close()
+        return SHA.new(record.info).hexdigest()
 
-        f = open('data/storage/%s.dat' % name, 'wb')
-        f.write(record.data)
-        f.close()
-
-    def add(self, record):
-        """
-        Add a data record.
-        :param record: The data record to add
-        :type record: records.data_record.DataRecord
-        :return: The location of the record
-        """
-        name = 'test'
-        self.records[name] = record
-        return name
-
-    def get(self, location):
-        """
-        Get a data record from the given location.
-        :param location: The location of the record.
-        :return: The record or None.
-
-        >>> service = InsuranceService(None, None)
-        >>> location = service.add({'data': 'TEST'})
-        >>> service.get(location) is not None
-        True
-        >>> service.get(location) == {'data': 'TEST'}
-        True
-        """
-        return self.records[location] if location in self.records else None
+    def load(self, location: str) -> DataRecord:
+        return self.storage.load(location, self.implementation)

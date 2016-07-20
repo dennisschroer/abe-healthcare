@@ -1,5 +1,3 @@
-
-
 def pad_data_pksc5(data, block_size):
     """
     Pads data with additonal bytes containing the length of the padding.

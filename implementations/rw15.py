@@ -1,8 +1,8 @@
-from implementations.base_implementation import BaseImplementation
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15
+from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from implementations.base_implementation import BaseImplementation
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
-import base64
 
 
 class RW15(BaseImplementation):
@@ -17,8 +17,8 @@ class RW15(BaseImplementation):
     def __init__(self, group=None):
         super().__init__(group)
 
-    def setup_secret_keys(self, user):
-        return {'GID': user.gid, 'keys': {}}
+    def setup_secret_keys(self, gid):
+        return {'GID': gid, 'keys': {}}
 
     def update_secret_keys(self, secret_keys_base, secret_keys):
         secret_keys_base['keys'].update(secret_keys)
@@ -31,11 +31,14 @@ class RW15(BaseImplementation):
 
     def abe_encrypt(self, global_parameters, public_keys, message, access_policy):
         maabe = MaabeRW15(self.group)
-        return maabe.encrypt(global_parameters, public_keys, message, access_policy)
+        return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, access_policy)
 
     def abe_decrypt(self, global_parameters, secret_keys, ciphertext):
         maabe = MaabeRW15(self.group)
-        return maabe.decrypt(global_parameters, secret_keys, ciphertext)
+        try:
+            return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
+        except Exception:
+            raise PolicyNotSatisfiedException()
 
     def serialize_abe_ciphertext(self, cp):
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
@@ -44,19 +47,39 @@ class RW15(BaseImplementation):
         # C2[i] = gp['g1'] ** (-tx)
         # C3[i] = pks[auth]['gy'] ** tx * gp['g1'] ** zero_shares[i]
         # C4[i] = gp['F'](attr) ** tx
-        dictionary = dict()
+        dictionary = dict()  # type: dict
         return {
             'p': cp['policy'],
             '0': self.group.serialize(cp['C0']),
-            '1': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C1'].items()},
-            '2': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C2'].items()},
-            '3': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '3': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C3'].items()},
-            '4': {self.attribute_replacement(dictionary, k): base64.decodebytes(self.group.serialize(v)) for k, v in
+            '4': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
                   cp['C4'].items()},
             'd': dictionary
+        }
+
+    def deserialize_abe_ciphertext(self, d):
+        """
+        >>> from charm.toolbox.pairinggroup import PairingGroup
+        >>> group = PairingGroup('SS512')
+        >>> i = RW15(group)
+        >>>
+        """
+        return {
+            'policy': d['p'],
+            'C0': self.group.deserialize(d['0']),
+            'C1': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['1'].items()},
+            'C2': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['2'].items()},
+            'C3': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['3'].items()},
+            'C4': {self.undo_attribute_replacement(d['d'], k): self.group.deserialize(v) for k, v in
+                   d['4'].items()},
         }
 
 
@@ -64,6 +87,7 @@ class RW15CentralAuthority(CentralAuthority):
     def setup(self):
         maabe = MaabeRW15(self.global_parameters.group)
         self.global_parameters.scheme_parameters = maabe.setup()
+        return self.global_parameters
 
 
 class RWAttributeAuthority(AttributeAuthority):
@@ -73,7 +97,7 @@ class RWAttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, user, attributes):
+    def keygen(self, gid, attributes):
         maabe = MaabeRW15(self.global_parameters.group)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, user.gid,
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)
