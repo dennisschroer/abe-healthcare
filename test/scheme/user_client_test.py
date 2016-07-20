@@ -1,7 +1,6 @@
 import unittest
 
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import MockImplementation
 from implementations.rw15 import RW15
 from scheme.insurance_service import InsuranceService
 from scheme.user import User

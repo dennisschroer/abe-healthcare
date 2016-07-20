@@ -2,6 +2,8 @@ import os
 import pickle
 from typing import Tuple
 
+from Crypto.PublicKey import RSA
+
 from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
@@ -10,7 +12,6 @@ from records.update_record import UpdateRecord
 from scheme.insurance_service import InsuranceService
 from scheme.user import User
 from utils.key_utils import extract_key_from_group_element
-from Crypto.PublicKey import RSA
 
 RSA_KEY_SIZE = 2048
 

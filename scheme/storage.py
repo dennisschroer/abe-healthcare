@@ -1,5 +1,5 @@
-import pickle
 import os
+import pickle
 
 from implementations.base_implementation import BaseImplementation
 from records.data_record import DataRecord

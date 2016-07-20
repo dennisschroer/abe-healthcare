@@ -1,13 +1,14 @@
-from implementations.rw15 import RW15
-from scheme.user import User
-from scheme.insurance_service import InsuranceService
 from os import listdir, path, makedirs
 from os.path import isfile, join
+
+from implementations.rw15 import RW15
+from scheme.insurance_service import InsuranceService
+from scheme.user import User
+
 # import psutil
 import cProfile
 
 from scheme.user_client import UserClient
-from utils.random_file_generator import RandomFileGenerator
 
 
 class ABEHealthCare(object):
@@ -80,7 +81,7 @@ class ABEHealthCare(object):
         self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
         self.bob = self.create_user('bob')
 
-    def encrypt_file(self, user: UserClient, filename:str) -> str:
+    def encrypt_file(self, user: UserClient, filename: str) -> str:
         """
         Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
         The first line is the read policy, the second line the write policy.

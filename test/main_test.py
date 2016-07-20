@@ -8,7 +8,6 @@ from scheme.insurance_service import InsuranceService
 
 
 class ABEHealthCareTestCase(unittest.TestCase):
-
     def setUp(self):
         self.subject = ABEHealthCare()
 

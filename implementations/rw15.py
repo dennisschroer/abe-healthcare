@@ -1,9 +1,8 @@
+from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation
-from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
-import base64
 
 
 class RW15(BaseImplementation):

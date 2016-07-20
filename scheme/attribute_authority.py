@@ -7,6 +7,7 @@ class AttributeAuthority(object):
     The attribute authority is an authority responsible for a (disjoint) subset of attributes.
     The authority is able to issue secret keys to users for these attributes.
     """
+
     def __init__(self, name):
         """
         Create a new attribute authority.

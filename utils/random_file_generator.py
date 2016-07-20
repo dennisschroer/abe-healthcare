@@ -1,4 +1,3 @@
-from Crypto.Hash import SHA
 from os import urandom, makedirs, path
 
 

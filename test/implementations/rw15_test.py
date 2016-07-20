@@ -84,7 +84,7 @@ class RW15TestCase(unittest.TestCase):
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
-    
+
     def test_encrypt_decrypt_abe_wrapped(self):
         self.setup_abe()
 
