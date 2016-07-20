@@ -1,3 +1,4 @@
+from charm.toolbox.pairinggroup import PairingGroup
 from records.global_parameters import GlobalParameters
 
 
@@ -7,7 +8,7 @@ class CentralAuthority(object):
     for the attribute authorities and users to work.
     """
 
-    def __init__(self, group):
+    def __init__(self, group: PairingGroup):
         """
         Creates a new central authority.
         :param group: The (bilinear) group to use.

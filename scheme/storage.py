@@ -1,6 +1,7 @@
 import pickle
 import os
 
+from implementations.base_implementation import BaseImplementation
 from records.data_record import DataRecord
 
 DATA_RECORD_READ_POLICY = 'rp'
@@ -18,13 +19,13 @@ class Storage(object):
         if not os.path.exists('data/storage'):
             os.makedirs('data/storage')
 
-    def serialize_data_record_meta(self, data_record, implementation):
+    @staticmethod
+    def serialize_data_record_meta(data_record: DataRecord, implementation: BaseImplementation) -> str:
         """
         Serialize a data record
         :param data_record:
         :type data_record: records.data_record.DataRecord
         :param implementation: The implementation of the scheme, used for serializing the ciphertext.
-        :type implementation: implementations.base_implementation.BaseImplementation
         :return: A generator which yields the serialized fields
         """
         return pickle.dumps({
@@ -36,10 +37,12 @@ class Storage(object):
             DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
             DATA_RECORD_INFO: data_record.info,
             DATA_RECORD_WRITE_SECRET_KEY: (
-            implementation.serialize_abe_ciphertext(data_record.write_private_key[0]), data_record.write_private_key[1])
+                implementation.serialize_abe_ciphertext(data_record.write_private_key[0]),
+                data_record.write_private_key[1])
         })
 
-    def deserialize_data_record_meta(self, byte_object, implementation):
+    @staticmethod
+    def deserialize_data_record_meta(byte_object: str, implementation: BaseImplementation) -> DataRecord:
         d = pickle.loads(byte_object)
         return DataRecord(
             read_policy=d[DATA_RECORD_READ_POLICY],
@@ -54,14 +57,12 @@ class Storage(object):
             data=None
         )
 
-    def store(self, name, record, implementation):
+    def store(self, name: str, record: DataRecord, implementation: BaseImplementation):
         """
         Store the data record.
         :param implementation: The implementation
-        :type implementation: implementations.base_implementation.BaseImplementation
         :param name: The location of the data record
         :param record: The record to store
-        :type record: records.data_record.DataRecord
         """
         f = open('data/storage/%s.meta' % name, 'wb')
         f.write(self.serialize_data_record_meta(record, implementation))
@@ -71,7 +72,13 @@ class Storage(object):
         f.write(record.data)
         f.close()
 
-    def load(self, name, implementation):
+    def load(self, name: str, implementation: BaseImplementation) -> DataRecord:
+        """
+        Load a data record from storage.
+        :param name: The location of the data record
+        :param implementation: The implementation
+        :return: The loaded data record
+        """
         f = open('data/storage/%s.meta' % name, 'rb')
         result = self.deserialize_data_record_meta(f.read(), implementation)
         f.close()
@@ -80,25 +87,3 @@ class Storage(object):
         result.data = f.read()
         f.close()
         return result
-
-    def serialize_abe_encryption(self, ciphertext, group):
-        data = self._transform_pairing_elements(ciphertext, group)
-        return pickle.dumps(ciphertext)
-        # return json.dumps(ciphertext, default=lambda x: self.json_serialize_default(x, group))
-
-    def json_serialize_default(self, o, group):
-        return group.serialize(o)
-
-    def _transform_pairing_elements(self, data, group):
-        print(type(data))
-        print(data.__class__)
-        if type(data) is dict:
-            for (key, value) in data.items():
-                data[key] = self._transform_pairing_elements(value, group)
-        elif type(data) is list or type(data) is tuple:
-            for i in range(0, len(data)):
-                data[i] = self._transform_pairing_elements(data[i], group)
-        elif data.__class__.__name__ == 'Element':
-            return group.serialize(data)
-        else:
-            return data

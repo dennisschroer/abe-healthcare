@@ -1,6 +1,11 @@
+from typing import Tuple
+
 from implementations.base_implementation import BaseImplementation
 from records.create_record import CreateRecord
+from records.data_record import DataRecord
+from records.global_parameters import GlobalParameters
 from records.update_record import UpdateRecord
+from scheme.insurance_service import InsuranceService
 from utils.key_utils import extract_key_from_group_element
 from Crypto.PublicKey import RSA
 
@@ -11,14 +16,12 @@ RSA_KEY_SIZE = 2048
 
 
 class User(object):
-    def __init__(self, gid, insurance_service, implementation):
+    def __init__(self, gid: str, insurance_service: InsuranceService, implementation: BaseImplementation):
         """
         Create a new user
         :param gid: The global identifier of this user
         :param insurance_service: The insurance service
-        :type insurance_service: scheme.insurance_service.InsuranceService
         :param implementation:
-        :type implementation: implementations.base_implementation.BaseImplementation
         """
         self.gid = gid
         self.insurance_service = insurance_service
@@ -27,7 +30,7 @@ class User(object):
         self._owner_key_pair = None
         self._global_parameters = None
 
-    def issue_secret_keys(self, secret_keys):
+    def issue_secret_keys(self, secret_keys: dict):
         """
         Issue new secret keys to this user.
         :param secret_keys:
@@ -48,7 +51,7 @@ class User(object):
         self.secret_keys.update(secret_keys)
 
     @property
-    def global_parameters(self):
+    def global_parameters(self) -> GlobalParameters:
         """
         Gets the global parameters.
         :return: The global parameters
@@ -83,7 +86,7 @@ class User(object):
         """
         return self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
 
-    def create_record(self, read_policy, write_policy, message, info):
+    def create_record(self, read_policy: str, write_policy: str, message: str, info: dict) -> CreateRecord:
         """
         Create a new record containing the encrypted message.
         :param read_policy: The read policy to encrypt with.
@@ -151,7 +154,7 @@ class User(object):
             key_pair = RSA.importKey(f.read())
         return key_pair
 
-    def send_create_record(self, create_record):
+    def send_create_record(self, create_record: CreateRecord) -> str:
         """
         Send a CreateRecord to the insurance company.
         :param create_record: The CreateRecord to send.
@@ -160,17 +163,15 @@ class User(object):
         """
         return self.insurance_service.create(create_record)
 
-    def send_update_record(self, location, update_record):
+    def send_update_record(self, location: str, update_record: UpdateRecord):
         """
         Send an UpdateRecord to the insurance company.
         :param location: The location of the original record.
         :param update_record: The UpdateRecord to send.
-        :type update_record: records.update_record.UpdateRecord
-        :return: The location of the created record.
         """
-        return self.insurance_service.update(location, update_record)
+        self.insurance_service.update(location, update_record)
 
-    def request_record(self, location):
+    def request_record(self, location: str)-> DataRecord:
         """
         Request the DataRecord on the given location from the insurance company.
         :param location: The location of the DataRecord to request
@@ -178,11 +179,10 @@ class User(object):
         """
         return self.insurance_service.load(location)
 
-    def update_record(self, record, message):
+    def update_record(self, record: DataRecord, message: str) -> UpdateRecord:
         """
         Update the content of a record
         :param record: The data record to update
-        :type record: records.data_record.DataRecord
         :param message: The new message
         :return: records.update_record.UpdateRecord An record containing the updated data
         """
@@ -200,7 +200,7 @@ class User(object):
         signature = self.implementation.pke_sign(write_secret_key, data)
         return UpdateRecord(data, signature)
 
-    def decrypt_record(self, record):
+    def decrypt_record(self, record: DataRecord) -> Tuple[dict, str]:
         """
         Decrypt a data record if possible.
         :param record: The data record to decrypt
