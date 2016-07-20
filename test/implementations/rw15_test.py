@@ -1,9 +1,8 @@
 import unittest
 
+from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from implementations.rw15 import RW15
-from scheme.insurance_service import InsuranceService
-from scheme.user import User
 
 
 class RW15TestCase(unittest.TestCase):
@@ -27,56 +26,80 @@ class RW15TestCase(unittest.TestCase):
             s = self.subject.pke_sign(key, m)
             self.assertNotEqual(s, m)
             self.assertTrue(self.subject.pke_verify(key, s, m))
-    
-    def test_encrypt_decrypt_abe_wrapped(self):
+
+    def setup_abe(self):
         # Setup authorities
-        ca = self.subject.create_central_authority()
-        ma1 = self.subject.create_attribute_authority('A1')
-        ma2 = self.subject.create_attribute_authority('A2')
-        global_parameters = ca.setup()
-        ma1.setup(ca, ['ONE@A1', 'TWO@A1'])
-        ma2.setup(ca, ['THREE@A2', 'FOUR@A2'])
+        self.ca = self.subject.create_central_authority()
+        self.ma1 = self.subject.create_attribute_authority('A1')
+        self.ma2 = self.subject.create_attribute_authority('A2')
+        self.global_parameters = self.ca.setup()
+        self.ma1.setup(self.ca, ['ONE@A1', 'TWO@A1'])
+        self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'])
 
         # Setup keys
-        public_keys = self.subject.merge_public_keys({ma1.name: ma1, ma2.name: ma2})
-        valid_secret_keys = []
-        invalid_secret_keys = []
+        self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2})
+        self.valid_secret_keys = []
+        self.invalid_secret_keys = []
 
         # Just enough secret keys
-        secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(secret_keys, ma1.keygen('alice', ['ONE@A1']))
-        self.subject.update_secret_keys(secret_keys, ma2.keygen('alice', ['THREE@A2']))
-        valid_secret_keys.append(secret_keys)
+        self.secret_keys = self.subject.setup_secret_keys('alice')
+        self.subject.update_secret_keys(self.secret_keys, self.ma1.keygen('alice', ['ONE@A1']))
+        self.subject.update_secret_keys(self.secret_keys, self.ma2.keygen('alice', ['THREE@A2']))
+        self.valid_secret_keys.append(self.secret_keys)
 
         # All secret keys
-        all_secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(all_secret_keys, ma1.keygen('alice', ['ONE@A1', 'TWO@A1']))
-        self.subject.update_secret_keys(all_secret_keys, ma2.keygen('alice', ['THREE@A2', 'FOUR@A2']))
-        valid_secret_keys.append(all_secret_keys)
+        self.all_secret_keys = self.subject.setup_secret_keys('alice')
+        self.subject.update_secret_keys(self.all_secret_keys, self.ma1.keygen('alice', ['ONE@A1', 'TWO@A1']))
+        self.subject.update_secret_keys(self.all_secret_keys, self.ma2.keygen('alice', ['THREE@A2', 'FOUR@A2']))
+        self.valid_secret_keys.append(self.all_secret_keys)
 
         # No secret keys
-        invalid_secret_keys.append(self.subject.setup_secret_keys('charlie'))
+        self.invalid_secret_keys.append(self.subject.setup_secret_keys('charlie'))
 
         # Not enough secret keys
-        not_enough_secret_keys = self.subject.setup_secret_keys('dennis')
-        self.subject.update_secret_keys(not_enough_secret_keys, ma1.keygen('dennis', ['ONE@A1']))
-        invalid_secret_keys.append(not_enough_secret_keys)
+        self.not_enough_secret_keys = self.subject.setup_secret_keys('dennis')
+        self.subject.update_secret_keys(self.not_enough_secret_keys, self.ma1.keygen('dennis', ['ONE@A1']))
+        self.invalid_secret_keys.append(self.not_enough_secret_keys)
 
-        policy = 'ONE@A1 AND THREE@A2'
+        self.policy = 'ONE@A1 AND THREE@A2'
 
-        # Attempt to decrypt the messages
+    def test_encrypt_decrypt_abe(self):
+        self.setup_abe()
+
+        m = self.global_parameters.group.random(GT)
+
+        # Encrypt message
+        key, ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy)
+        self.assertNotEqual(m, ciphertext)
+
+        # Attempt to decrypt
+        for secret_keys in self.valid_secret_keys:
+            decrypted = self.subject.abe_decrypt(self.global_parameters, secret_keys, (key, ciphertext))
+            self.assertEqual(m, decrypted)
+
+        for secret_keys in self.invalid_secret_keys:
+            try:
+                self.subject.abe_decrypt(self.global_parameters, secret_keys, (key, ciphertext))
+                self.fail("Should throw an Exception because of insufficient secret keys")
+            except Exception:
+                pass
+    
+    def test_encrypt_decrypt_abe_wrapped(self):
+        self.setup_abe()
+
         for m in [b'Hello world', lorem]:
             # Encrypt message
-            key, ciphertext = self.subject.abe_encrypt_wrapped(global_parameters, public_keys, m, policy)
+            key, ciphertext = self.subject.abe_encrypt_wrapped(self.global_parameters, self.public_keys, m, self.policy)
             self.assertNotEqual(m, ciphertext)
 
-            for secret_keys in valid_secret_keys:
-                decrypted = self.subject.abe_decrypt_wrapped(global_parameters, secret_keys, (key, ciphertext))
+            # Attempt to decrypt the messages
+            for secret_keys in self.valid_secret_keys:
+                decrypted = self.subject.abe_decrypt_wrapped(self.global_parameters, secret_keys, (key, ciphertext))
                 self.assertEqual(m, decrypted)
 
-            for secret_keys in invalid_secret_keys:
+            for secret_keys in self.invalid_secret_keys:
                 try:
-                    self.subject.abe_decrypt_wrapped(global_parameters, secret_keys, (key, ciphertext))
+                    self.subject.abe_decrypt_wrapped(self.global_parameters, secret_keys, (key, ciphertext))
                     self.fail("Should throw an Exception because of insufficient secret keys")
                 except Exception:
                     pass
