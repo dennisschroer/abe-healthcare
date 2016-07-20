@@ -171,6 +171,14 @@ class UserClient(object):
         """
         self.insurance_service.update(location, update_record)
 
+    def send_policy_update_record(self, location: str, policy_update_record: PolicyUpdateRecord) -> None:
+        """
+        Send an PolicyUpdateRecord to the insurance company.
+        :param location: The location of the original record.
+        :param policy_update_record: The UpdateRecord to send.
+        """
+        self.insurance_service.policy_update(location, policy_update_record)
+
     def get_owner_key(self) -> Any:
         """
         Loads the keys from storage, or creates them if they do not exist
