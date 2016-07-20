@@ -11,6 +11,7 @@ class UserClientTestCase(unittest.TestCase):
     def setUp(self):
         implementation = RW15()
         central_authority = implementation.create_central_authority()
+        central_authority.setup()
         attribute_authority = implementation.create_attribute_authority('TEST')
         attribute_authority.setup(central_authority, ['TEST'])
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
