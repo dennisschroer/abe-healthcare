@@ -32,7 +32,7 @@ class UserClient(object):
             self._global_parameters = self.insurance_service.global_parameters
         return self._global_parameters
 
-    def create_record(self, read_policy: str, write_policy: str, message: str, info: dict) -> CreateRecord:
+    def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict) -> CreateRecord:
         """
         Create a new record containing the encrypted message.
         :param read_policy: The read policy to encrypt with.
@@ -90,7 +90,7 @@ class UserClient(object):
         signature = self.implementation.pke_sign(write_secret_key, data)
         return UpdateRecord(data, signature)
 
-    def decrypt_record(self, record: DataRecord) -> Tuple[dict, str]:
+    def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
         """
         Decrypt a data record if possible.
         :param record: The data record to decrypt
