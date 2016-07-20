@@ -1,6 +1,17 @@
+from typing import Any, Tuple
+
+from records.update_record import UpdateRecord
+
+
 class DataRecord(object):
-    def __init__(self, read_policy=None, write_policy=None, owner_public_key=None, write_public_key=None,
-                 encryption_key_read=None, encryption_key_owner=None, write_private_key=None, info=None, data=None):
+    def __init__(self, read_policy: str = None,
+                 write_policy: str = None,
+                 owner_public_key: Any = None,
+                 write_public_key: Any = None,
+                 encryption_key_read: dict = None,
+                 encryption_key_owner: bytes = None,
+                 write_private_key: Tuple[dict, bytes] = None,
+                 info: bytes = None, data: bytes = None) -> None:
         self.info = info
         self.read_policy = read_policy
         self.write_policy = write_policy
@@ -11,7 +22,7 @@ class DataRecord(object):
         self.write_private_key = write_private_key
         self.data = data
 
-    def update(self, update_record):
+    def update(self, update_record: UpdateRecord):
         """
         Update this record with new data from an UpdateRecord
 
