@@ -6,8 +6,8 @@ from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 
 class ImplementationBaseTestCase(unittest.TestCase):
     # noinspection PyUnusedLocal,PyPep8Naming
-    def __init__(self, methodName='runTest'):
-        super().__init__(methodName='runTest')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.subject = None
 
     def ske_encrypt_decrypt(self):
