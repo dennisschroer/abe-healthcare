@@ -62,6 +62,12 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.subject.update_secret_keys(self.not_enough_secret_keys, self.ma1.keygen('dennis', ['ONE@A1'], 1))
         self.invalid_secret_keys.append(self.not_enough_secret_keys)
 
+        # All secret keys, but invalid time period
+        self.invalid_time_keys = self.subject.setup_secret_keys('edwin')
+        self.subject.update_secret_keys(self.invalid_time_keys, self.ma1.keygen('edwin', ['ONE@A1', 'TWO@A1'], 2))
+        self.subject.update_secret_keys(self.invalid_time_keys, self.ma2.keygen('edwin', ['THREE@A2', 'FOUR@A2'], 2))
+        self.invalid_secret_keys.append(self.invalid_time_keys)
+
         self.policy = 'ONE@A1 AND THREE@A2'
 
     def encrypt_decrypt_abe(self):
@@ -78,7 +84,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
-            decrypted = self.subject.abe_decrypt(self.global_parameters, self.secret_keys, ciphertext)
+            decrypted = self.subject.abe_decrypt(self.global_parameters, secret_keys, ciphertext)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
