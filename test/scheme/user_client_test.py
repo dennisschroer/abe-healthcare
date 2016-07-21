@@ -18,12 +18,12 @@ class UserClientTestCase(unittest.TestCase):
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
-        user.issue_secret_keys(attribute_authority.keygen(user.gid, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']))
+        user.issue_secret_keys(attribute_authority.keygen(user.gid, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
         self.assertIsNotNone(create_record.info)
         self.assertIsNotNone(create_record.write_policy)
         self.assertIsNotNone(create_record.read_policy)
@@ -42,7 +42,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
@@ -58,8 +58,8 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_policy(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
-        update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST')
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST', 1)
 
         self.assertIsNotNone(update_record.info)
         self.assertIsNotNone(update_record.write_policy)
@@ -85,7 +85,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(message, b'Hello world')
 
         # Now update to policies which the user can not satisfy
-        update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST')
+        update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST', 1)
         # Update the original record
         create_record.update_policy(update_record)
 
@@ -101,8 +101,9 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_decrypt_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
-        create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'})
+        create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
+                                                           1)
 
         # Attempt to decrypt
         info, message = self.subject.decrypt_record(create_record_valid)
