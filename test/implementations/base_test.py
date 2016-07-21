@@ -1,17 +1,16 @@
 import unittest
 
 from charm.core.math.pairing import GT
-from charm.toolbox.pairinggroup import PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.rw15_implementation import RW15Implementation
 
 
-class RW15TestCase(unittest.TestCase):
-    def setUp(self):
-        self.group = PairingGroup('SS512')
-        self.subject = RW15Implementation(self.group)
+class ImplementationBaseTestCase(unittest.TestCase):
+    # noinspection PyUnusedLocal,PyPep8Naming
+    def __init__(self, methodName='runTest'):
+        super().__init__(methodName='runTest')
+        self.subject = None
 
-    def test_ske_encrypt_decrypt(self):
+    def ske_encrypt_decrypt(self):
         key = b'a' * self.subject.ske_key_size()
         for m in [b'Hello world', lorem]:
             c = self.subject.ske_encrypt(m, key)
@@ -21,7 +20,7 @@ class RW15TestCase(unittest.TestCase):
             r = self.subject.ske_decrypt(c, b'b' * self.subject.ske_key_size())
             self.assertNotEqual(m, r)
 
-    def test_pke_sign_verify(self):
+    def pke_sign_verify(self):
         key = self.subject.pke_generate_key_pair(1024)
         for m in [b'Hello world', lorem]:
             s = self.subject.pke_sign(key, m)
@@ -64,7 +63,7 @@ class RW15TestCase(unittest.TestCase):
 
         self.policy = 'ONE@A1 AND THREE@A2'
 
-    def test_encrypt_decrypt_abe(self):
+    def encrypt_decrypt_abe(self):
         self.setup_abe()
 
         m = self.global_parameters.group.random(GT)
@@ -85,7 +84,7 @@ class RW15TestCase(unittest.TestCase):
             except PolicyNotSatisfiedException:
                 pass
 
-    def test_encrypt_decrypt_abe_wrapped(self):
+    def encrypt_decrypt_abe_wrapped(self):
         self.setup_abe()
 
         for m in [b'Hello world', lorem]:
