@@ -3,13 +3,13 @@ import unittest
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.rw15 import RW15
+from implementations.rw15_implementation import RW15Implementation
 
 
 class RW15TestCase(unittest.TestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
-        self.subject = RW15(self.group)
+        self.subject = RW15Implementation(self.group)
 
     def test_ske_encrypt_decrypt(self):
         key = b'a' * self.subject.ske_key_size()

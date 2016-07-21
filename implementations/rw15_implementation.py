@@ -8,7 +8,7 @@ from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
 
 
-class RW15(BaseImplementation):
+class RW15Implementation(BaseImplementation):
     """
     The implementation according to "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
 
@@ -71,7 +71,7 @@ class RW15(BaseImplementation):
         """
         >>> from charm.toolbox.pairinggroup import PairingGroup
         >>> group = PairingGroup('SS512')
-        >>> i = RW15(group)
+        >>> i = RW15Implementation(group)
         >>>
         """
         return {

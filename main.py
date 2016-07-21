@@ -2,7 +2,7 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 
 from implementations.base_implementation import BaseImplementation
-from implementations.rw15 import RW15
+from implementations.rw15_implementation import RW15Implementation
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
 from scheme.insurance_service import InsuranceService
@@ -34,7 +34,7 @@ class ABEHealthCare(object):
             makedirs('data/output')
 
     def rw15(self):
-        self.implementation = RW15()
+        self.implementation = RW15Implementation()
         self.run()
 
     def setup_central_authority(self):

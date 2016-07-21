@@ -1,6 +1,6 @@
 import unittest
 
-from implementations.rw15 import RW15
+from implementations.rw15_implementation import RW15Implementation
 from main import ABEHealthCare
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
@@ -12,7 +12,7 @@ class ABEHealthCareTestCase(unittest.TestCase):
         self.subject = ABEHealthCare()
 
     def test_setup_central_authority_rw15(self):
-        self.subject.implementation = RW15()
+        self.subject.implementation = RW15Implementation()
 
         self.assertIsNone(self.subject.central_authority)
         self.subject.setup_central_authority()
@@ -20,7 +20,7 @@ class ABEHealthCareTestCase(unittest.TestCase):
         self.assertIsInstance(self.subject.central_authority, CentralAuthority)
 
     def test_setup_attribute_authorities_rw15(self):
-        self.subject.implementation = RW15()
+        self.subject.implementation = RW15Implementation()
         self.subject.setup_central_authority()
 
         self.assertIsNone(self.subject.insurance_company)
@@ -36,7 +36,7 @@ class ABEHealthCareTestCase(unittest.TestCase):
         self.assertEqual(self.subject.national_database.name, 'NDB')
 
     def test_setup_service_rw15(self):
-        self.subject.implementation = RW15()
+        self.subject.implementation = RW15Implementation()
         self.subject.setup_central_authority()
         self.subject.setup_attribute_authorities(['ONE', 'TWO'], ['THREE', 'FOUR'])
 

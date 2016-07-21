@@ -2,7 +2,7 @@ import pickle
 import unittest
 
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.rw15 import RW15
+from implementations.rw15_implementation import RW15Implementation
 from scheme.insurance_service import InsuranceService
 from scheme.user import User
 from scheme.user_client import UserClient
@@ -10,7 +10,7 @@ from scheme.user_client import UserClient
 
 class UserClientTestCase(unittest.TestCase):
     def setUp(self):
-        implementation = RW15()
+        implementation = RW15Implementation()
         central_authority = implementation.create_central_authority()
         central_authority.setup()
         attribute_authority = implementation.create_attribute_authority('TEST')
