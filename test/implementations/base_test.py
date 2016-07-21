@@ -44,14 +44,14 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Just enough secret keys
         self.secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(self.secret_keys, self.ma1.keygen('alice', ['ONE@A1']))
-        self.subject.update_secret_keys(self.secret_keys, self.ma2.keygen('alice', ['THREE@A2']))
+        self.subject.update_secret_keys(self.secret_keys, self.ma1.keygen('alice', ['ONE@A1'], 1))
+        self.subject.update_secret_keys(self.secret_keys, self.ma2.keygen('alice', ['THREE@A2'], 1))
         self.valid_secret_keys.append(self.secret_keys)
 
         # All secret keys
         self.all_secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(self.all_secret_keys, self.ma1.keygen('alice', ['ONE@A1', 'TWO@A1']))
-        self.subject.update_secret_keys(self.all_secret_keys, self.ma2.keygen('alice', ['THREE@A2', 'FOUR@A2']))
+        self.subject.update_secret_keys(self.all_secret_keys, self.ma1.keygen('alice', ['ONE@A1', 'TWO@A1'], 1))
+        self.subject.update_secret_keys(self.all_secret_keys, self.ma2.keygen('alice', ['THREE@A2', 'FOUR@A2'], 1))
         self.valid_secret_keys.append(self.all_secret_keys)
 
         # No secret keys
@@ -59,7 +59,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Not enough secret keys
         self.not_enough_secret_keys = self.subject.setup_secret_keys('dennis')
-        self.subject.update_secret_keys(self.not_enough_secret_keys, self.ma1.keygen('dennis', ['ONE@A1']))
+        self.subject.update_secret_keys(self.not_enough_secret_keys, self.ma1.keygen('dennis', ['ONE@A1'], 1))
         self.invalid_secret_keys.append(self.not_enough_secret_keys)
 
         self.policy = 'ONE@A1 AND THREE@A2'
@@ -70,12 +70,15 @@ class ImplementationBaseTestCase(unittest.TestCase):
         m = self.global_parameters.group.random(GT)
 
         # Encrypt message
-        ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy)
+        ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy, 1)
         self.assertNotEqual(m, ciphertext)
+
+        # if self.subject.decryption_keys_required:
+        #    decryption_keys = self.subject.decryption_keys()
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
-            decrypted = self.subject.abe_decrypt(self.global_parameters, secret_keys, ciphertext)
+            decrypted = self.subject.abe_decrypt(self.global_parameters, self.secret_keys, ciphertext)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
@@ -90,7 +93,8 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         for m in [b'Hello world', lorem]:
             # Encrypt message
-            key, ciphertext = self.subject.abe_encrypt_wrapped(self.global_parameters, self.public_keys, m, self.policy)
+            key, ciphertext = self.subject.abe_encrypt_wrapped(self.global_parameters, self.public_keys, m, self.policy,
+                                                               1)
             self.assertNotEqual(m, ciphertext)
 
             # Attempt to decrypt the messages

@@ -34,9 +34,11 @@ class UserClient(object):
             self._global_parameters = self.insurance_service.global_parameters
         return self._global_parameters
 
-    def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict) -> CreateRecord:
+    def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict,
+                      time_period: int) -> CreateRecord:
         """
         Create a new record containing the encrypted message.
+        :param time_period: The time period for which the record is encrypted
         :param read_policy: The read policy to encrypt with.
         :param write_policy: The write policy to encrypt with.
         :param message: The message to encrypt.
@@ -62,10 +64,11 @@ class UserClient(object):
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
-                                                                authority_public_keys, key, read_policy),
+                                                                authority_public_keys, key, read_policy, time_period),
             encryption_key_owner=self.implementation.pke_encrypt(symmetric_key, owner_key_pair),
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
-                                                                      write_key_pair.exportKey('DER'), write_policy),
+                                                                      write_key_pair.exportKey('DER'), write_policy,
+                                                                      time_period),
             info=self.implementation.ske_encrypt(pickle.dumps(info), symmetric_key),
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
@@ -78,7 +81,12 @@ class UserClient(object):
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: info, data
         """
-        key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
+        # Check if we need to fetch update keys first
+        if self.implementation.decryption_keys_required:
+            raise NotImplementedError()
+        else:
+            decryption_keys = self.user.secret_keys
+        key = self.implementation.abe_decrypt(self.global_parameters, decryption_keys,
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
@@ -109,19 +117,21 @@ class UserClient(object):
         signature = self.implementation.pke_sign(write_secret_key, data)
         return UpdateRecord(data, signature)
 
-    def update_policy(self, record: DataRecord, read_policy: str, write_policy: str) -> PolicyUpdateRecord:
+    def update_policy(self, record: DataRecord, read_policy: str, write_policy: str,
+                      time_period: int) -> PolicyUpdateRecord:
         """
         Update the policies of a DataRecord
         :param record: The DataRecord to update the policies of
         :param read_policy: The new read policy
         :param write_policy: The new write_policy
+        :param time_period: The new time period
         :return: A PolicyUpdateRecord containing the updated policies
         """
         # Retrieve the encryption key
         key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
                                               record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                               self.implementation.ske_key_size())
+                                                       self.implementation.ske_key_size())
         # Find the correct owner key
         owner_key_pair = self.find_owner_keys(record.owner_public_key)
         # Generate new encryption keys
@@ -137,12 +147,16 @@ class UserClient(object):
             write_policy=write_policy,
             write_public_key=write_key_pair.publickey(),
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
-                                                                authority_public_keys, new_key, read_policy),
+                                                                authority_public_keys, new_key, read_policy,
+                                                                time_period),
             encryption_key_owner=self.implementation.pke_encrypt(new_symmetric_key, owner_key_pair),
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
-                                                                      write_key_pair.exportKey('DER'), write_policy),
-            info=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.info, symmetric_key), new_symmetric_key),
-            data=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.data, symmetric_key), new_symmetric_key),
+                                                                      write_key_pair.exportKey('DER'), write_policy,
+                                                                      time_period),
+            info=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.info, symmetric_key),
+                                                 new_symmetric_key),
+            data=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.data, symmetric_key),
+                                                 new_symmetric_key),
             signature=self.implementation.pke_sign(owner_key_pair, pickle.dumps((read_policy, write_policy)))
         )
 

@@ -25,6 +25,8 @@ class BaseImplementation(object):
     implementation specific subclasses of various scheme classes.
     """
 
+    decryption_keys_required = False
+
     def __init__(self, group: PairingGroup = None) -> None:
         self.group = PairingGroup('SS512') if group is None else group
 
@@ -49,7 +51,7 @@ class BaseImplementation(object):
         :param gid: The gid of the user
         :return: The key store for the given user.
         """
-        raise NotImplementedError()
+        return {'GID': gid, 'keys': {}}
 
     def update_secret_keys(self, base_keys: SecretKeyStore, secret_keys: SecretKeys) -> None:
         """
@@ -57,7 +59,7 @@ class BaseImplementation(object):
         :param base_keys:
         :param secret_keys:
         """
-        raise NotImplementedError()
+        base_keys['keys'].update(secret_keys)
 
     def merge_public_keys(self, authorities: Dict[str, AttributeAuthority]) -> Dict[str, Any]:
         """
@@ -91,10 +93,11 @@ class BaseImplementation(object):
         return key, symmetric_key
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
-                    policy: str) -> AbeEncryption:
+                    policy: str, time_period: int) -> AbeEncryption:
         """
-        Encrypt the message using attribute based encrpytion. This only works if message can be encrypted
+        Encrypt the message using attribute based encryption. This only works if message can be encrypted
         by the underlying implementation (in practice: element of a group).
+        :param time_period: The time period for which to encrypt.
         :param global_parameters: The global parameters.
         :param public_keys: The public keys of the authorities
         :param message: The message to encrypt.
@@ -104,10 +107,11 @@ class BaseImplementation(object):
         raise NotImplementedError()
 
     def abe_encrypt_wrapped(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
-                            policy: str) -> Tuple[AbeEncryption, bytes]:
+                            policy: str, time_period: int) -> Tuple[AbeEncryption, bytes]:
         """
         Encrypt the message using attribute based encryption, by encrypting the message with symmetric encryption and
         the key with attribute based encryption.
+        :param time_period: The time period for which to encrypt.
         :param global_parameters: The global parameters.
         :param public_keys: The public keys of the authorities
         :param message: The message to encrypt.
@@ -116,8 +120,18 @@ class BaseImplementation(object):
         """
         key, symmetric_key = self.generate_abe_key(global_parameters)
         ciphertext = self.ske_encrypt(message, symmetric_key)
-        encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy)
+        encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
+
+    def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
+        """
+        Calculate decryption keys for a user for the given attribute authority.
+        :param authority: The attribute authority to fetch update keys of.
+        :param secret_keys: The secret keys of the user.
+        :param time_period: The time period to calculate the decryption keys for.
+        :return: The decryption keys for the attributes of the authority the user possesses at the given time period.
+        """
+        raise NotImplementedError()
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
                     ciphertext: AbeEncryption) -> bytes:

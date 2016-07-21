@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption, SecretKeys
+from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
@@ -20,12 +20,6 @@ class RW15Implementation(BaseImplementation):
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
 
-    def setup_secret_keys(self, gid: str) -> SecretKeyStore:
-        return {'GID': gid, 'keys': {}}
-
-    def update_secret_keys(self, base_keys: SecretKeyStore, secret_keys: SecretKeys) -> None:
-        base_keys['keys'].update(secret_keys)
-
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RWAttributeAuthority(name)
 
@@ -33,9 +27,12 @@ class RW15Implementation(BaseImplementation):
         return RW15CentralAuthority(self.group)
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
-                    policy: str) -> AbeEncryption:
+                    policy: str, time_period: int) -> AbeEncryption:
         maabe = MaabeRW15(self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
+
+    def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
+        pass
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
                     ciphertext: AbeEncryption) -> bytes:
@@ -68,12 +65,6 @@ class RW15Implementation(BaseImplementation):
         }
 
     def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
-        """
-        >>> from charm.toolbox.pairinggroup import PairingGroup
-        >>> group = PairingGroup('SS512')
-        >>> i = RW15Implementation(group)
-        >>>
-        """
         return {
             'policy': dictionary['p'],
             'C0': self.group.deserialize(dictionary['0']),
@@ -102,7 +93,7 @@ class RWAttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, gid, attributes):
+    def keygen(self, gid, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
         return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)
