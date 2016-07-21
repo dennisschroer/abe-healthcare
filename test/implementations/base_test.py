@@ -2,13 +2,14 @@ import unittest
 
 from charm.core.math.pairing import GT
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from implementations.base_implementation import BaseImplementation
 
 
 class ImplementationBaseTestCase(unittest.TestCase):
     # noinspection PyUnusedLocal,PyPep8Naming
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.subject = None
+        self.subject = None  # type: BaseImplementation
 
     def ske_encrypt_decrypt(self):
         key = b'a' * self.subject.ske_key_size()
