@@ -6,11 +6,13 @@ from implementations.base_implementation import BaseImplementation, SecretKeySto
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
+from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 
 class RW15Implementation(BaseImplementation):
     """
-    The implementation according to "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
+    The implementation according to
+    "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
 
     :paper:     Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption
     :authors:   Rouselakis, Yannis and Waters, Brent
@@ -29,6 +31,7 @@ class RW15Implementation(BaseImplementation):
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
         maabe = MaabeRW15(self.group)
+        policy = add_time_periods_to_policy(policy, time_period, self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
     def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
@@ -95,5 +98,6 @@ class RWAttributeAuthority(AttributeAuthority):
 
     def keygen(self, gid, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
+        attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)
