@@ -84,8 +84,13 @@ class UserClientTestCase(unittest.TestCase):
         info, message = self.subject.decrypt_record(create_record)
         self.assertEqual(message, b'Hello world')
 
+    def test_update_policy_insufficient_policy(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+
         # Now update to policies which the user can not satisfy
         update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST', 1)
+
         # Update the original record
         create_record.update_policy(update_record)
 
@@ -99,17 +104,54 @@ class UserClientTestCase(unittest.TestCase):
         except PolicyNotSatisfiedException:
             pass
 
+    def test_update_policy_invalid_timeperiod(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+
+        # Now update to policies which the user can not satisfy
+        update_record = self.subject.update_policy(create_record, create_record.read_policy, create_record.write_policy,
+                                                   2)
+
+        # Update the original record
+        create_record.update_policy(update_record)
+
+        self.assertEqual('TEST@TEST', create_record.read_policy)
+        self.assertEqual('TEST@TEST', create_record.write_policy)
+
+        # Attempt to decrypt
+        try:
+            self.subject.decrypt_record(create_record)
+            self.fail('PolicyNotSatisfiedException expected')
+        except PolicyNotSatisfiedException:
+            pass
+
     def test_decrypt_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
-        create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
-                                                           1)
 
         # Attempt to decrypt
         info, message = self.subject.decrypt_record(create_record_valid)
         self.assertEqual(message, b'Hello world')
         self.assertEqual(info, {'test': 'info'})
 
+    def test_decrypt_record_insufficient_attributes(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
+                                                           1)
+
+        # Attempt to decrypt
+        try:
+            self.subject.decrypt_record(create_record_invalid)
+            self.fail("PolicyNotSatisfiedException expected")
+        except PolicyNotSatisfiedException:
+            pass
+
+    def test_decrypt_record_invalid_time_period(self):
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record_invalid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
+                                                           2)
+
+        # Attempt to decrypt
         try:
             self.subject.decrypt_record(create_record_invalid)
             self.fail("PolicyNotSatisfiedException expected")
