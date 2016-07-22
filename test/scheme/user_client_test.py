@@ -74,7 +74,8 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.signature)
         self.assertTrue(self.subject.implementation.pke_verify(create_record.owner_public_key, update_record.signature,
                                                                pickle.dumps((update_record.read_policy,
-                                                                             update_record.write_policy))))
+                                                                             update_record.write_policy,
+                                                                             update_record.time_period))))
 
         # Update the original record
         create_record.update_policy(update_record)
