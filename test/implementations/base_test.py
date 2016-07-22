@@ -66,7 +66,6 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.invalid_time_keys = self.subject.setup_secret_keys('alice')
         self.subject.update_secret_keys(self.invalid_time_keys, self.ma1.keygen('alice', ['ONE@A1', 'TWO@A1'], 2))
         self.subject.update_secret_keys(self.invalid_time_keys, self.ma2.keygen('alice', ['THREE@A2', 'FOUR@A2'], 2))
-        self.invalid_secret_keys.append(self.invalid_time_keys)
 
         self.policy = 'ONE@A1 AND THREE@A2'
 
@@ -80,7 +79,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         """
         if self.subject.decryption_keys_required:
             decryption_keys = self.subject.decryption_keys({'A1': self.ma1, 'A2': self.ma2},
-                                                                  secret_keys, time_period)
+                                                           secret_keys, time_period)
         else:
             decryption_keys = secret_keys
         return decryption_keys
@@ -99,15 +98,24 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
-            decrypted = self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice', ciphertext)
+            decrypted = self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
+                                                 ciphertext)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
             try:
-                self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice', ciphertext)
+                self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
+                                         ciphertext)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
+
+        try:
+            self.subject.abe_decrypt(self.global_parameters, self.decryption_key(self.invalid_time_keys, 2), 'alice',
+                                     ciphertext)
+            self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
+        except PolicyNotSatisfiedException:
+            pass
 
     def encrypt_decrypt_abe_wrapped(self):
         self.setup_abe()
@@ -120,15 +128,25 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
             # Attempt to decrypt the messages
             for secret_keys in self.valid_secret_keys:
-                decrypted = self.subject.abe_decrypt_wrapped(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice', (key, ciphertext))
+                decrypted = self.subject.abe_decrypt_wrapped(self.global_parameters,
+                                                             self.decryption_key(secret_keys, 1), 'alice',
+                                                             (key, ciphertext))
                 self.assertEqual(m, decrypted)
 
             for secret_keys in self.invalid_secret_keys:
                 try:
-                    self.subject.abe_decrypt_wrapped(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice', (key, ciphertext))
+                    self.subject.abe_decrypt_wrapped(self.global_parameters, self.decryption_key(secret_keys, 1),
+                                                     'alice', (key, ciphertext))
                     self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
                 except PolicyNotSatisfiedException:
                     pass
+
+            try:
+                self.subject.abe_decrypt_wrapped(self.global_parameters, self.decryption_key(self.invalid_time_keys, 2),
+                                                 'alice', (key, ciphertext))
+                self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
+            except PolicyNotSatisfiedException:
+                pass
 
 
 if __name__ == '__main__':
