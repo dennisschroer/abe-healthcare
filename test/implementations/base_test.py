@@ -148,6 +148,21 @@ class ImplementationBaseTestCase(unittest.TestCase):
             except PolicyNotSatisfiedException:
                 pass
 
+    def abe_serialize_deserialize(self):
+        self.setup_abe()
+
+        m = self.global_parameters.group.random(GT)
+
+        # Encrypt message
+        ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy, 1)
+
+        serialized = self.subject.serialize_abe_ciphertext(ciphertext)
+        self.assertIsNotNone(serialized)
+
+        deserialized = self.subject.deserialize_abe_ciphertext(serialized)
+        self.assertIsNotNone(deserialized)
+        self.assertEqual(deserialized, ciphertext)
+
 
 if __name__ == '__main__':
     unittest.main()
