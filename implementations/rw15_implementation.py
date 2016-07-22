@@ -6,6 +6,7 @@ from implementations.base_implementation import BaseImplementation, SecretKeySto
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
+from scheme.user import User
 from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 
@@ -83,6 +84,9 @@ class RW15Implementation(BaseImplementation):
 
 
 class RW15CentralAuthority(CentralAuthority):
+    def register_user(self, user: User) -> dict:
+        return None
+
     def setup(self):
         maabe = MaabeRW15(self.global_parameters.group)
         self.global_parameters.scheme_parameters = maabe.setup()
@@ -97,8 +101,8 @@ class RW15AttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, gid, attributes, time_period):
+    def keygen(self, user, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, user.gid,
                                                 attributes)
