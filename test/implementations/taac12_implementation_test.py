@@ -5,7 +5,7 @@ from implementations.taac12_implementation import TAAC12Implementation
 from test.implementations.base_test import ImplementationBaseTestCase
 
 
-class RW15TestCase(ImplementationBaseTestCase, unittest.TestCase):
+class TAAC12ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = TAAC12Implementation(self.group)
