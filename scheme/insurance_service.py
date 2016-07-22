@@ -67,7 +67,8 @@ class InsuranceService(object):
         assert current_record is not None, 'Only existing records can be updated'
         assert self.implementation.pke_verify(current_record.owner_public_key, policy_update_record.signature,
                                               pickle.dumps((policy_update_record.read_policy,
-                                                            policy_update_record.write_policy))), 'Signature should be valid'
+                                                            policy_update_record.write_policy,
+                                                            policy_update_record.time_period))), 'Signature should be valid'
         current_record.update_policy(policy_update_record)
         self.storage.store(location, current_record, self.implementation)
 
