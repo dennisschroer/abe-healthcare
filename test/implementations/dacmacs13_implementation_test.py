@@ -23,6 +23,9 @@ class DACMACS13ImplementationTestCase(ImplementationBaseTestCase, unittest.TestC
     def test_encrypt_decrypt_abe_wrapped(self):
         self.encrypt_decrypt_abe_wrapped()
 
+    def test_abe_serialize_deserialize(self):
+        self.abe_serialize_deserialize()
+
 
 if __name__ == '__main__':
     unittest.main()
