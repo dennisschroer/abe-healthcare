@@ -115,7 +115,7 @@ class UserClient(object):
         :return: records.update_record.UpdateRecord An record containing the updated data
         """
         # Retrieve the encryption key
-        key = self._decrypt_abe(record.encryption_key_read)
+        key = self._decrypt_abe(record.encryption_key_read, record.time_period)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
         # Retrieve the write secret key
