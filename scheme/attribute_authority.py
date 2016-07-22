@@ -16,6 +16,7 @@ class AttributeAuthority(object):
         :param name: The name of the authority.
         """
         self.name = name
+        self.attributes = []  # type: list
         self.public_keys = None  # type: Any
         self.secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters
@@ -28,11 +29,13 @@ class AttributeAuthority(object):
         """
         raise NotImplementedError
 
-    def keygen(self, gid: str, attributes: list):
+    def keygen(self, gid: str, attributes: list, time_period: int):
         """
         Generate secret keys for a user.
         :param gid: The gid of the user
         :param attributes: The attributes to embed in the secret key.
+        :param time_period: The time period for which to generate the keys. In some
+        schemes, this value is not used.
         :return: The secret keys.
 
         Note: this method does not check whether the user owns the attribute.

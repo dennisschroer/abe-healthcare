@@ -1,16 +1,18 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption, SecretKeys
+from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
+from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 
 class RW15Implementation(BaseImplementation):
     """
-    The implementation according to "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
+    The implementation according to
+    "Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption"
 
     :paper:     Efficient Statically-Secure Large-Universe Multi-Authority Attribute-Based Encryption
     :authors:   Rouselakis, Yannis and Waters, Brent
@@ -20,12 +22,6 @@ class RW15Implementation(BaseImplementation):
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
 
-    def setup_secret_keys(self, gid: str) -> SecretKeyStore:
-        return {'GID': gid, 'keys': {}}
-
-    def update_secret_keys(self, base_keys: SecretKeyStore, secret_keys: SecretKeys) -> None:
-        base_keys['keys'].update(secret_keys)
-
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RWAttributeAuthority(name)
 
@@ -33,15 +29,19 @@ class RW15Implementation(BaseImplementation):
         return RW15CentralAuthority(self.group)
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
-                    policy: str) -> AbeEncryption:
+                    policy: str, time_period: int) -> AbeEncryption:
         maabe = MaabeRW15(self.group)
+        policy = add_time_periods_to_policy(policy, time_period, self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore, time_period: int):
+        pass
+
+    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption) -> bytes:
         maabe = MaabeRW15(self.group)
         try:
-            return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
+            return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)
         except Exception:
             raise PolicyNotSatisfiedException()
 
@@ -68,12 +68,6 @@ class RW15Implementation(BaseImplementation):
         }
 
     def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
-        """
-        >>> from charm.toolbox.pairinggroup import PairingGroup
-        >>> group = PairingGroup('SS512')
-        >>> i = RW15Implementation(group)
-        >>>
-        """
         return {
             'policy': dictionary['p'],
             'C0': self.group.deserialize(dictionary['0']),
@@ -98,11 +92,13 @@ class RW15CentralAuthority(CentralAuthority):
 class RWAttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
+        self.attributes = attributes
         maabe = MaabeRW15(self.global_parameters.group)
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, gid, attributes):
+    def keygen(self, gid, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
+        attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)

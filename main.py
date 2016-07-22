@@ -3,6 +3,7 @@ from os.path import isfile, join
 
 from implementations.base_implementation import BaseImplementation
 from implementations.rw15_implementation import RW15Implementation
+from implementations.taac12_implementation import TAAC12Implementation
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
 from scheme.insurance_service import InsuranceService
@@ -37,6 +38,10 @@ class ABEHealthCare(object):
         self.implementation = RW15Implementation()
         self.run()
 
+    def taac12(self):
+        self.implementation = TAAC12Implementation()
+        self.run()
+
     def setup_central_authority(self):
         """
         Setup central authority
@@ -66,9 +71,9 @@ class ABEHealthCare(object):
         user = User(name, self.implementation)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes))
+            user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes, 1))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes))
+            user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes, 1))
         return user_client
 
     def setup(self):
@@ -103,7 +108,7 @@ class ABEHealthCare(object):
         read_policy = policy_file.readline()
         write_policy = policy_file.readline()
         # Encrypt a message
-        create_record = user.create_record(read_policy, write_policy, file.read(), {'name': filename})
+        create_record = user.create_record(read_policy, write_policy, file.read(), {'name': filename}, 1)
         file.close()
         # Send to insurance (this also stores the record)
         return user.send_create_record(create_record)
@@ -146,12 +151,13 @@ class ABEHealthCare(object):
         # Send it to the insurance
         user.send_update_record(location, update_record)
 
-    def update_policy_file(self, user: UserClient, location: str, read_policy: str, write_policy: str):
+    def update_policy_file(self, user: UserClient, location: str, read_policy: str, write_policy: str,
+                           time_period: int):
         # Give it to the user
         record = user.request_record(location)
         print('Policy update %s' % join('data/storage', location))
         # Update the content
-        policy_update_record = user.update_policy(record, read_policy, write_policy)
+        policy_update_record = user.update_policy(record, read_policy, write_policy, time_period)
         # Send it to the insurance
         user.send_policy_update_record(location, policy_update_record)
 
@@ -166,7 +172,8 @@ class ABEHealthCare(object):
     def run_policy_updates(self, locations):
         list(map(
             lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE',
-                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)'),
+                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)',
+                                              1),
             locations))
 
     def run_decryptions(self, locations):
@@ -185,5 +192,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.rw15)
+    pr.runcall(abe.taac12)
     # pr.print_stats(sort='cumtime')
