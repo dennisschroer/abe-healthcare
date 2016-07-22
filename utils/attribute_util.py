@@ -14,13 +14,12 @@ def add_time_periods_to_policy(policy: str, time_period: int, group: PairingGrou
     :param group:
     :return: The policy with the time period embedded.
     >>> group = PairingGroup('SS512')
-    >>> add_time_periods_to_policy("STUDENT@UT", 2, group)
-    "2%STUDENT@UT"
-    >>> add_time_periods_to_policy("STUDENT@UT and TUTOR@VU", 2, group) \
-    ... == "2%STUDENT@UT and 2%TUTOR@VU"
+    >>> add_time_periods_to_policy("STUDENT@UT", 2, group) == "2%STUDENT@UT"
+    True
+    >>> add_time_periods_to_policy("STUDENT@UT and TUTOR@VU", 2, group) == "2%STUDENT@UT and 2%TUTOR@VU"
     True
     >>> add_time_periods_to_policy("(STUDENT@UT and TUTOR@VU) or (FOO@BAR and (TEST@TROLL or A@B))", 5611315, group) \
-    ... == "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
+    == "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
     True
     """
     util = SecretUtil(group, verbose=False)
