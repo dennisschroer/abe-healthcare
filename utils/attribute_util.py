@@ -16,10 +16,12 @@ def add_time_periods_to_policy(policy: str, time_period: int, group: PairingGrou
     >>> group = PairingGroup('SS512')
     >>> add_time_periods_to_policy("STUDENT@UT", 2, group)
     "2%STUDENT@UT"
-    >>> add_time_periods_to_policy("STUDENT@UT and TUTOR@VU", 2, group)
-    "2%STUDENT@UT and 2%TUTOR@VU"
-    >>> add_time_periods_to_policy("(STUDENT@UT and TUTOR@VU) or (FOO@BAR and (TEST@TROLL or A@B))", 5611315, group)
-    "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
+    >>> add_time_periods_to_policy("STUDENT@UT and TUTOR@VU", 2, group) \
+    ... == "2%STUDENT@UT and 2%TUTOR@VU"
+    True
+    >>> add_time_periods_to_policy("(STUDENT@UT and TUTOR@VU) or (FOO@BAR and (TEST@TROLL or A@B))", 5611315, group) \
+    ... == "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
+    True
     """
     util = SecretUtil(group, verbose=False)
     parsed_policy = util.createPolicy(policy)
@@ -37,9 +39,9 @@ def add_time_period_to_attribute(attribute: str, time_period: int) -> str:
     :param attribute: The attribute.
     :param time_period: The time period to embed.
     :return: The attribute with the time period embedded
-    >>> add_time_period_to_attribute("STUDENT", 2)
-    "2%STUDENT"
-    >>> add_time_period_to_attribute("STUDENT@UT", 2)
-    "2%STUDENT@UT"
+    >>> add_time_period_to_attribute("STUDENT", 2) == "2%STUDENT"
+    True
+    >>> add_time_period_to_attribute("STUDENT@UT", 2) == "2%STUDENT@UT"
+    True
     """
     return ATTRIBUTE_TIME_FORMAT % (time_period, attribute)
