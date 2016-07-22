@@ -4,7 +4,7 @@ from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
 
-from implementations.base_implementation import BaseImplementation
+from implementations.base_implementation import BaseImplementation, AbeEncryption
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
 from records.global_parameters import GlobalParameters
@@ -69,17 +69,26 @@ class UserClient(object):
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
                                                                       write_key_pair.exportKey('DER'), write_policy,
                                                                       time_period),
+            time_period=time_period,
             info=self.implementation.ske_encrypt(pickle.dumps(info), symmetric_key),
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
-    def _decrypt_abe(self, ciphertext):
+    def _decrypt_abe(self, ciphertext: AbeEncryption, time_period: int):
+        """
+        Decrypt the ABE ciphertext. The method calculates decryption keys if necessary.
+        :param ciphertext: The ABE ciphertext to decrypt.
+        :param time_period: The time period.
+        :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
+        :return: The plaintext
+        """
         if self.implementation.decryption_keys_required:
-            raise NotImplementedError()
+            decryption_keys = self.implementation.decryption_keys(self.insurance_service.authorities,
+                                                                  self.user.secret_keys, time_period)
         else:
             decryption_keys = self.user.secret_keys
         return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid,
-                                              ciphertext)
+                                               ciphertext)
 
     def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
         """
@@ -90,7 +99,7 @@ class UserClient(object):
         :return: info, data
         """
         # Check if we need to fetch update keys first
-        key = self._decrypt_abe(record.encryption_key_read)
+        key = self._decrypt_abe(record.encryption_key_read, record.time_period)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
         return pickle.loads(
@@ -154,11 +163,12 @@ class UserClient(object):
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
                                                                       write_key_pair.exportKey('DER'), write_policy,
                                                                       time_period),
+            time_period=record.time_period,
             info=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.info, symmetric_key),
                                                  new_symmetric_key),
             data=self.implementation.ske_encrypt(self.implementation.ske_decrypt(record.data, symmetric_key),
                                                  new_symmetric_key),
-            signature=self.implementation.pke_sign(owner_key_pair, pickle.dumps((read_policy, write_policy)))
+            signature=self.implementation.pke_sign(owner_key_pair, pickle.dumps((read_policy, write_policy, time_period)))
         )
 
     def request_record(self, location: str) -> DataRecord:

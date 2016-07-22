@@ -32,6 +32,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(create_record.encryption_key_read)
         self.assertIsNotNone(create_record.encryption_key_owner)
         self.assertIsNotNone(create_record.write_private_key)
+        self.assertIsNotNone(create_record.time_period)
         self.assertIsNotNone(create_record.data)
         self.assertNotEqual(create_record.data, b'Hello world')
 
@@ -68,6 +69,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.encryption_key_read)
         self.assertIsNotNone(update_record.encryption_key_owner)
         self.assertIsNotNone(update_record.write_private_key)
+        self.assertIsNotNone(update_record.time_period)
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
         self.assertTrue(self.subject.implementation.pke_verify(create_record.owner_public_key, update_record.signature,
