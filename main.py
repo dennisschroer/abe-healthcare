@@ -3,6 +3,7 @@ from os.path import isfile, join
 
 from implementations.base_implementation import BaseImplementation
 from implementations.rw15_implementation import RW15Implementation
+from implementations.taac12_implementation import TAAC12Implementation
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
 from scheme.insurance_service import InsuranceService
@@ -35,6 +36,10 @@ class ABEHealthCare(object):
 
     def rw15(self):
         self.implementation = RW15Implementation()
+        self.run()
+
+    def taac12(self):
+        self.implementation = TAAC12Implementation()
         self.run()
 
     def setup_central_authority(self):
@@ -187,5 +192,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.rw15)
+    pr.runcall(abe.taac12)
     # pr.print_stats(sort='cumtime')
