@@ -37,11 +37,11 @@ class RW15Implementation(BaseImplementation):
     def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
         pass
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption) -> bytes:
         maabe = MaabeRW15(self.group)
         try:
-            return maabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext)
+            return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)
         except Exception:
             raise PolicyNotSatisfiedException()
 

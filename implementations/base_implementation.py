@@ -51,7 +51,7 @@ class BaseImplementation(object):
         :param gid: The gid of the user
         :return: The key store for the given user.
         """
-        return {'GID': gid, 'keys': {}}
+        return {}
 
     def update_secret_keys(self, base_keys: SecretKeyStore, secret_keys: SecretKeys) -> None:
         """
@@ -59,7 +59,7 @@ class BaseImplementation(object):
         :param base_keys:
         :param secret_keys:
         """
-        base_keys['keys'].update(secret_keys)
+        base_keys.update(secret_keys)
 
     def merge_public_keys(self, authorities: Dict[str, AttributeAuthority]) -> Dict[str, Any]:
         """
@@ -133,12 +133,13 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption) -> bytes:
         """
         Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
         :param global_parameters: The global parameters.
         :param secret_keys: The secret keys of the user.
+        :param gid: The global identifier of the user
         :param ciphertext: The ciphertext to decrypt.
         :raise exception.policy_not_satisfied_exception.PolicyNotSatisfiedException: raised when the secret keys do not satisfy the access policy
         :return: The plaintext

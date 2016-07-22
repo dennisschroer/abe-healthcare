@@ -73,6 +73,14 @@ class UserClient(object):
             data=self.implementation.ske_encrypt(message, symmetric_key)
         )
 
+    def _decrypt_abe(self, ciphertext):
+        if self.implementation.decryption_keys_required:
+            raise NotImplementedError()
+        else:
+            decryption_keys = self.user.secret_keys
+        return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid,
+                                              ciphertext)
+
     def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
         """
         Decrypt a data record if possible.
@@ -82,12 +90,7 @@ class UserClient(object):
         :return: info, data
         """
         # Check if we need to fetch update keys first
-        if self.implementation.decryption_keys_required:
-            raise NotImplementedError()
-        else:
-            decryption_keys = self.user.secret_keys
-        key = self.implementation.abe_decrypt(self.global_parameters, decryption_keys,
-                                              record.encryption_key_read)
+        key = self._decrypt_abe(record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
         return pickle.loads(
@@ -103,8 +106,7 @@ class UserClient(object):
         :return: records.update_record.UpdateRecord An record containing the updated data
         """
         # Retrieve the encryption key
-        key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
-                                              record.encryption_key_read)
+        key = self._decrypt_abe(record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
         # Retrieve the write secret key
@@ -128,8 +130,7 @@ class UserClient(object):
         :return: A PolicyUpdateRecord containing the updated policies
         """
         # Retrieve the encryption key
-        key = self.implementation.abe_decrypt(self.global_parameters, self.user.secret_keys,
-                                              record.encryption_key_read)
+        key = self._decrypt_abe(record.encryption_key_read)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        self.implementation.ske_key_size())
         # Find the correct owner key
