@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
@@ -40,7 +40,7 @@ class TAAC12Implementation(BaseImplementation):
         taac = Taac(self.group)
         return taac.encrypt(global_parameters.scheme_parameters, public_keys, message, policy, time_period)
 
-    def decryption_keys(self, authorities: Dict[str, 'TAAC12AttributeAuthority'], secret_keys: SecretKeyStore, time_period: int):
+    def decryption_keys(self, authorities: Dict[str, Any], secret_keys: SecretKeyStore, time_period: int):
         update_keys = []
         taac = Taac(self.group)
         for authority_name in authorities:

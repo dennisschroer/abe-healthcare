@@ -122,7 +122,7 @@ class UserClient(object):
         # Retrieve the write secret key
         write_secret_key = RSA.importKey(
             self.implementation.abe_decrypt_wrapped(self.global_parameters, self.user.secret_keys,
-                                                    record.write_private_key))
+                                                    self.user.gid, record.write_private_key))
         # Encrypt the updated data
         data = self.implementation.ske_encrypt(message, symmetric_key)
         # Sign the data
