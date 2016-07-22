@@ -16,6 +16,7 @@ class AttributeAuthority(object):
         :param name: The name of the authority.
         """
         self.name = name
+        self.attributes = []  # type: list
         self.public_keys = None  # type: Any
         self.secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters

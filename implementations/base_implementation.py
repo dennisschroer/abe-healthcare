@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List
 
 from Crypto import Random
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -123,10 +123,10 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
-    def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
+    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore, time_period: int):
         """
         Calculate decryption keys for a user for the given attribute authority.
-        :param authority: The attribute authority to fetch update keys of.
+        :param authorities: The attribute authorities to fetch update keys of.
         :param secret_keys: The secret keys of the user.
         :param time_period: The time period to calculate the decryption keys for.
         :return: The decryption keys for the attributes of the authority the user possesses at the given time period.

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
@@ -34,7 +34,7 @@ class RW15Implementation(BaseImplementation):
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, authority: AttributeAuthority, secret_keys: SecretKeyStore, time_period: int):
+    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore, time_period: int):
         pass
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
@@ -92,6 +92,7 @@ class RW15CentralAuthority(CentralAuthority):
 class RWAttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
+        self.attributes = attributes
         maabe = MaabeRW15(self.global_parameters.group)
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
