@@ -23,7 +23,7 @@ class RW15Implementation(BaseImplementation):
         super().__init__(group)
 
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
-        return RWAttributeAuthority(name)
+        return RW15AttributeAuthority(name)
 
     def create_central_authority(self) -> CentralAuthority:
         return RW15CentralAuthority(self.group)
@@ -89,7 +89,7 @@ class RW15CentralAuthority(CentralAuthority):
         return self.global_parameters
 
 
-class RWAttributeAuthority(AttributeAuthority):
+class RW15AttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
