@@ -131,11 +131,11 @@ class RD13AttributeAuthority(AttributeAuthority):
         self._public_keys[time_period] = pk
         self._secret_keys[time_period] = sk
 
-    def keygen(self, user, attributes, time_period):
+    def keygen(self, gid, registration_info, attributes, time_period):
         attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), self.attributes))
         dabe = DabeRD13(self.global_parameters.group)
         print(self.secret_keys_for_time_period(time_period))
         print(attributes)
         print(self.global_parameters.scheme_parameters)
         return dabe.keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period),
-                           user.gid, attributes)
+                           gid, attributes)

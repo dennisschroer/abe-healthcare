@@ -24,7 +24,7 @@ def add_time_periods_to_policy(policy: str, time_period: int, group: PairingGrou
     == "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
     True
     >>> add_time_periods_to_policy(\
-    "ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)" == \
+    "ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)") == \
     "1%ADMINISTRATION@INSURANCE or (1%DOCTOR@NDB and 1%REVIEWER@INSURANCE) or (1%RADIOLOGIST@NDB and 1%REVIEWER@INSURANCE)"
     True
     """
@@ -86,9 +86,9 @@ def translate_policy_to_access_structure(policy: BinNode):
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE']]
     True
-    >>> policy = util.createPolicy('(ONE AND THREE) OR (TWO AND FOUR)')
+    >>> policy = util.createPolicy('(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)')
     >>> translated = translate_policy_to_access_structure(policy)
-    >>> translated == [['ONE']]
+    >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
     True
     """
     if policy.type == OpType.OR:

@@ -72,10 +72,10 @@ class BaseImplementation(object):
         >>> from scheme.attribute_authority import AttributeAuthority
         >>> a1 = AttributeAuthority('A1')
         >>> a2 = AttributeAuthority('A2')
-        >>> a1.public_keys = {'foo': 'bar'}
-        >>> a2.public_keys = {'a': 'b'}
+        >>> a1._public_keys = {'foo': 'bar'}
+        >>> a2._public_keys = {'a': 'b'}
         >>> base_implementation = BaseImplementation()
-        >>> public_keys = base_implementation.merge_public_keys({a1.name: a1, a2.name: a2})
+        >>> public_keys = base_implementation.merge_public_keys({a1.name: a1, a2.name: a2}, 1)
         >>> public_keys == {'A1': {'foo': 'bar'}, 'A2': {'a': 'b'}}
         True
         """

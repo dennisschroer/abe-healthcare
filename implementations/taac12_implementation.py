@@ -64,10 +64,10 @@ class TAAC12Implementation(BaseImplementation):
         >>> from scheme.attribute_authority import AttributeAuthority
         >>> a1 = AttributeAuthority('A1')
         >>> a2 = AttributeAuthority('A2')
-        >>> a1.public_keys = {'foo': 'bar'}
-        >>> a2.public_keys = {'a': 'b'}
+        >>> a1._public_keys = {'foo': 'bar'}
+        >>> a2._public_keys = {'a': 'b'}
         >>> taac_implementation = TAAC12Implementation()
-        >>> public_keys = taac_implementation.merge_public_keys({a1.name: a1, a2.name: a2})
+        >>> public_keys = taac_implementation.merge_public_keys({a1.name: a1, a2.name: a2}, 1)
         >>> public_keys == {'foo': 'bar', 'a': 'b'}
         True
         """
