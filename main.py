@@ -73,7 +73,7 @@ class ABEHealthCare(object):
 
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
-        user.registration_data = self.central_authority.register_user(user)
+        user.registration_data = self.central_authority.register_user(user.gid)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
             user.issue_secret_keys(self.insurance_company.keygen(user.gid, user.registration_data, insurance_attributes, 1))

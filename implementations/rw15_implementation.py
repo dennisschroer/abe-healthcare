@@ -84,7 +84,7 @@ class RW15Implementation(BaseImplementation):
 
 
 class RW15CentralAuthority(CentralAuthority):
-    def register_user(self, user: User) -> dict:
+    def register_user(self, gid: str) -> dict:
         return None
 
     def setup(self):

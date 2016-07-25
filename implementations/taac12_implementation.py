@@ -125,7 +125,7 @@ class TAAC12Implementation(BaseImplementation):
 
 
 class TAAC12CentralAuthority(CentralAuthority):
-    def register_user(self, user: User) -> dict:
+    def register_user(self, gid: str) -> dict:
         return None
 
     def setup(self):
