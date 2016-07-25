@@ -57,7 +57,7 @@ class TAAC12Implementation(BaseImplementation):
         except Exception:
             raise PolicyNotSatisfiedException()
 
-    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority]) -> Dict[str, Any]:
+    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
@@ -74,7 +74,7 @@ class TAAC12Implementation(BaseImplementation):
         >>> public_keys == {'foo': 'bar', 'a': 'b'}
         True
         """
-        return merge_dicts(*[authority.public_keys for name, authority in authorities.items()])
+        return merge_dicts(*[authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()])
 
     def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
         util = SecretUtil(self.group, verbose=False)

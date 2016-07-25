@@ -61,10 +61,11 @@ class BaseImplementation(object):
         """
         base_keys.update(secret_keys)
 
-    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority]) -> Dict[str, Any]:
+    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period: int) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
+        :param time_period: The time period to get the public of.
         :param authorities: A dict from authority name to authority
         :return: A dict containing the public keys of the authorities.
 
@@ -78,7 +79,7 @@ class BaseImplementation(object):
         >>> public_keys == {'A1': {'foo': 'bar'}, 'A2': {'a': 'b'}}
         True
         """
-        return {name: authority.public_keys for name, authority in authorities.items()}
+        return {name: authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()}
 
     def generate_abe_key(self, global_parameters: GlobalParameters) -> Tuple[Any, bytes]:
         """

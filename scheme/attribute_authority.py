@@ -18,8 +18,8 @@ class AttributeAuthority(object):
         """
         self.name = name
         self.attributes = []  # type: list
-        self.public_keys = None  # type: Any
-        self.secret_keys = None  # type: Any
+        self._public_keys = None  # type: Any
+        self._secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters
 
     def setup(self, central_authority: CentralAuthority, attributes: list):
@@ -29,6 +29,22 @@ class AttributeAuthority(object):
         :param attributes: The attributes managed by this authority.
         """
         raise NotImplementedError
+
+    def public_keys_for_time_period(self, time_period: int) -> Any:
+        """
+        Gets the public keys to be used in the given time period.
+        :param time_period: The time period
+        :return: The public keys for the given time period.
+        """
+        return self._public_keys
+
+    def secret_keys_for_time_period(self, time_period: int) -> Any:
+        """
+        Gets the secret/master keys to be used in the given time period.
+        :param time_period: The time period
+        :return: The secret keys for the given time period.
+        """
+        return self._secret_keys
 
     def keygen(self, user: User, attributes: list, time_period: int):
         """
