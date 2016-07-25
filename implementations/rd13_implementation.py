@@ -8,7 +8,6 @@ from implementations.base_implementation import BaseImplementation, SecretKeySto
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
-from scheme.user import User
 from utils.attribute_util import add_time_period_to_attribute, translate_policy_to_access_structure
 from utils.dict_utils import merge_dicts
 
@@ -82,7 +81,7 @@ class RD13Implementation(BaseImplementation):
             'A': dictionary['A']
         }
         for i in range(0, len(dictionary['A'])):
-            result[i] = {
+            result[i] = {  # type: ignore
                 'c_1': self.group.deserialize(dictionary[str(i)]['1']),
                 'c_2': self.group.deserialize(dictionary[str(i)]['2']),
                 'c_3': self.group.deserialize(dictionary[str(i)]['3'])
@@ -96,7 +95,7 @@ class RD13CentralAuthority(CentralAuthority):
         self.global_parameters.scheme_parameters = maabe.setup()
         return self.global_parameters
 
-    def register_user(self, user: User) -> dict:
+    def register_user(self, gid: str) -> dict:
         return None
 
 
