@@ -73,10 +73,10 @@ def translate_policy_to_access_structure(policy: BinNode):
     if policy.type == OpType.OR:
         left = translate_policy_to_access_structure(policy.getLeft())
         right = translate_policy_to_access_structure(policy.getRight())
-        return left[0] + right[0]
+        return left + right
     elif policy.type == OpType.AND:
         left = translate_policy_to_access_structure(policy.getLeft())
         right = translate_policy_to_access_structure(policy.getRight())
         return [left[0] + right[0]]
     else:
-        return [[policy.getAttributeAndIndex()]]
+        return [[policy.getAttribute()]]
