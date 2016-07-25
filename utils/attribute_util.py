@@ -52,7 +52,7 @@ def translate_policy_to_access_structure(policy: BinNode):
     Translate an access policy to an access structure.
     Example: (ONE AND THREE) OR (TWO AND FOUR) is translated to
                 [['ONE', 'THREE'], ['TWO', 'FOUR']]
-    The access policy is assumed to be in CNF, see https://en.wikipedia.org/wiki/Conjunctive_normal_form
+    The access policy is assumed to be in DNF, see https://en.wikipedia.org/wiki/Disjunctive_normal_form
     :param policy: The policy to translate
     :return:
     >>> group = PairingGroup('SS512')
@@ -61,15 +61,22 @@ def translate_policy_to_access_structure(policy: BinNode):
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR']]
     True
+    >>> policy = util.createPolicy('ONE')
+    >>> translated = translate_policy_to_access_structure(policy)
+    >>> translated == [['ONE']]
+    True
+    >>> policy = util.createPolicy('(ONE AND THREE) OR (TWO AND FOUR)')
+    >>> translated = translate_policy_to_access_structure(policy)
+    >>> translated == [['ONE']]
+    True
     """
     if policy.type == OpType.OR:
-        return translate_policy_to_access_structure(
-            policy.getLeft()) + translate_policy_to_access_structure(policy.getRight())
+        left = translate_policy_to_access_structure(policy.getLeft())
+        right = translate_policy_to_access_structure(policy.getRight())
+        return left[0] + right[0]
     elif policy.type == OpType.AND:
-        left_translated = translate_policy_to_access_structure(policy.getLeft())
-        left = left_translated if policy.getLeft().type == OpType.AND else [left_translated]
-        right_translated = translate_policy_to_access_structure(policy.getRight())
-        right = right_translated if policy.getRight().type == OpType.AND else [right_translated]
-        return left + right
+        left = translate_policy_to_access_structure(policy.getLeft())
+        right = translate_policy_to_access_structure(policy.getRight())
+        return [left[0] + right[0]]
     else:
-        return [policy.getAttributeAndIndex()]
+        return [[policy.getAttributeAndIndex()]]
