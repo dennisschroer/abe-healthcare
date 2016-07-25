@@ -15,6 +15,7 @@ class User(object):
         self.implementation = implementation
         self.secret_keys = implementation.setup_secret_keys(self.gid)
         self.owner_key_pair = None  # type: Any
+        self.registration_data = None  # type: dict
         self._global_parameters = None  # type: GlobalParameters
 
     def issue_secret_keys(self, secret_keys: dict):

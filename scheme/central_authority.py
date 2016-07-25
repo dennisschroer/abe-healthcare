@@ -1,5 +1,6 @@
 from charm.toolbox.pairinggroup import PairingGroup
 from records.global_parameters import GlobalParameters
+from scheme.user import User
 
 
 class CentralAuthority(object):
@@ -18,5 +19,13 @@ class CentralAuthority(object):
     def setup(self):
         """
         Setup the central authority, creating the global parameters to be used.
+        """
+        raise NotImplementedError
+
+    def register_user(self, user: User) -> dict:
+        """
+        Register a new user. Some schemes do nothing with this.
+        :param user: The user to register
+        :return: Additional data to store on the user
         """
         raise NotImplementedError

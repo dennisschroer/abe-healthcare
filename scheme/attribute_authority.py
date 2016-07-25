@@ -2,6 +2,7 @@ from typing import Any
 
 from records.global_parameters import GlobalParameters
 from scheme.central_authority import CentralAuthority
+from scheme.user import User
 
 
 class AttributeAuthority(object):
@@ -29,10 +30,10 @@ class AttributeAuthority(object):
         """
         raise NotImplementedError
 
-    def keygen(self, gid: str, attributes: list, time_period: int):
+    def keygen(self, user: User, attributes: list, time_period: int):
         """
         Generate secret keys for a user.
-        :param gid: The gid of the user
+        :param user: The user
         :param attributes: The attributes to embed in the secret key.
         :param time_period: The time period for which to generate the keys. In some
         schemes, this value is not used.

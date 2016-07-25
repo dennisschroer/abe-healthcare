@@ -2,6 +2,7 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 
 from implementations.base_implementation import BaseImplementation
+from implementations.dacmacs13_implementation import DACMACS13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
 from scheme.attribute_authority import AttributeAuthority
@@ -42,6 +43,10 @@ class ABEHealthCare(object):
         self.implementation = TAAC12Implementation()
         self.run()
 
+    def dacmacs13(self):
+        self.implementation = DACMACS13Implementation()
+        self.run()
+
     def setup_central_authority(self):
         """
         Setup central authority
@@ -69,6 +74,7 @@ class ABEHealthCare(object):
 
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
+        user.registration_data = self.central_authority.register_user(user)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
             user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes, 1))
@@ -192,5 +198,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.taac12)
+    pr.runcall(abe.dacmacs13)
     # pr.print_stats(sort='cumtime')
