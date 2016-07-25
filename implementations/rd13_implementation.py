@@ -107,14 +107,14 @@ class RD13AttributeAuthority(AttributeAuthority):
         self._secret_keys = {}
 
     def public_keys_for_time_period(self, time_period: int) -> Any:
-        if time_period not in self._secret_keys:
-            self.generate_keys_for_time_period(time_period)
-        return self._secret_keys[time_period]
-
-    def secret_keys_for_time_period(self, time_period: int) -> Any:
         if time_period not in self._public_keys:
             self.generate_keys_for_time_period(time_period)
         return self._public_keys[time_period]
+
+    def secret_keys_for_time_period(self, time_period: int) -> Any:
+        if time_period not in self._secret_keys:
+            self.generate_keys_for_time_period(time_period)
+        return self._secret_keys[time_period]
 
     def generate_keys_for_time_period(self, time_period):
         """
