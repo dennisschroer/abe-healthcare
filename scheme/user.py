@@ -1,11 +1,10 @@
 from typing import Any
 
-from implementations.base_implementation import BaseImplementation
 from records.global_parameters import GlobalParameters
 
 
 class User(object):
-    def __init__(self, gid: str, implementation: BaseImplementation) -> None:
+    def __init__(self, gid: str, implementation: Any) -> None:
         """
         Create a new user
         :param gid: The global identifier of this user
