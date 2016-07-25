@@ -55,7 +55,7 @@ class UserClient(object):
         self.save_owner_keys(owner_key_pair)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities)
+        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
 
         # Encrypt data and create a record
         return CreateRecord(
@@ -151,7 +151,7 @@ class UserClient(object):
         write_key_pair = self.implementation.pke_generate_key_pair(RSA_KEY_SIZE)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities)
+        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
 
         return PolicyUpdateRecord(
             read_policy=read_policy,

@@ -2,6 +2,7 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 
 from implementations.base_implementation import BaseImplementation
+from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
 from scheme.attribute_authority import AttributeAuthority
@@ -36,6 +37,10 @@ class ABEHealthCare(object):
 
     def rw15(self):
         self.implementation = RW15Implementation()
+        self.run()
+
+    def rd13(self):
+        self.implementation = RD13Implementation()
         self.run()
 
     def taac12(self):
@@ -130,7 +135,7 @@ class ABEHealthCare(object):
 
         print('Decrypting %s' % join('data/storage', location))
 
-        # print('Received record')
+        # 'Received record')
         # print(record.encryption_key_read)
 
         info, data = user.decrypt_record(record)
@@ -176,8 +181,8 @@ class ABEHealthCare(object):
 
     def run_policy_updates(self, locations):
         list(map(
-            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE',
-                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)',
+            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                              'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               1),
             locations))
 
@@ -197,5 +202,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.rw15)
+    pr.runcall(abe.rd13)
     # pr.print_stats(sort='cumtime')

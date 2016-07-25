@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
+from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from records.global_parameters import GlobalParameters
@@ -41,6 +42,12 @@ class RW15Implementation(BaseImplementation):
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption) -> bytes:
         maabe = MaabeRW15(self.group)
+
+        util = SecretUtil(self.group)
+        policy = util.createPolicy(ciphertext['policy'])
+        coefficients = util.getCoefficients(policy)
+        pruned_list = util.prune(policy, secret_keys.keys())
+
         try:
             return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)
         except Exception:
@@ -98,11 +105,11 @@ class RW15AttributeAuthority(AttributeAuthority):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         maabe = MaabeRW15(self.global_parameters.group)
-        self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
+        self._public_keys, self._secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
     def keygen(self, gid, registration_data, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period), gid,
                                                 attributes)
