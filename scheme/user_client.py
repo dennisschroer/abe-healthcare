@@ -57,6 +57,8 @@ class UserClient(object):
         # Retrieve authority public keys
         authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
 
+        print(authority_public_keys)
+
         # Encrypt data and create a record
         return CreateRecord(
             read_policy=read_policy,

@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union
+from typing import Dict, Any
 
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
@@ -8,9 +8,6 @@ from implementations.base_implementation import BaseImplementation, SecretKeySto
 from records.global_parameters import GlobalParameters
 from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
-
-# The height of the binary trees in the implementation. The number of allowed users is 2^(height-1)
-from scheme.user import User
 from utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 9
@@ -74,7 +71,8 @@ class TAAC12Implementation(BaseImplementation):
         >>> public_keys == {'foo': 'bar', 'a': 'b'}
         True
         """
-        return merge_dicts(*[authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()])
+        return merge_dicts(
+            *[authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()])
 
     def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
         util = SecretUtil(self.group, verbose=False)
@@ -144,17 +142,20 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         taac = Taac(self.global_parameters.group)
-        self.public_keys, self.secret_keys, self.states = taac.authsetup(
+        self._public_keys, self._secret_keys, self.states = taac.authsetup(
             central_authority.global_parameters.scheme_parameters, attributes, BINARY_TREE_HEIGHT)
 
     def keygen(self, gid, registration_data, attributes, time_period):
         taac = Taac(self.global_parameters.group)
-        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys, self.states, gid,
+        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period),
+                           self.states, gid,
                            attributes)
 
     def generate_update_keys(self, time_period: int) -> dict:
         if time_period not in self.update_keys:
             taac = Taac(self.global_parameters.group)
-            self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters, self.public_keys, self.secret_keys, {},
-                                      time_period, self.attributes)
+            self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
+                                                                      self.public_keys_for_time_period(time_period),
+                                                                      self.secret_keys_for_time_period(time_period), {},
+                                                                      time_period, self.attributes)
         return self.update_keys[time_period]

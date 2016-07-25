@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import Callable, Any
 
 from charm.toolbox.node import BinNode, OpType
 from charm.toolbox.pairinggroup import PairingGroup
@@ -22,15 +23,35 @@ def add_time_periods_to_policy(policy: str, time_period: int, group: PairingGrou
     >>> add_time_periods_to_policy("(STUDENT@UT and TUTOR@VU) or (FOO@BAR and (TEST@TROLL or A@B))", 5611315, group) \
     == "(5611315%STUDENT@UT and 5611315%TUTOR@VU) or (5611315%FOO@BAR and (5611315%TEST@TROLL or 5611315%A@B))"
     True
+    >>> add_time_periods_to_policy(\
+    "ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)" == \
+    "1%ADMINISTRATION@INSURANCE or (1%DOCTOR@NDB and 1%REVIEWER@INSURANCE) or (1%RADIOLOGIST@NDB and 1%REVIEWER@INSURANCE)"
+    True
     """
     util = SecretUtil(group, verbose=False)
     parsed_policy = util.createPolicy(policy)
-    attribute_list = util.getAttributeList(parsed_policy)
+    attributes = list_attributes(parsed_policy)
 
     return reduce(
         lambda p, attribute: p.replace(attribute, add_time_period_to_attribute(attribute, time_period)),
-        attribute_list,
+        attributes,
         policy)
+
+
+def list_attributes(tree):
+    return walk_tree(tree,
+              lambda node, value: value.append(node.getAttribute()) or value if node.type == OpType.ATTR and node.getAttribute() not in value else value, [])
+
+
+def walk_tree(tree: BinNode, function: Callable[[BinNode, Any], Any], value: Any):
+    value = function(tree, value)
+    left = tree.getLeft()
+    right = tree.getRight()
+    if left:
+        value = walk_tree(left, function, value)
+    if right:
+        value = walk_tree(right, function, value)
+    return value
 
 
 def add_time_period_to_attribute(attribute: str, time_period: int) -> str:
