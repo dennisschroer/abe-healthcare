@@ -18,7 +18,8 @@ class UserClientTestCase(unittest.TestCase):
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
-        user.issue_secret_keys(attribute_authority.keygen(user.gid, None, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
+        central_authority.register_user(user)
+        user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record(self):
