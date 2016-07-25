@@ -46,10 +46,12 @@ class AttributeAuthority(object):
         """
         return self._secret_keys
 
-    def keygen(self, user: User, attributes: list, time_period: int):
+    def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         """
         Generate secret keys for a user.
-        :param user: The user
+
+        :param gid: The global identifier of the user.
+        :param registration_data: The registration data of the user.
         :param attributes: The attributes to embed in the secret key.
         :param time_period: The time period for which to generate the keys. In some
         schemes, this value is not used.

@@ -84,7 +84,7 @@ class RW15Implementation(BaseImplementation):
 
 
 class RW15CentralAuthority(CentralAuthority):
-    def register_user(self, user: User) -> dict:
+    def register_user(self, gid: str) -> dict:
         return None
 
     def setup(self):
@@ -101,8 +101,8 @@ class RW15AttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                              self.name)
 
-    def keygen(self, user, attributes, time_period):
+    def keygen(self, gid, registration_data, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, user.gid,
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys, gid,
                                                 attributes)
