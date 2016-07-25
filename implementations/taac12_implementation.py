@@ -10,6 +10,7 @@ from scheme.attribute_authority import AttributeAuthority
 from scheme.central_authority import CentralAuthority
 
 # The height of the binary trees in the implementation. The number of allowed users is 2^(height-1)
+from scheme.user import User
 from utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 9
@@ -124,6 +125,9 @@ class TAAC12Implementation(BaseImplementation):
 
 
 class TAAC12CentralAuthority(CentralAuthority):
+    def register_user(self, user: User) -> dict:
+        return None
+
     def setup(self):
         taac = Taac(self.global_parameters.group)
         self.global_parameters.scheme_parameters = taac.setup()
@@ -143,9 +147,9 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         self.public_keys, self.secret_keys, self.states = taac.authsetup(
             central_authority.global_parameters.scheme_parameters, attributes, BINARY_TREE_HEIGHT)
 
-    def keygen(self, gid, attributes, time_period):
+    def keygen(self, user, attributes, time_period):
         taac = Taac(self.global_parameters.group)
-        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys, self.states, gid,
+        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys, self.states, user.gid,
                            attributes)
 
     def generate_update_keys(self, time_period: int) -> dict:
