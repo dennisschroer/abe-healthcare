@@ -176,8 +176,8 @@ class ABEHealthCare(object):
 
     def run_policy_updates(self, locations):
         list(map(
-            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE',
-                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)',
+            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                              'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               1),
             locations))
 
