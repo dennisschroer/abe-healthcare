@@ -33,10 +33,7 @@ class RW15Implementation(BaseImplementation):
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
         maabe = MaabeRW15(self.group)
-        print("abe_encrypt")
-        print(policy)
         policy = add_time_periods_to_policy(policy, time_period, self.group)
-        print(policy)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
     def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore, time_period: int):
@@ -49,10 +46,7 @@ class RW15Implementation(BaseImplementation):
         util = SecretUtil(self.group)
         policy = util.createPolicy(ciphertext['policy'])
         coefficients = util.getCoefficients(policy)
-        print(policy)
-        print(secret_keys.keys())
         pruned_list = util.prune(policy, secret_keys.keys())
-        print(pruned_list)
 
         try:
             return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)

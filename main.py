@@ -202,5 +202,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.rw15)
+    pr.runcall(abe.taac12)
     # pr.print_stats(sort='cumtime')
