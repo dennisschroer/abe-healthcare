@@ -38,7 +38,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'])
 
         # Setup keys
-        self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2})
+        self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2}, 1)
         self.valid_secret_keys = []  # type: list
         self.invalid_secret_keys = []  # type:list
 
@@ -68,7 +68,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.subject.update_secret_keys(self.invalid_time_keys, self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 2))
         self.subject.update_secret_keys(self.invalid_time_keys, self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 2))
 
-        self.policy = 'ONE@A1 AND THREE@A2'
+        self.policy = '(ONE@A1 AND THREE@A2) OR (ONE@A1 AND TWO@A1 AND FOUR@A2) OR (ONE@A1 AND THREE@A2 AND FOUR@A2)'
 
     def decryption_key(self, secret_keys, time_period: int):
         """
