@@ -23,6 +23,7 @@ class RW15Implementation(BaseImplementation):
 
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
+        self._serializer = None
 
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RW15AttributeAuthority(name)
@@ -31,7 +32,9 @@ class RW15Implementation(BaseImplementation):
         return RW15CentralAuthority(self.group)
 
     def create_serializer(self) -> BaseSerializer:
-        return RW15Serializer(self.group)
+        if self._serializer is None:
+            self._serializer = RW15Serializer(self.group)
+        return self._serializer
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:

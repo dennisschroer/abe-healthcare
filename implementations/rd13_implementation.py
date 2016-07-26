@@ -25,6 +25,7 @@ class RD13Implementation(BaseImplementation):
 
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
+        self._serializer = None
 
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RD13AttributeAuthority(name)
@@ -33,7 +34,9 @@ class RD13Implementation(BaseImplementation):
         return RD13CentralAuthority(self.group)
 
     def create_serializer(self) -> BaseSerializer:
-        return RD13Serializer(self.group)
+        if self._serializer is None:
+            self._serializer = RD13Serializer(self.group)
+        return self._serializer
 
     def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period: int) -> Dict[str, Any]:
         return merge_dicts(*[authority.public_keys_for_time_period(time_period) for authority in authorities.values()])
