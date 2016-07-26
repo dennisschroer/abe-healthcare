@@ -13,9 +13,6 @@ class RW15ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
     def test_ske_encrypt_decrypt(self):
         self.ske_encrypt_decrypt()
 
-    def test_pke_sign_verify(self):
-        self.pke_sign_verify()
-
     def test_encrypt_decrypt_abe(self):
         self.encrypt_decrypt_abe()
 

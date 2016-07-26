@@ -6,6 +6,7 @@ from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
 from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
+from implementations.serializer.base_serializer import BaseSerializer
 from model.records.global_parameters import GlobalParameters
 from service.central_authority import CentralAuthority
 from utils.dict_utils import merge_dicts
@@ -32,6 +33,9 @@ class TAAC12Implementation(BaseImplementation):
 
     def create_central_authority(self) -> CentralAuthority:
         return TAAC12CentralAuthority(self.group)
+
+    def create_serializer(self) -> BaseSerializer:
+        return TAAC12Serializer(self.group)
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
@@ -75,53 +79,6 @@ class TAAC12Implementation(BaseImplementation):
         return merge_dicts(
             *[authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()])
 
-    def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
-        util = SecretUtil(self.group, verbose=False)
-        # Parse the policy
-        policy = util.createPolicy(dictionary['A'])
-        attributes = util.getAttributeList(policy)
-        result = {
-            'A': dictionary['A'],
-            't': dictionary['t'],
-            'c': self.group.deserialize(dictionary['c'])
-        }
-        for attribute in attributes:
-            result[attribute] = {
-                'c_1': self.group.deserialize(dictionary[attribute]['1']),
-                'c_2': self.group.deserialize(dictionary[attribute]['2']),
-                'c_3': self.group.deserialize(dictionary[attribute]['3']),
-                'c_4': self.group.deserialize(dictionary[attribute]['4'])
-            }
-        return result
-
-    def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
-        # ct = {'A': access_policy, 't': t, 'c': c}
-        # for attribute in vshares.keys():
-        #     r = self.group.random(ZR)
-        #     c_1 = (pair(gp['g'], gp['g']) ** vshares[attribute]) * (pk[attribute]['e(g,g)^a'] ** r)
-        #     c_2 = (gp['g'] ** ushares[attribute]) * (pk[attribute]['g^b'] ** r)
-        #     c_3 = gp['g'] ** r
-        #     c_4 = pk['H'](attribute, t) ** r
-        #     ct[attribute] = {'c_1': c_1, 'c_2': c_2, 'c_3': c_3, 'c_4': c_4}
-        util = SecretUtil(self.group, verbose=False)
-        # Parse the policy
-        policy = util.createPolicy(ciphertext['A'])
-        attributes = util.getAttributeList(policy)
-
-        result = {
-            'A': ciphertext['A'],
-            't': ciphertext['t'],
-            'c': self.group.serialize(ciphertext['c'])
-        }
-        for attribute in attributes:
-            result[attribute] = {
-                '1': self.group.serialize(ciphertext[attribute]['c_1']),
-                '2': self.group.serialize(ciphertext[attribute]['c_2']),
-                '3': self.group.serialize(ciphertext[attribute]['c_3']),
-                '4': self.group.serialize(ciphertext[attribute]['c_4'])
-            }
-        return result
-
 
 class TAAC12CentralAuthority(CentralAuthority):
     def register_user(self, gid: str) -> dict:
@@ -160,3 +117,52 @@ class TAAC12AttributeAuthority(AttributeAuthority):
                                                                       self.secret_keys_for_time_period(time_period), {},
                                                                       time_period, self.attributes)
         return self.update_keys[time_period]
+
+
+class TAAC12Serializer(BaseSerializer):
+    def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
+        # ct = {'A': access_policy, 't': t, 'c': c}
+        # for attribute in vshares.keys():
+        #     r = self.group.random(ZR)
+        #     c_1 = (pair(gp['g'], gp['g']) ** vshares[attribute]) * (pk[attribute]['e(g,g)^a'] ** r)
+        #     c_2 = (gp['g'] ** ushares[attribute]) * (pk[attribute]['g^b'] ** r)
+        #     c_3 = gp['g'] ** r
+        #     c_4 = pk['H'](attribute, t) ** r
+        #     ct[attribute] = {'c_1': c_1, 'c_2': c_2, 'c_3': c_3, 'c_4': c_4}
+        util = SecretUtil(self.group, verbose=False)
+        # Parse the policy
+        policy = util.createPolicy(ciphertext['A'])
+        attributes = util.getAttributeList(policy)
+
+        result = {
+            'A': ciphertext['A'],
+            't': ciphertext['t'],
+            'c': self.group.serialize(ciphertext['c'])
+        }
+        for attribute in attributes:
+            result[attribute] = {
+                '1': self.group.serialize(ciphertext[attribute]['c_1']),
+                '2': self.group.serialize(ciphertext[attribute]['c_2']),
+                '3': self.group.serialize(ciphertext[attribute]['c_3']),
+                '4': self.group.serialize(ciphertext[attribute]['c_4'])
+            }
+        return result
+
+    def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
+        util = SecretUtil(self.group, verbose=False)
+        # Parse the policy
+        policy = util.createPolicy(dictionary['A'])
+        attributes = util.getAttributeList(policy)
+        result = {
+            'A': dictionary['A'],
+            't': dictionary['t'],
+            'c': self.group.deserialize(dictionary['c'])
+        }
+        for attribute in attributes:
+            result[attribute] = {
+                'c_1': self.group.deserialize(dictionary[attribute]['1']),
+                'c_2': self.group.deserialize(dictionary[attribute]['2']),
+                'c_3': self.group.deserialize(dictionary[attribute]['3']),
+                'c_4': self.group.deserialize(dictionary[attribute]['4'])
+            }
+        return result

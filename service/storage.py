@@ -1,64 +1,13 @@
 import os
-import pickle
 
 from implementations.base_implementation import BaseImplementation
 from model.records.data_record import DataRecord
-
-DATA_RECORD_READ_POLICY = 'rp'
-DATA_RECORD_WRITE_POLICY = 'wp'
-DATA_RECORD_OWNER_PUBLIC_KEY = 'opk'
-DATA_RECORD_WRITE_PUBLIC_KEY = 'wpk'
-DATA_RECORD_ENCRYPTION_KEY_READ = 'ekr'
-DATA_RECORD_ENCRYPTION_KEY_OWNER = 'eko'
-DATA_RECORD_WRITE_SECRET_KEY = 'wsk'
-DATA_RECORD_INFO = 'i'
-DATA_RECORD_TIME_PERIOD = 't'
 
 
 class Storage(object):
     def __init__(self):
         if not os.path.exists('data/storage'):
             os.makedirs('data/storage')
-
-    @staticmethod
-    def serialize_data_record_meta(data_record: DataRecord, implementation: BaseImplementation) -> bytes:
-        """
-        Serialize a data record
-        :param data_record:
-        :type data_record: records.data_record.DataRecord
-        :param implementation: The implementation of the scheme, used for serializing the ciphertext.
-        :return: A generator which yields the serialized fields
-        """
-        return pickle.dumps({
-            DATA_RECORD_READ_POLICY: data_record.read_policy,
-            DATA_RECORD_WRITE_POLICY: data_record.write_policy,
-            DATA_RECORD_OWNER_PUBLIC_KEY: data_record.owner_public_key.exportKey('DER'),
-            DATA_RECORD_WRITE_PUBLIC_KEY: data_record.write_public_key.exportKey('DER'),
-            DATA_RECORD_ENCRYPTION_KEY_READ: implementation.serialize_abe_ciphertext(data_record.encryption_key_read),
-            DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
-            DATA_RECORD_TIME_PERIOD: data_record.time_period,
-            DATA_RECORD_INFO: data_record.info,
-            DATA_RECORD_WRITE_SECRET_KEY: (
-                implementation.serialize_abe_ciphertext(data_record.write_private_key[0]),
-                data_record.write_private_key[1])
-        })
-
-    @staticmethod
-    def deserialize_data_record_meta(byte_object: bytes, implementation: BaseImplementation) -> DataRecord:
-        d = pickle.loads(byte_object)
-        return DataRecord(
-            read_policy=d[DATA_RECORD_READ_POLICY],
-            write_policy=d[DATA_RECORD_WRITE_POLICY],
-            owner_public_key=implementation.pke_import_key(d[DATA_RECORD_OWNER_PUBLIC_KEY]),
-            write_public_key=implementation.pke_import_key(d[DATA_RECORD_WRITE_PUBLIC_KEY]),
-            encryption_key_read=implementation.deserialize_abe_ciphertext(d[DATA_RECORD_ENCRYPTION_KEY_READ]),
-            encryption_key_owner=d[DATA_RECORD_ENCRYPTION_KEY_OWNER],
-            write_private_key=(implementation.deserialize_abe_ciphertext(d[DATA_RECORD_WRITE_SECRET_KEY][0]),
-                               d[DATA_RECORD_WRITE_SECRET_KEY][1]),
-            time_period=d[DATA_RECORD_TIME_PERIOD],
-            info=d[DATA_RECORD_INFO],
-            data=None
-        )
 
     def store(self, name: str, record: DataRecord, implementation: BaseImplementation):
         """
@@ -67,8 +16,11 @@ class Storage(object):
         :param name: The location of the data record
         :param record: The record to store
         """
+        serializer = implementation.create_serializer()
+        pke = implementation.create_public_key_scheme()
+
         f = open('data/storage/%s.meta' % name, 'wb')
-        f.write(self.serialize_data_record_meta(record, implementation))
+        f.write(serializer.serialize_data_record_meta(record, pke))
         f.close()
 
         f = open('data/storage/%s.dat' % name, 'wb')
@@ -82,8 +34,11 @@ class Storage(object):
         :param implementation: The implementation
         :return: The loaded data record
         """
+        serializer = implementation.create_serializer()
+        pke = implementation.create_public_key_scheme()
+
         f = open('data/storage/%s.meta' % name, 'rb')
-        result = self.deserialize_data_record_meta(f.read(), implementation)
+        result = serializer.deserialize_data_record_meta(f.read(), pke)
         f.close()
 
         f = open('data/storage/%s.dat' % name, 'rb')

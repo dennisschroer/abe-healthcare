@@ -2,14 +2,14 @@ import pickle
 from typing import Dict
 
 from Crypto.Hash import SHA
-from model.records.create_record import CreateRecord
-from model.records.data_record import DataRecord
-from model.records.policy_update_record import PolicyUpdateRecord
-from model.records.update_record import UpdateRecord
 
 from authority.attribute_authority import AttributeAuthority
 from implementations.base_implementation import BaseImplementation
+from model.records.create_record import CreateRecord
+from model.records.data_record import DataRecord
 from model.records.global_parameters import GlobalParameters
+from model.records.policy_update_record import PolicyUpdateRecord
+from model.records.update_record import UpdateRecord
 from service.storage import Storage
 
 
@@ -52,8 +52,9 @@ class InsuranceService(object):
         """
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
-        assert self.implementation.pke_verify(current_record.write_public_key, update_record.signature,
-                                              update_record.data), 'Signature should be valid'
+        pke = self.implementation.create_public_key_scheme()
+        assert pke.pke_verify(current_record.write_public_key, update_record.signature,
+                              update_record.data), 'Signature should be valid'
         current_record.update(update_record)
         self.storage.store(location, current_record, self.implementation)
 
@@ -65,10 +66,11 @@ class InsuranceService(object):
         """
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
-        assert self.implementation.pke_verify(current_record.owner_public_key, policy_update_record.signature,
-                                              pickle.dumps((policy_update_record.read_policy,
-                                                            policy_update_record.write_policy,
-                                                            policy_update_record.time_period))), 'Signature should be valid'
+        pke = self.implementation.create_public_key_scheme()
+        assert pke.pke_verify(current_record.owner_public_key, policy_update_record.signature,
+                              pickle.dumps((policy_update_record.read_policy,
+                                            policy_update_record.write_policy,
+                                            policy_update_record.time_period))), 'Signature should be valid'
         current_record.update_policy(policy_update_record)
         self.storage.store(location, current_record, self.implementation)
 
