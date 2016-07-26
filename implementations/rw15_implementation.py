@@ -1,13 +1,13 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
+from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-from records.global_parameters import GlobalParameters
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
-from scheme.user import User
+from implementations.serializer.base_serializer import BaseSerializer
+from model.records.global_parameters import GlobalParameters
+from service.central_authority import CentralAuthority
 from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 
@@ -23,6 +23,7 @@ class RW15Implementation(BaseImplementation):
 
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
+        self._serializer = None  # type: BaseSerializer
 
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RW15AttributeAuthority(name)
@@ -30,13 +31,19 @@ class RW15Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return RW15CentralAuthority(self.group)
 
+    def create_serializer(self) -> BaseSerializer:
+        if self._serializer is None:
+            self._serializer = RW15Serializer(self.group)
+        return self._serializer
+
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
         maabe = MaabeRW15(self.group)
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore, time_period: int):
+    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
+                        time_period: int):
         pass
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
@@ -53,6 +60,34 @@ class RW15Implementation(BaseImplementation):
         except Exception:
             raise PolicyNotSatisfiedException()
 
+
+class RW15CentralAuthority(CentralAuthority):
+    def register_user(self, gid: str) -> dict:
+        return None
+
+    def setup(self):
+        maabe = MaabeRW15(self.global_parameters.group)
+        self.global_parameters.scheme_parameters = maabe.setup()
+        return self.global_parameters
+
+
+class RW15AttributeAuthority(AttributeAuthority):
+    def setup(self, central_authority, attributes):
+        self.global_parameters = central_authority.global_parameters
+        self.attributes = attributes
+        maabe = MaabeRW15(self.global_parameters.group)
+        self._public_keys, self._secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
+                                                               self.name)
+
+    def keygen(self, gid, registration_data, attributes, time_period):
+        maabe = MaabeRW15(self.global_parameters.group)
+        attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
+        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters,
+                                                self.secret_keys_for_time_period(time_period), gid,
+                                                attributes)
+
+
+class RW15Serializer(BaseSerializer):
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
         # C0 = message * (gp['egg'] ** s)
@@ -88,28 +123,3 @@ class RW15Implementation(BaseImplementation):
             'C4': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
                    dictionary['4'].items()},
         }
-
-
-class RW15CentralAuthority(CentralAuthority):
-    def register_user(self, gid: str) -> dict:
-        return None
-
-    def setup(self):
-        maabe = MaabeRW15(self.global_parameters.group)
-        self.global_parameters.scheme_parameters = maabe.setup()
-        return self.global_parameters
-
-
-class RW15AttributeAuthority(AttributeAuthority):
-    def setup(self, central_authority, attributes):
-        self.global_parameters = central_authority.global_parameters
-        self.attributes = attributes
-        maabe = MaabeRW15(self.global_parameters.group)
-        self._public_keys, self._secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
-                                                             self.name)
-
-    def keygen(self, gid, registration_data, attributes, time_period):
-        maabe = MaabeRW15(self.global_parameters.group)
-        attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period), gid,
-                                                attributes)
