@@ -1,6 +1,5 @@
 from charm.toolbox.pairinggroup import PairingGroup
-from records.global_parameters import GlobalParameters
-from scheme.user import User
+from model.records.global_parameters import GlobalParameters
 
 
 class CentralAuthority(object):

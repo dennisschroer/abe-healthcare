@@ -2,7 +2,7 @@ import os
 import pickle
 
 from implementations.base_implementation import BaseImplementation
-from records.data_record import DataRecord
+from model.records.data_record import DataRecord
 
 DATA_RECORD_READ_POLICY = 'rp'
 DATA_RECORD_WRITE_POLICY = 'wp'

@@ -1,13 +1,12 @@
-from typing import Any, Dict, List
+from typing import Any, Dict
 
+from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-from records.global_parameters import GlobalParameters
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
-from scheme.user import User
+from model.records.global_parameters import GlobalParameters
+from service.central_authority import CentralAuthority
 from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 

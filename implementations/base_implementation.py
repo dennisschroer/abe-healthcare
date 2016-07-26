@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, List
+from typing import Any, Dict, Tuple
 
 from Crypto import Random
 from Crypto.Cipher import AES, PKCS1_OAEP
@@ -6,11 +6,11 @@ from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
+from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
-from records.global_parameters import GlobalParameters
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
+from model.records.global_parameters import GlobalParameters
+from service.central_authority import CentralAuthority
 from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from utils.key_utils import extract_key_from_group_element
 
@@ -69,7 +69,7 @@ class BaseImplementation(object):
         :param authorities: A dict from authority name to authority
         :return: A dict containing the public keys of the authorities.
 
-        >>> from scheme.attribute_authority import AttributeAuthority
+        >>> from authority.attribute_authority import AttributeAuthority
         >>> a1 = AttributeAuthority('A1')
         >>> a2 = AttributeAuthority('A2')
         >>> a1._public_keys = {'foo': 'bar'}

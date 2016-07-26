@@ -1,13 +1,13 @@
 from typing import Dict, Any
 
+from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
 from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-from records.global_parameters import GlobalParameters
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
+from model.records.global_parameters import GlobalParameters
+from service.central_authority import CentralAuthority
 from utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 9
@@ -61,7 +61,7 @@ class TAAC12Implementation(BaseImplementation):
         :param authorities: A dict from authority name to authority
         :return: A dict containing the public keys of the authorities.
 
-        >>> from scheme.attribute_authority import AttributeAuthority
+        >>> from authority.attribute_authority import AttributeAuthority
         >>> a1 = AttributeAuthority('A1')
         >>> a2 = AttributeAuthority('A2')
         >>> a1._public_keys = {'foo': 'bar'}

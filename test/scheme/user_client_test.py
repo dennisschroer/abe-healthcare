@@ -1,11 +1,11 @@
 import pickle
 import unittest
 
+from client.user_client import UserClient
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.rw15_implementation import RW15Implementation
-from scheme.insurance_service import InsuranceService
-from scheme.user import User
-from scheme.user_client import UserClient
+from model.user import User
+from service.insurance_service import InsuranceService
 
 
 class UserClientTestCase(unittest.TestCase):

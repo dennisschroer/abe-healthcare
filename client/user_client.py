@@ -3,15 +3,15 @@ import pickle
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
-
-from implementations.base_implementation import BaseImplementation, AbeEncryption
 from records.create_record import CreateRecord
 from records.data_record import DataRecord
-from records.global_parameters import GlobalParameters
 from records.policy_update_record import PolicyUpdateRecord
 from records.update_record import UpdateRecord
-from scheme.insurance_service import InsuranceService
-from scheme.user import User
+
+from implementations.base_implementation import BaseImplementation, AbeEncryption
+from model.records.global_parameters import GlobalParameters
+from model.user import User
+from service.insurance_service import InsuranceService
 from utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048

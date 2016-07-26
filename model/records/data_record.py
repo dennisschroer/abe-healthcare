@@ -1,7 +1,8 @@
 from typing import Any, Tuple
 
-from records.policy_update_record import PolicyUpdateRecord
 from records.update_record import UpdateRecord
+
+from model.records.policy_update_record import PolicyUpdateRecord
 
 
 class DataRecord(object):
