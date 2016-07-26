@@ -1,8 +1,9 @@
 from typing import Any
 
-from Crypto.Cipher import PKCS1_OAEP, PKCS1_v1_5
+from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 
 from implementations.public_key.base_public_key import BasePublicKey
 
