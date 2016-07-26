@@ -1,18 +1,17 @@
 from typing import Any, Dict, Tuple
 
-from Crypto import Random
-from Crypto.Cipher import AES
+from implementations.public_key.rsa_public_key import RSAPublicKey
 
 from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from implementations.public_key.base_public_key import BasePublicKey
-from implementations.public_key.rsa_pke import RSAPublicKey
 from implementations.serializer.base_serializer import BaseSerializer
+from implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
+from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from model.records.global_parameters import GlobalParameters
 from model.types import SecretKeyStore, SecretKeys, AbeEncryption
 from service.central_authority import CentralAuthority
-from utils.data_util import pad_data_pksc5, unpad_data_pksc5
 from utils.key_utils import extract_key_from_group_element
 
 
@@ -27,6 +26,7 @@ class BaseImplementation(object):
     def __init__(self, group: PairingGroup = None) -> None:
         self.group = PairingGroup('SS512') if group is None else group
         self._public_key_scheme = None  # type:BasePublicKey
+        self._symmetric_key_scheme = None  # type:BaseSymmetricKey
 
     def create_central_authority(self) -> CentralAuthority:
         """
@@ -58,6 +58,15 @@ class BaseImplementation(object):
         if self._public_key_scheme is None:
             self._public_key_scheme = RSAPublicKey()
         return self._public_key_scheme
+
+    def create_symmetric_key_scheme(self) -> BaseSymmetricKey:
+        """
+        Create a new public key scheme
+        :return: A BasePublicKey
+        """
+        if self._symmetric_key_scheme is None:
+            self._symmetric_key_scheme = AESSymmetricKey()
+        return self._symmetric_key_scheme
 
     def setup_secret_keys(self, gid: str) -> SecretKeyStore:
         """
@@ -103,8 +112,9 @@ class BaseImplementation(object):
         :return: The key (element of group) and the extracted symmetric key
         """
         key = global_parameters.group.random(GT)
+        ske = self.create_symmetric_key_scheme()
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
-                                                       self.ske_key_size())
+                                                       ske.ske_key_size())
         return key, symmetric_key
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
@@ -133,8 +143,9 @@ class BaseImplementation(object):
         :param policy: The policy to encrypt under.
         :return: The encrypted key and the encrypted message.
         """
+        ske = self.create_symmetric_key_scheme()
         key, symmetric_key = self.generate_abe_key(global_parameters)
-        ciphertext = self.ske_encrypt(message, symmetric_key)
+        ciphertext = ske.ske_encrypt(message, symmetric_key)
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
@@ -177,51 +188,12 @@ class BaseImplementation(object):
         :raise Exception: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
+        ske = self.create_symmetric_key_scheme()
         encrypted_key, ciphertext = ciphertext_tuple
         key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key)
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
-                                                       self.ske_key_size())
-        return self.ske_decrypt(ciphertext, symmetric_key)
-
-    def ske_key_size(self):
-        """
-        Get the size of the key to use in the symmetric key encryption scheme of this implementation.
-        :return:
-        """
-        return 32
-
-    def ske_encrypt(self, message: bytes, key: bytes) -> bytes:
-        """
-        Encrypt the message using symmetric key encryption.
-        :param message: The message to encrypt.
-        :param key: The key to use in the encryption.
-        :return: The encrypted message
-
-        >>> i = BaseImplementation()
-        >>> i.ske_encrypt(b'Hello world', b'a'*i.ske_key_size()) != b'Hello world'
-        True
-        """
-        iv = Random.new().read(AES.block_size)
-        encryption = AES.new(key, AES.MODE_CBC, iv)
-        return iv + encryption.encrypt(pad_data_pksc5(message, AES.block_size))
-
-    def ske_decrypt(self, ciphertext: bytes, key: bytes) -> bytes:
-        """
-        Decrypt a ciphertext encrypted using symmetric key encryption of this implementation.
-        :param ciphertext: The ciphertext to decrypt.
-        :param key: The key to use.
-        :return: The plaintext, or some random bytes.
-
-        >>> i = BaseImplementation()
-        >>> m = b'Hello world'
-        >>> c = i.ske_encrypt(m, b'a'*i.ske_key_size())
-        >>> d = i.ske_decrypt(c, b'a'*i.ske_key_size())
-        >>> d == m
-        True
-        """
-        iv = ciphertext[:AES.block_size]
-        decryption = AES.new(key, AES.MODE_CBC, iv)
-        return unpad_data_pksc5(decryption.decrypt(ciphertext[AES.block_size:]))
+                                                       ske.ske_key_size())
+        return ske.ske_decrypt(ciphertext, symmetric_key)
 
 
 class MockImplementation(BaseImplementation):

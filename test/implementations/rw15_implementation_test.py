@@ -10,9 +10,6 @@ class RW15ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
         self.group = PairingGroup('SS512')
         self.subject = RW15Implementation(self.group)
 
-    def test_ske_encrypt_decrypt(self):
-        self.ske_encrypt_decrypt()
-
     def test_encrypt_decrypt_abe(self):
         self.encrypt_decrypt_abe()
 

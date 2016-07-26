@@ -12,18 +12,6 @@ class ImplementationBaseTestCase(unittest.TestCase):
         super().__init__(*args, **kwargs)
         self.subject = None  # type: BaseImplementation
 
-    def ske_encrypt_decrypt(self):
-        key = b'a' * self.subject.ske_key_size()
-        for m in [b'Hello world', lorem]:
-            c = self.subject.ske_encrypt(m, key)
-            self.assertNotEqual(c, m)
-            d = self.subject.ske_decrypt(c, key)
-            self.assertEqual(m, d)
-            r = self.subject.ske_decrypt(c, b'b' * self.subject.ske_key_size())
-            self.assertNotEqual(m, r)
-
-
-
     def setup_abe(self):
         # Setup authorities
         self.ca = self.subject.create_central_authority()
