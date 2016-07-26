@@ -25,7 +25,7 @@ class RD13Implementation(BaseImplementation):
 
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
-        self._serializer = None
+        self._serializer = None  # type: BaseSerializer
 
     def create_attribute_authority(self, name: str) -> AttributeAuthority:
         return RD13AttributeAuthority(name)
