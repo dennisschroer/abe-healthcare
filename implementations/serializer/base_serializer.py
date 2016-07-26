@@ -84,7 +84,7 @@ class BaseSerializer(object):
         :param keyword: The keyword to replace.
         :return: int The replacement keyword. The dict is also updated.
 
-        >>> i = BaseSerializer()
+        >>> i = BaseSerializer(None)
         >>> d = dict()
         >>> a = i.attribute_replacement(d, 'TEST123')
         >>> b = i.attribute_replacement(d, 'TEST123')
@@ -116,7 +116,7 @@ class BaseSerializer(object):
         :param replacement: The replacement to revert to the original keyword.
         :return: The original keyword.
 
-        >>> i = BaseSerializer()
+        >>> i = BaseSerializer(None)
         >>> d = dict()
         >>> a = i.attribute_replacement(d, 'TEST123')
         >>> b = i.attribute_replacement(d, 'TEST')

@@ -19,7 +19,8 @@ class UserClientTestCase(unittest.TestCase):
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
         central_authority.register_user(user.gid)
-        user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
+        user.issue_secret_keys(
+            attribute_authority.keygen(user.gid, user.registration_data, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record(self):
@@ -48,7 +49,8 @@ class UserClientTestCase(unittest.TestCase):
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        self.assertTrue(self.subject.implementation.verify(create_record.write_public_key, update_record.signature,
+        pke = self.subject.implementation.create_public_key_scheme()
+        self.assertTrue(pke.verify(create_record.write_public_key, update_record.signature,
                                                            update_record.data))
 
         # Update the original record
@@ -73,10 +75,11 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.time_period)
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        self.assertTrue(self.subject.implementation.verify(create_record.owner_public_key, update_record.signature,
-                                                           pickle.dumps((update_record.read_policy,
-                                                                             update_record.write_policy,
-                                                                             update_record.time_period))))
+        pke = self.subject.implementation.create_public_key_scheme()
+        self.assertTrue(pke.verify(create_record.owner_public_key, update_record.signature,
+                                   pickle.dumps((update_record.read_policy,
+                                                 update_record.write_policy,
+                                                 update_record.time_period))))
 
         # Update the original record
         create_record.update_policy(update_record)
