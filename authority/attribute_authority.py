@@ -1,8 +1,7 @@
 from typing import Any
 
-from records.global_parameters import GlobalParameters
-from scheme.central_authority import CentralAuthority
-from scheme.user import User
+from model.records.global_parameters import GlobalParameters
+from service.central_authority import CentralAuthority
 
 
 class AttributeAuthority(object):

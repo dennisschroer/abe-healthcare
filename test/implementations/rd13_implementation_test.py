@@ -10,12 +10,6 @@ class RD13ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
         self.group = PairingGroup('SS512')
         self.subject = RD13Implementation(self.group)
 
-    def test_ske_encrypt_decrypt(self):
-        self.ske_encrypt_decrypt()
-
-    def test_pke_sign_verify(self):
-        self.pke_sign_verify()
-
     def test_encrypt_decrypt_abe(self):
         self.encrypt_decrypt_abe()
 

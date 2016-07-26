@@ -1,19 +1,16 @@
+import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
+from authority.attribute_authority import AttributeAuthority
+from client.user_client import UserClient
 from implementations.base_implementation import BaseImplementation
 from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
-from scheme.insurance_service import InsuranceService
-from scheme.user import User
-
-# import psutil
-import cProfile
-
-from scheme.user_client import UserClient
+from model.user import User
+from service.central_authority import CentralAuthority
+from service.insurance_service import InsuranceService
 
 
 class ABEHealthCare(object):
