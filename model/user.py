@@ -1,6 +1,6 @@
 from typing import Any
 
-from records.global_parameters import GlobalParameters
+from model.records.global_parameters import GlobalParameters
 
 
 class User(object):

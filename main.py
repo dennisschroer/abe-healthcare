@@ -1,19 +1,16 @@
+import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
+from authority.attribute_authority import AttributeAuthority
+from client.user_client import UserClient
 from implementations.base_implementation import BaseImplementation
-from implementations.dacmacs13_implementation import DACMACS13Implementation
+from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
-from scheme.attribute_authority import AttributeAuthority
-from scheme.central_authority import CentralAuthority
-from scheme.insurance_service import InsuranceService
-from scheme.user import User
-
-# import psutil
-import cProfile
-
-from scheme.user_client import UserClient
+from model.user import User
+from service.central_authority import CentralAuthority
+from service.insurance_service import InsuranceService
 
 
 class ABEHealthCare(object):
@@ -39,13 +36,17 @@ class ABEHealthCare(object):
         self.implementation = RW15Implementation()
         self.run()
 
+    def rd13(self):
+        self.implementation = RD13Implementation()
+        self.run()
+
     def taac12(self):
         self.implementation = TAAC12Implementation()
         self.run()
 
-    def dacmacs13(self):
-        self.implementation = DACMACS13Implementation()
-        self.run()
+    # def dacmacs13(self):
+    #     self.implementation = DACMACS13Implementation()
+    #     self.run()
 
     def setup_central_authority(self):
         """
@@ -74,12 +75,12 @@ class ABEHealthCare(object):
 
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
-        user.registration_data = self.central_authority.register_user(user)
+        user.registration_data = self.central_authority.register_user(user.gid)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen(user.gid, insurance_attributes, 1))
+            user.issue_secret_keys(self.insurance_company.keygen(user.gid, user.registration_data, insurance_attributes, 1))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen(user.gid, national_attributes, 1))
+            user.issue_secret_keys(self.national_database.keygen(user.gid, user.registration_data, national_attributes, 1))
         return user_client
 
     def setup(self):
@@ -131,7 +132,7 @@ class ABEHealthCare(object):
 
         print('Decrypting %s' % join('data/storage', location))
 
-        # print('Received record')
+        # 'Received record')
         # print(record.encryption_key_read)
 
         info, data = user.decrypt_record(record)
@@ -177,8 +178,8 @@ class ABEHealthCare(object):
 
     def run_policy_updates(self, locations):
         list(map(
-            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE',
-                                              'ADMINISTRATION@INSURANCE or ((DOCTOR@NDB or RADIOLOGIST@NDB) and REVIEWER@INSURANCE)',
+            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                              'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               1),
             locations))
 
@@ -198,5 +199,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.dacmacs13)
+    pr.runcall(abe.rd13)
     # pr.print_stats(sort='cumtime')

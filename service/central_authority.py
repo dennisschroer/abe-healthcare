@@ -1,6 +1,5 @@
 from charm.toolbox.pairinggroup import PairingGroup
-from records.global_parameters import GlobalParameters
-from scheme.user import User
+from model.records.global_parameters import GlobalParameters
 
 
 class CentralAuthority(object):
@@ -22,10 +21,10 @@ class CentralAuthority(object):
         """
         raise NotImplementedError
 
-    def register_user(self, user: User) -> dict:
+    def register_user(self, gid: str) -> dict:
         """
         Register a new user. Some schemes do nothing with this.
-        :param user: The user to register
+        :param gid: The global identifier of the user to register
         :return: Additional data to store on the user
         """
         raise NotImplementedError
