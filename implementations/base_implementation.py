@@ -26,7 +26,7 @@ class BaseImplementation(object):
 
     def __init__(self, group: PairingGroup = None) -> None:
         self.group = PairingGroup('SS512') if group is None else group
-        self._public_key_scheme = None
+        self._public_key_scheme = None  # type:BasePublicKey
 
     def create_central_authority(self) -> CentralAuthority:
         """

@@ -18,7 +18,7 @@ DATA_RECORD_TIME_PERIOD = 't'
 
 
 class BaseSerializer(object):
-    def __init__(self, group: PairingGroup):
+    def __init__(self, group: PairingGroup) -> None:
         self.group = group
 
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
