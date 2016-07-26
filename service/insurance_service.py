@@ -2,10 +2,10 @@ import pickle
 from typing import Dict
 
 from Crypto.Hash import SHA
-from records.create_record import CreateRecord
-from records.data_record import DataRecord
-from records.policy_update_record import PolicyUpdateRecord
-from records.update_record import UpdateRecord
+from model.records.create_record import CreateRecord
+from model.records.data_record import DataRecord
+from model.records.policy_update_record import PolicyUpdateRecord
+from model.records.update_record import UpdateRecord
 
 from authority.attribute_authority import AttributeAuthority
 from implementations.base_implementation import BaseImplementation

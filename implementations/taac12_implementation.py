@@ -58,6 +58,7 @@ class TAAC12Implementation(BaseImplementation):
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
+        :param time_period: The time period to get the public keys for.
         :param authorities: A dict from authority name to authority
         :return: A dict containing the public keys of the authorities.
 

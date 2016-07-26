@@ -3,10 +3,10 @@ import pickle
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
-from records.create_record import CreateRecord
-from records.data_record import DataRecord
-from records.policy_update_record import PolicyUpdateRecord
-from records.update_record import UpdateRecord
+from model.records.create_record import CreateRecord
+from model.records.data_record import DataRecord
+from model.records.policy_update_record import PolicyUpdateRecord
+from model.records.update_record import UpdateRecord
 
 from implementations.base_implementation import BaseImplementation, AbeEncryption
 from model.records.global_parameters import GlobalParameters
