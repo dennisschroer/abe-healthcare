@@ -53,8 +53,8 @@ class InsuranceService(object):
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
         pke = self.implementation.create_public_key_scheme()
-        assert pke.pke_verify(current_record.write_public_key, update_record.signature,
-                              update_record.data), 'Signature should be valid'
+        assert pke.verify(current_record.write_public_key, update_record.signature,
+                          update_record.data), 'Signature should be valid'
         current_record.update(update_record)
         self.storage.store(location, current_record, self.implementation)
 
@@ -67,8 +67,8 @@ class InsuranceService(object):
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
         pke = self.implementation.create_public_key_scheme()
-        assert pke.pke_verify(current_record.owner_public_key, policy_update_record.signature,
-                              pickle.dumps((policy_update_record.read_policy,
+        assert pke.verify(current_record.owner_public_key, policy_update_record.signature,
+                          pickle.dumps((policy_update_record.read_policy,
                                             policy_update_record.write_policy,
                                             policy_update_record.time_period))), 'Signature should be valid'
         current_record.update_policy(policy_update_record)

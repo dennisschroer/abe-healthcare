@@ -14,11 +14,11 @@ class RSAPublicKeyTestCase(unittest.TestCase):
         self.subject = RSAPublicKey()
 
     def pke_sign_verify(self):
-        key = self.subject.pke_generate_key_pair(1024)
+        key = self.subject.generate_key_pair(1024)
         for m in [b'Hello world', lorem]:
-            s = self.subject.pke_sign(key, m)
+            s = self.subject.sign(key, m)
             self.assertNotEqual(s, m)
-            self.assertTrue(self.subject.pke_verify(key, s, m))
+            self.assertTrue(self.subject.verify(key, s, m))
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ from typing import Any
 
 
 class BasePublicKey(object):
-    def pke_generate_key_pair(self, size: int) -> Any:
+    def generate_key_pair(self, size: int) -> Any:
         """
         Create a new public and private key pair
         :param size: The size in bits
@@ -10,10 +10,10 @@ class BasePublicKey(object):
         """
         raise NotImplementedError()
 
-    def pke_import_key(self, data: bytes) -> Any:
+    def import_key(self, data: bytes) -> Any:
         raise NotImplementedError()
 
-    def pke_encrypt(self, message: bytes, key: Any) -> bytes:
+    def encrypt(self, message: bytes, key: Any) -> bytes:
         """
         Encrypt a message using public key encryption.
         :param message: The message to encrypt
@@ -22,7 +22,7 @@ class BasePublicKey(object):
         """
         raise NotImplementedError()
 
-    def pke_sign(self, secret_key: Any, data: bytes) -> bytes:
+    def sign(self, secret_key: Any, data: bytes) -> bytes:
         """
         Sign the data using the secret key
         :param secret_key:
@@ -31,7 +31,7 @@ class BasePublicKey(object):
         """
         raise NotImplementedError()
 
-    def pke_verify(self, public_key: Any, signature: bytes, data: bytes) -> bool:
+    def verify(self, public_key: Any, signature: bytes, data: bytes) -> bool:
         """
         Verify a signature over data with the given key.
         :param public_key: The public key to use in the verification
@@ -41,5 +41,5 @@ class BasePublicKey(object):
         """
         raise NotImplementedError()
 
-    def export(self, owner_public_key):
+    def export_key(self, owner_public_key):
         raise NotImplementedError()
