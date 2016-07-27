@@ -2,8 +2,7 @@ from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
-from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
-from charm.toolbox.secretutil import SecretUtil
+from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from implementations.serializer.base_serializer import BaseSerializer
@@ -57,7 +56,7 @@ class DACMACS13Implementation(BaseImplementation):
         dacmacs = DACMACS(self.group)
 
         try:
-            return dacmacs.decrypt(ciphertext, secret_keys, registration_data['secret'])
+            return dacmacs.decrypt(ciphertext, secret_keys, registration_data['private'])
         except Exception:
             raise PolicyNotSatisfiedException()
 
@@ -83,20 +82,66 @@ class DACMACS13CentralAuthority(CentralAuthority):
 
 
 class DACMACS13AttributeAuthority(AttributeAuthority):
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+        self._public_keys = dict()
+        self._secret_keys = dict()
+
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         dacmacs = DACMACS(self.global_parameters.group)
-        self._public_keys, self._secret_keys = dacmacs.authsetup(
+        # These are the main keys, these keys will be reused for keys of the timed attributes
+        self._public_keys['main'], self._secret_keys['main'] = dacmacs.authsetup(
             central_authority.global_parameters.scheme_parameters,
             self.attributes)
+        del self._public_keys['main']['attr']
+        del self._secret_keys['main']['attr']
+
+    def public_keys_for_time_period(self, time_period: int) -> Any:
+        if time_period not in self._public_keys:
+            self.generate_keys_for_time_period(time_period)
+        return {
+            'e(g,g)^alpha': self._public_keys['main']['e(g,g)^alpha'],
+            'g^(1/beta)': self._public_keys['main']['g^(1/beta)'],
+            'g^(gamma/beta)': self._public_keys['main']['g^(gamma/beta)'],
+            'attr': self._public_keys[time_period]
+        }
+
+    def secret_keys_for_time_period(self, time_period: int) -> Any:
+        if time_period not in self._secret_keys:
+            self.generate_keys_for_time_period(time_period)
+        return {
+            'alpha': self._secret_keys['main']['alpha'],
+            'beta': self._secret_keys['main']['beta'],
+            'gamma': self._secret_keys['main']['gamma'],
+            'attr': self._secret_keys[time_period]
+        }
+
+    def generate_keys_for_time_period(self, time_period):
+        """
+        Generate the public and secret keys for the given time period.
+        :param time_period: The time period
+        """
+        attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), self.attributes))
+
+        dabe = DACMACS(self.global_parameters.group)
+        public_keys = dict(self._public_keys['main'])
+        secret_keys = dict(self._secret_keys['main'])
+        public_keys['attr'] = dict()
+        secret_keys['attr'] = dict()
+        pk, sk = dabe.authsetup(self.global_parameters.scheme_parameters, attributes, secret_keys=secret_keys,
+                                public_keys=public_keys)
+
+        self._public_keys[time_period] = pk['attr']
+        self._secret_keys[time_period] = sk['attr']
 
     def keygen(self, gid, registration_data, attributes, time_period):
         dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return dacmacs.keygen(self.global_parameters.scheme_parameters,
+        return {self.name: dacmacs.keygen(self.global_parameters.scheme_parameters,
                               self.secret_keys_for_time_period(time_period),
-                              self.public_keys_for_time_period(time_period), attributes, registration_data['cert'])
+                              self.public_keys_for_time_period(time_period), attributes, registration_data['cert'])}
 
 
 class DACMACS13Serializer(BaseSerializer):
@@ -110,28 +155,26 @@ class DACMACS13Serializer(BaseSerializer):
         dictionary = dict()  # type: dict
         return {
             'p': ciphertext['policy'],
-            '0': self.group.serialize(ciphertext['C0']),
-            '1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
-                  ciphertext['C1'].items()},
-            '2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
-                  ciphertext['C2'].items()},
-            '3': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
-                  ciphertext['C3'].items()},
-            '4': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
-                  ciphertext['C4'].items()},
+            'C': self.group.serialize(ciphertext['C']),
+            'C1': self.group.serialize(ciphertext['C1']),
+            'C2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['C2'].items()},
+            'Ci': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['Ci'].items()},
+            'D1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['D1'].items()},
+            'D2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['D2'].items()},
             'd': dictionary
         }
 
     def deserialize_abe_ciphertext(self, dictionary: Any) -> AbeEncryption:
         return {
             'policy': dictionary['p'],
-            'C0': self.group.deserialize(dictionary['0']),
-            'C1': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
-                   dictionary['1'].items()},
+            'C': self.group.deserialize(dictionary['C']),
+            'C1': self.group.deserialize(dictionary['C1']),
             'C2': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
-                   dictionary['2'].items()},
-            'C3': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
-                   dictionary['3'].items()},
-            'C4': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
-                   dictionary['4'].items()},
+                   dictionary['C2'].items()},
+            'Ci': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
+                   dictionary['Ci'].items()},
+            'D1': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
+                   dictionary['D1'].items()},
+            'D2': {self.undo_attribute_replacement(dictionary['d'], k): self.group.deserialize(v) for k, v in
+                   dictionary['D2'].items()}
         }
