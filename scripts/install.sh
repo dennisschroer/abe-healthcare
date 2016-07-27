@@ -10,10 +10,12 @@ make -C ./pbc-0.5.14
 sudo make install -C ./pbc-0.5.14
 sudo apt-get install -y openssl libssl-dev
 git clone https://github.com/denniss17/charm.git
+(cd ./charm && git checkout dev && git pull)
 pip3 install -r charm/requirements.txt
 (cd ./charm && ./configure.sh)
 make -C ./charm
 sudo make install -C ./charm
 git clone git@github.com:denniss17/abe-healthcare.git
+(cd ./abe-healthcare && git checkout master && git pull)
 pip3 install -r abe-healtchare/requirements.txt
 pip3 install -r abe-healtchare/test-requirements.txt
