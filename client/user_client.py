@@ -86,12 +86,15 @@ class UserClient(object):
         """
         if self.implementation.decryption_keys_required:
             # TODO cache decryption keys
-            decryption_keys = self.implementation.decryption_keys(self.insurance_service.authorities,
-                                                                  self.user.secret_keys, time_period)
+            decryption_keys = self.implementation.decryption_keys(self.global_parameters,
+                                                                  self.insurance_service.authorities,
+                                                                  self.user.secret_keys,
+                                                                  self.user.registration_data,
+                                                                  ciphertext,
+                                                                  time_period)
         else:
             decryption_keys = self.user.secret_keys
-        return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid,
-                                               ciphertext)
+        return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext, d)
 
     def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
         """

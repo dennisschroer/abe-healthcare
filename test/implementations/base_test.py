@@ -84,20 +84,20 @@ class ImplementationBaseTestCase(unittest.TestCase):
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
             decrypted = self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
-                                                 ciphertext)
+                                                 ciphertext, d)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
             try:
                 self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
-                                         ciphertext)
+                                         ciphertext, d)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
 
         try:
             self.subject.abe_decrypt(self.global_parameters, self.decryption_key(self.invalid_time_keys, 2), 'alice',
-                                     ciphertext)
+                                     ciphertext, d)
             self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
         except PolicyNotSatisfiedException:
             pass

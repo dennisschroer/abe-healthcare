@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
+from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from charm.toolbox.secretutil import SecretUtil
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
@@ -21,6 +22,8 @@ class DACMACS13Implementation(BaseImplementation):
     :year:      2013
     """
 
+    decryption_keys_required = True
+
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
@@ -38,36 +41,44 @@ class DACMACS13Implementation(BaseImplementation):
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
-        maabe = DACMACS(self.group)
+        dacmacs = DACMACS(self.group)
         policy = add_time_periods_to_policy(policy, time_period, self.group)
-        return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
+        return dacmacs.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
-                        time_period: int):
-        pass
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+                        secret_keys: SecretKeyStore,
+                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
+        dacmacs = DACMACS(self.group)
+        return dacmacs.generate_token(global_parameters.scheme_parameters, ciphertext, registration_data['public'],
+                                      secret_keys)
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
-        maabe = MaabeRW15(self.group)
-
-        util = SecretUtil(self.group)
-        policy = util.createPolicy(ciphertext['policy'])
-        coefficients = util.getCoefficients(policy)
-        pruned_list = util.prune(policy, secret_keys.keys())
+                    ciphertext: AbeEncryption, registration_data) -> bytes:
+        dacmacs = DACMACS(self.group)
 
         try:
-            return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)
+            return dacmacs.decrypt(ciphertext, secret_keys, registration_data['secret'])
         except Exception:
             raise PolicyNotSatisfiedException()
 
 
 class DACMACS13CentralAuthority(CentralAuthority):
+    def __init__(self, group=None):
+        super().__init__(group)
+        self.master_key = None
+
     def register_user(self, gid: str) -> dict:
-        return None
+        dacmacs = DACMACS(self.global_parameters.group)
+        public, private = dacmacs.register_user(self.global_parameters.scheme_parameters)
+        cert = private['cert']
+        del private['cert']
+        return {'public': public, 'private': private, 'cert': cert}
 
     def setup(self):
-        maabe = MaabeRW15(self.global_parameters.group)
-        self.global_parameters.scheme_parameters = maabe.setup()
+        dacmacs = DACMACS(self.global_parameters.group)
+        public_key, master_key = dacmacs.setup()
+        self.master_key = master_key
+        self.global_parameters.scheme_parameters = public_key
         return self.global_parameters
 
 
@@ -75,16 +86,17 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
-        maabe = MaabeRW15(self.global_parameters.group)
-        self._public_keys, self._secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
-                                                               self.name)
+        dacmacs = DACMACS(self.global_parameters.group)
+        self._public_keys, self._secret_keys = dacmacs.authsetup(
+            central_authority.global_parameters.scheme_parameters,
+            self.attributes)
 
     def keygen(self, gid, registration_data, attributes, time_period):
-        maabe = MaabeRW15(self.global_parameters.group)
+        dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
-        return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters,
-                                                self.secret_keys_for_time_period(time_period), gid,
-                                                attributes)
+        return dacmacs.keygen(self.global_parameters.scheme_parameters,
+                              self.secret_keys_for_time_period(time_period),
+                              self.public_keys_for_time_period(time_period), attributes, registration_data['cert'])
 
 
 class DACMACS13Serializer(BaseSerializer):

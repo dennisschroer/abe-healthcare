@@ -149,25 +149,29 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
-                        time_period: int):
+    def decryption_keys(self,  global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
+                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         """
         Calculate decryption keys for a user for the given attribute authority.
+        :param global_parameters: The global parameters.
         :param authorities: The attribute authorities to fetch update keys of.
         :param secret_keys: The secret keys of the user.
+        :param registration_data: The registration data of the user
+        :param ciphertext: The ciphertext to create decryption keys for.
         :param time_period: The time period to calculate the decryption keys for.
         :return: The decryption keys for the attributes of the authority the user possesses at the given time period.
         """
         raise NotImplementedError()
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
+                    ciphertext: AbeEncryption, registration_data) -> bytes:
         """
         Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
         :param global_parameters: The global parameters.
         :param secret_keys: The secret keys of the user.
         :param gid: The global identifier of the user
         :param ciphertext: The ciphertext to decrypt.
+        :param registration_data: The registration data of the user.
         :raise exception.policy_not_satisfied_exception.PolicyNotSatisfiedException: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
@@ -190,7 +194,7 @@ class BaseImplementation(object):
         """
         ske = self.create_symmetric_key_scheme()
         encrypted_key, ciphertext = ciphertext_tuple
-        key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key)
+        key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key, d)
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
                                                        ske.ske_key_size())
         return ske.ske_decrypt(ciphertext, symmetric_key)

@@ -5,6 +5,7 @@ from os.path import isfile, join
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from implementations.base_implementation import BaseImplementation
+from implementations.dacmacs13_implementation import DACMACS13Implementation
 from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
@@ -44,9 +45,9 @@ class ABEHealthCare(object):
         self.implementation = TAAC12Implementation()
         self.run()
 
-    # def dacmacs13(self):
-    #     self.implementation = DACMACS13Implementation()
-    #     self.run()
+    def dacmacs13(self):
+        self.implementation = DACMACS13Implementation()
+        self.run()
 
     def setup_central_authority(self):
         """
@@ -199,5 +200,5 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
-    pr.runcall(abe.rd13)
+    pr.runcall(abe.dacmacs13)
     # pr.print_stats(sort='cumtime')

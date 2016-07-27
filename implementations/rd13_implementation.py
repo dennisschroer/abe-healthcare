@@ -57,12 +57,13 @@ class RD13Implementation(BaseImplementation):
 
         return dabe.encrypt(global_parameters.scheme_parameters, public_keys, message, access_structure)
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
-                        time_period: int):
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+                        secret_keys: SecretKeyStore,
+                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         pass
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
+                    ciphertext: AbeEncryption, registration_data) -> bytes:
         dabe = DabeRD13(self.group)
         try:
             return dabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext, gid)
