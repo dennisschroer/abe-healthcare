@@ -42,11 +42,6 @@ class RW15Implementation(BaseImplementation):
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return maabe.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
-                        secret_keys: SecretKeyStore,
-                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
-        pass
-
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption, registration_data) -> bytes:
         maabe = MaabeRW15(self.group)
