@@ -1,16 +1,24 @@
 import pickle
 import unittest
+from typing import List
 
 from client.user_client import UserClient
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from implementations.base_implementation import BaseImplementation
+from implementations.dacmacs13_implementation import DACMACS13Implementation
+from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
+from implementations.taac12_implementation import TAAC12Implementation
 from model.user import User
 from service.insurance_service import InsuranceService
 
 
 class UserClientTestCase(unittest.TestCase):
     def setUp(self):
-        implementation = RW15Implementation()
+        self.implementations = [RW15Implementation(), DACMACS13Implementation(), RD13Implementation(),
+                                TAAC12Implementation()]  # type: List[BaseImplementation]
+
+    def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
         attribute_authority = implementation.create_attribute_authority('TEST')
@@ -24,6 +32,11 @@ class UserClientTestCase(unittest.TestCase):
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_create_record()
+
+    def _test_create_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
         self.assertIsNotNone(create_record.info)
@@ -44,6 +57,11 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(info, {'test': 'info'})
 
     def test_update_record(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_update_record()
+
+    def _test_update_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
         update_record = self.subject.update_record(create_record, b'Goodbye world')
@@ -51,7 +69,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.signature)
         pke = self.subject.implementation.create_public_key_scheme()
         self.assertTrue(pke.verify(create_record.write_public_key, update_record.signature,
-                                                           update_record.data))
+                                   update_record.data))
 
         # Update the original record
         create_record.update(update_record)
@@ -61,6 +79,11 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(message, b'Goodbye world')
 
     def test_update_policy(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_update_policy()
+
+    def _test_update_policy(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
         update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST', 1)
@@ -92,6 +115,11 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(message, b'Hello world')
 
     def test_update_policy_insufficient_policy(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_update_policy_insufficient_policy()
+
+    def _test_update_policy_insufficient_policy(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
 
@@ -112,6 +140,11 @@ class UserClientTestCase(unittest.TestCase):
             pass
 
     def test_update_policy_invalid_timeperiod(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_update_policy_invalid_timeperiod()
+
+    def _test_update_policy_invalid_timeperiod(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
 
@@ -133,6 +166,11 @@ class UserClientTestCase(unittest.TestCase):
             pass
 
     def test_decrypt_record(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_decrypt_record()
+
+    def _test_decrypt_record(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
 
@@ -142,6 +180,11 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual(info, {'test': 'info'})
 
     def test_decrypt_record_insufficient_attributes(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_decrypt_record_insufficient_attributes()
+
+    def _test_decrypt_record_insufficient_attributes(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
                                                            1)
@@ -154,6 +197,11 @@ class UserClientTestCase(unittest.TestCase):
             pass
 
     def test_decrypt_record_invalid_time_period(self):
+        for implementation in self.implementations:
+            self.setUpWithImplementation(implementation)
+            self._test_decrypt_record_invalid_time_period()
+
+    def _test_decrypt_record_invalid_time_period(self):
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
         create_record_invalid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
                                                            2)

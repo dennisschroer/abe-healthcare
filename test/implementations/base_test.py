@@ -99,7 +99,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         try:
             decryption_keys = self.subject.decryption_keys(self.global_parameters,
                                                            {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
-                                                           self.invalid_time_keys, self.registration_data, ciphertext, 1
+                                                           self.invalid_time_keys, self.registration_data, ciphertext, 2
                                                            )
             self.subject.abe_decrypt(self.global_parameters, decryption_keys,
                                      'alice', ciphertext, self.registration_data)
@@ -121,7 +121,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
                 decryption_keys = self.subject.decryption_keys(self.global_parameters,
                                                                {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
                                                                secret_keys, self.registration_data,
-                                                               ciphertext, 1
+                                                               key, 1
                                                                )
                 decrypted = self.subject.abe_decrypt_wrapped(self.global_parameters,
                                                              decryption_keys, 'alice',
@@ -133,7 +133,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
                     decryption_keys = self.subject.decryption_keys(self.global_parameters,
                                                                    {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
                                                                    secret_keys, self.registration_data,
-                                                                   ciphertext, 1
+                                                                   key, 1
                                                                    )
                     self.subject.abe_decrypt_wrapped(self.global_parameters,
                                                      decryption_keys,
@@ -146,7 +146,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
                 decryption_keys = self.subject.decryption_keys(self.global_parameters,
                                                                {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
                                                                self.invalid_time_keys, self.registration_data,
-                                                               ciphertext, 2
+                                                               key, 2
                                                                )
                 self.subject.abe_decrypt_wrapped(self.global_parameters,
                                                  decryption_keys,
