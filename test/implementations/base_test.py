@@ -3,6 +3,7 @@ import unittest
 from charm.core.math.pairing import GT
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation
+from model.types import AbeEncryption
 from test.data import lorem
 
 
@@ -21,6 +22,8 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.ma1.setup(self.ca, ['ONE@A1', 'TWO@A1'])
         self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'])
 
+        self.registration_data = self.ca.register_user('alice')
+
         # Setup keys
         self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2}, 1)
         self.valid_secret_keys = []  # type: list
@@ -35,8 +38,10 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # All secret keys
         self.all_secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(self.all_secret_keys, self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 1))
-        self.subject.update_secret_keys(self.all_secret_keys, self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 1))
+        self.subject.update_secret_keys(self.all_secret_keys,
+                                        self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 1))
+        self.subject.update_secret_keys(self.all_secret_keys,
+                                        self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 1))
         self.valid_secret_keys.append(self.all_secret_keys)
 
         # No secret keys
@@ -44,17 +49,20 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Not enough secret keys
         self.not_enough_secret_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(self.not_enough_secret_keys, self.ma1.keygen('alice', registration_data, ['ONE@A1'], 1))
+        self.subject.update_secret_keys(self.not_enough_secret_keys,
+                                        self.ma1.keygen('alice', registration_data, ['ONE@A1'], 1))
         self.invalid_secret_keys.append(self.not_enough_secret_keys)
 
         # All secret keys, but invalid time period
         self.invalid_time_keys = self.subject.setup_secret_keys('alice')
-        self.subject.update_secret_keys(self.invalid_time_keys, self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 2))
-        self.subject.update_secret_keys(self.invalid_time_keys, self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 2))
+        self.subject.update_secret_keys(self.invalid_time_keys,
+                                        self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 2))
+        self.subject.update_secret_keys(self.invalid_time_keys,
+                                        self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 2))
 
         self.policy = '(ONE@A1 AND THREE@A2) OR (ONE@A1 AND TWO@A1 AND FOUR@A2) OR (ONE@A1 AND THREE@A2 AND FOUR@A2)'
 
-    def decryption_key(self, secret_keys, time_period: int):
+    def decryption_key(self, secret_keys, ciphertext: AbeEncryption, time_period: int):
         """
         Determine the decryption key to use in the decryption. If a decryption key is required, this
         is used. Otherwise, the secret keys of the user are used.
@@ -63,8 +71,8 @@ class ImplementationBaseTestCase(unittest.TestCase):
         :return: The plaintext
         """
         if self.subject.decryption_keys_required:
-            decryption_keys = self.subject.decryption_keys({'A1': self.ma1, 'A2': self.ma2},
-                                                           secret_keys, time_period)
+            decryption_keys = self.subject.decryption_keys(self.global_parameters, {'A1': self.ma1, 'A2': self.ma2},
+                                                           secret_keys, self.registration_data, ciphertext, time_period)
         else:
             decryption_keys = secret_keys
         return decryption_keys
@@ -83,21 +91,21 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
-            decrypted = self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
-                                                 ciphertext, d)
+            decrypted = self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, ciphertext, 1), 'alice',
+                                                 ciphertext, self.registration_data)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
             try:
-                self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, 1), 'alice',
-                                         ciphertext, d)
+                self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, ciphertext,1), 'alice',
+                                         ciphertext, self.registration_data)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
 
         try:
-            self.subject.abe_decrypt(self.global_parameters, self.decryption_key(self.invalid_time_keys, 2), 'alice',
-                                     ciphertext, d)
+            self.subject.abe_decrypt(self.global_parameters, self.decryption_key(self.invalid_time_keys, ciphertext,2), 'alice',
+                                     ciphertext, self.registration_data)
             self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
         except PolicyNotSatisfiedException:
             pass
@@ -153,5 +161,3 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-

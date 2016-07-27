@@ -10,7 +10,7 @@ from implementations.serializer.base_serializer import BaseSerializer
 from implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
 from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from model.records.global_parameters import GlobalParameters
-from model.types import SecretKeyStore, SecretKeys, AbeEncryption
+from model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData
 from service.central_authority import CentralAuthority
 from utils.key_utils import extract_key_from_group_element
 
@@ -164,7 +164,7 @@ class BaseImplementation(object):
         raise NotImplementedError()
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption, registration_data) -> bytes:
+                    ciphertext: AbeEncryption, registration_data: RegistrationData) -> bytes:
         """
         Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
         :param global_parameters: The global parameters.
@@ -179,7 +179,7 @@ class BaseImplementation(object):
 
     def abe_decrypt_wrapped(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
                             gid: str,
-                            ciphertext_tuple: Tuple[AbeEncryption, bytes]):
+                            ciphertext_tuple: Tuple[AbeEncryption, bytes], registration_data: RegistrationData):
         """
         Decrypt some ciphertext resulting from a wrapped attribute based encryption
         (encrypted with symmetric key encryption and attribute based encryption) to the plaintext.
@@ -189,12 +189,13 @@ class BaseImplementation(object):
         :param gid: The global identifier of the user
         :param ciphertext_tuple: The ciphertext to decrypt. This is a tuple containing the encrypted key and the ciphertext
         encrypted using symmetric key encryption.
+        :param registration_data: The registration data of the user.
         :raise Exception: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
         ske = self.create_symmetric_key_scheme()
         encrypted_key, ciphertext = ciphertext_tuple
-        key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key, d)
+        key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key, registration_data)
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
                                                        ske.ske_key_size())
         return ske.ske_decrypt(ciphertext, symmetric_key)

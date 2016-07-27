@@ -44,7 +44,7 @@ class DACMACS13Implementation(BaseImplementation):
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return dacmacs.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, Any],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         dacmacs = DACMACS(self.group)
@@ -64,7 +64,7 @@ class DACMACS13Implementation(BaseImplementation):
 class DACMACS13CentralAuthority(CentralAuthority):
     def __init__(self, group=None):
         super().__init__(group)
-        self.master_key = None
+        self.master_key = None  # type: Any
 
     def register_user(self, gid: str) -> dict:
         dacmacs = DACMACS(self.global_parameters.group)
@@ -140,8 +140,9 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
         dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return {self.name: dacmacs.keygen(self.global_parameters.scheme_parameters,
-                              self.secret_keys_for_time_period(time_period),
-                              self.public_keys_for_time_period(time_period), attributes, registration_data['cert'])}
+                                          self.secret_keys_for_time_period(time_period),
+                                          self.public_keys_for_time_period(time_period), attributes,
+                                          registration_data['cert'])}
 
 
 class DACMACS13Serializer(BaseSerializer):
@@ -157,10 +158,14 @@ class DACMACS13Serializer(BaseSerializer):
             'p': ciphertext['policy'],
             'C': self.group.serialize(ciphertext['C']),
             'C1': self.group.serialize(ciphertext['C1']),
-            'C2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['C2'].items()},
-            'Ci': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['Ci'].items()},
-            'D1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['D1'].items()},
-            'D2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in ciphertext['D2'].items()},
+            'C2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+                   ciphertext['C2'].items()},
+            'Ci': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+                   ciphertext['Ci'].items()},
+            'D1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+                   ciphertext['D1'].items()},
+            'D2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+                   ciphertext['D2'].items()},
             'd': dictionary
         }
 

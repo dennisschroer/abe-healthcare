@@ -45,7 +45,7 @@ class TAAC12Implementation(BaseImplementation):
         taac = Taac(self.group)
         return taac.encrypt(global_parameters.scheme_parameters, public_keys, message, policy, time_period)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, Any],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         update_keys = []
@@ -59,7 +59,7 @@ class TAAC12Implementation(BaseImplementation):
                     ciphertext: AbeEncryption, registration_data) -> bytes:
         taac = Taac(self.group)
         try:
-            return taac.decrypt(global_parameters.scheme_parameters, decryption_keys, ciphertext, gid)
+            return taac.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext, gid)
         except Exception:
             raise PolicyNotSatisfiedException()
 
