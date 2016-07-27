@@ -3,7 +3,6 @@ import unittest
 from charm.core.math.pairing import GT
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from implementations.base_implementation import BaseImplementation
-from model.types import AbeEncryption
 from test.data import lorem
 
 
@@ -62,21 +61,6 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         self.policy = '(ONE@A1 AND THREE@A2) OR (ONE@A1 AND TWO@A1 AND FOUR@A2) OR (ONE@A1 AND THREE@A2 AND FOUR@A2)'
 
-    def decryption_key(self, secret_keys, ciphertext: AbeEncryption, time_period: int):
-        """
-        Determine the decryption key to use in the decryption. If a decryption key is required, this
-        is used. Otherwise, the secret keys of the user are used.
-        :param time_period: The time period.
-        :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
-        :return: The plaintext
-        """
-        if self.subject.decryption_keys_required:
-            decryption_keys = self.subject.decryption_keys(self.global_parameters, {'A1': self.ma1, 'A2': self.ma2},
-                                                           secret_keys, self.registration_data, ciphertext, time_period)
-        else:
-            decryption_keys = secret_keys
-        return decryption_keys
-
     def encrypt_decrypt_abe(self):
         self.setup_abe()
 
@@ -91,21 +75,33 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
+            decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                           {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                           secret_keys, self.registration_data, ciphertext, 1
+                                                           )
             decrypted = self.subject.abe_decrypt(self.global_parameters,
-                                                 self.decryption_key(secret_keys, ciphertext, 1), 'alice',
+                                                 decryption_keys, 'alice',
                                                  ciphertext, self.registration_data)
             self.assertEqual(m, decrypted)
 
         for secret_keys in self.invalid_secret_keys:
             try:
-                self.subject.abe_decrypt(self.global_parameters, self.decryption_key(secret_keys, ciphertext, 1),
+                decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               secret_keys, self.registration_data, ciphertext, 1
+                                                               )
+                self.subject.abe_decrypt(self.global_parameters, decryption_keys,
                                          'alice', ciphertext, self.registration_data)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:
                 pass
 
         try:
-            self.subject.abe_decrypt(self.global_parameters, self.decryption_key(self.invalid_time_keys, ciphertext, 2),
+            decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                           {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                           self.invalid_time_keys, self.registration_data, ciphertext, 1
+                                                           )
+            self.subject.abe_decrypt(self.global_parameters, decryption_keys,
                                      'alice', ciphertext, self.registration_data)
             self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
         except PolicyNotSatisfiedException:
@@ -122,23 +118,38 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
             # Attempt to decrypt the messages
             for secret_keys in self.valid_secret_keys:
+                decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               secret_keys, self.registration_data,
+                                                               ciphertext, 1
+                                                               )
                 decrypted = self.subject.abe_decrypt_wrapped(self.global_parameters,
-                                                             self.decryption_key(secret_keys, ciphertext, 1), 'alice',
+                                                             decryption_keys, 'alice',
                                                              (key, ciphertext), self.registration_data)
                 self.assertEqual(m, decrypted)
 
             for secret_keys in self.invalid_secret_keys:
                 try:
+                    decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                                   {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                                   secret_keys, self.registration_data,
+                                                                   ciphertext, 1
+                                                                   )
                     self.subject.abe_decrypt_wrapped(self.global_parameters,
-                                                     self.decryption_key(secret_keys, ciphertext, 1),
+                                                     decryption_keys,
                                                      'alice', (key, ciphertext), self.registration_data)
                     self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
                 except PolicyNotSatisfiedException:
                     pass
 
             try:
+                decryption_keys = self.subject.decryption_keys(self.global_parameters,
+                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               self.invalid_time_keys, self.registration_data,
+                                                               ciphertext, 2
+                                                               )
                 self.subject.abe_decrypt_wrapped(self.global_parameters,
-                                                 self.decryption_key(self.invalid_time_keys, ciphertext, 2),
+                                                 decryption_keys,
                                                  'alice', (key, ciphertext), self.registration_data)
                 self.fail("Should throw an PolicyNotSatisfiedException because of insufficient secret keys")
             except PolicyNotSatisfiedException:

@@ -84,16 +84,12 @@ class UserClient(object):
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: The plaintext
         """
-        if self.implementation.decryption_keys_required:
-            # TODO cache decryption keys
-            decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                                  self.insurance_service.authorities,
-                                                                  self.user.secret_keys,
-                                                                  self.user.registration_data,
-                                                                  ciphertext,
-                                                                  time_period)
-        else:
-            decryption_keys = self.user.secret_keys
+        decryption_keys = self.implementation.decryption_keys(self.global_parameters,
+                                                              self.insurance_service.authorities,
+                                                              self.user.secret_keys,
+                                                              self.user.registration_data,
+                                                              ciphertext,
+                                                              time_period)
         return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext,
                                                self.user.registration_data)
 
@@ -131,7 +127,8 @@ class UserClient(object):
         # Retrieve the write secret key
         write_secret_key = RSA.importKey(
             self.implementation.abe_decrypt_wrapped(self.global_parameters, self.user.secret_keys,
-                                                    self.user.gid, record.write_private_key, self.user.registration_data))
+                                                    self.user.gid, record.write_private_key,
+                                                    self.user.registration_data))
         # Encrypt the updated data
         data = ske.ske_encrypt(message, symmetric_key)
         # Sign the data
