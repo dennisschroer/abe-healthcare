@@ -79,9 +79,9 @@ class ABEHealthCare(object):
         user.registration_data = self.central_authority.register_user(user.gid)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen_valid_sttributes(user.gid, user.registration_data, insurance_attributes, 1))
+            user.issue_secret_keys(self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes, 1))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen_valid_sttributes(user.gid, user.registration_data, national_attributes, 1))
+            user.issue_secret_keys(self.national_database.keygen_valid_attributes(user.gid, user.registration_data, national_attributes, 1))
         return user_client
 
     def setup(self):

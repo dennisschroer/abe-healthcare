@@ -84,9 +84,9 @@ class AttributeAuthority(object):
     def remove_revoked_attributes(self, gid: str, attributes: List[str], time_period: int) -> List[str]:
         return [attribute for attribute in attributes if not self.is_revoked(gid, attribute, time_period)]
 
-    def keygen_valid_sttributes(self, gid: str, registration_data: Any, attributes: list, time_period: int):
+    def keygen_valid_attributes(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         valid_attributes = self.remove_revoked_attributes(gid, attributes, time_period)
-        self.keygen(gid, registration_data, valid_attributes, time_period)
+        return self.keygen(gid, registration_data, valid_attributes, time_period)
 
     def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         """
