@@ -3,16 +3,16 @@ import pickle
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
+
+from shared.connection.user_insurance_connection import UserInsuranceConnection
+from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
+from shared.model.records.update_record import UpdateRecord
 from shared.model.types import AbeEncryption
 from shared.model.user import User
-
-from service.insurance_service import InsuranceService
-from shared.implementations.base_implementation import BaseImplementation
-from shared.model.records.update_record import UpdateRecord
 from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
@@ -23,9 +23,10 @@ USER_OWNER_KEY_FILENAME = '%s.der'
 
 
 class UserClient(object):
-    def __init__(self, user: User, insurance_service: InsuranceService, implementation: BaseImplementation) -> None:
+    def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
+                 implementation: BaseImplementation) -> None:
         self.user = user
-        self.insurance_service = insurance_service
+        self.insurance_connection = insurance_connection
         self.implementation = implementation
         self._global_parameters = None  # type: GlobalParameters
 
@@ -36,8 +37,16 @@ class UserClient(object):
         :return: The global parameters
         """
         if self._global_parameters is None:
-            self._global_parameters = self.insurance_service.global_parameters
+            self._global_parameters = self.insurance_connection.request_global_parameters()
         return self._global_parameters
+
+    @property
+    def authorities(self):
+        return self.insurance_connection.request_authorities()
+
+    def authorities_public_keys(self, time_period):
+        # Retrieve authority public keys
+        return self.implementation.merge_public_keys(self.authorities, time_period)
 
     def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict,
                       time_period: int) -> CreateRecord:
@@ -59,9 +68,6 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.get_owner_key()
 
-        # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
-
         # Encrypt data and create a record
         return CreateRecord(
             read_policy=read_policy,
@@ -69,9 +75,11 @@ class UserClient(object):
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
-                                                                authority_public_keys, key, read_policy, time_period),
+                                                                self.authorities_public_keys(time_period), key,
+                                                                read_policy, time_period),
             encryption_key_owner=pke.encrypt(symmetric_key, owner_key_pair),
-            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
+            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters,
+                                                                      self.authorities_public_keys(time_period),
                                                                       write_key_pair.exportKey('DER'), write_policy,
                                                                       time_period),
             time_period=time_period,
@@ -88,7 +96,7 @@ class UserClient(object):
         :return: The plaintext
         """
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.insurance_service.authorities,
+                                                              self.authorities,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               ciphertext,
@@ -129,7 +137,7 @@ class UserClient(object):
                                                        ske.ske_key_size())
         # Retrieve the write secret key
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.insurance_service.authorities,
+                                                              self.authorities,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               record.write_private_key[0],
@@ -168,7 +176,7 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
+        authority_public_keys = self.implementation.merge_public_keys(self.authorities, time_period)
 
         return PolicyUpdateRecord(
             read_policy=read_policy,
@@ -195,7 +203,7 @@ class UserClient(object):
         :param location: The location of the DataRecord to request
         :return: records.data_record.DataRecord the DataRecord, or None.
         """
-        return self.insurance_service.load(location)
+        return self.insurance_connection.request_record(location)
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
@@ -204,7 +212,7 @@ class UserClient(object):
         :type create_record: records.create_record.CreateRecord
         :return: The location of the created record.
         """
-        return self.insurance_service.create(create_record)
+        return self.insurance_connection.send_create_record(create_record)
 
     def send_update_record(self, location: str, update_record: UpdateRecord) -> None:
         """
@@ -212,7 +220,7 @@ class UserClient(object):
         :param location: The location of the original record.
         :param update_record: The UpdateRecord to send.
         """
-        self.insurance_service.update(location, update_record)
+        self.insurance_connection.send_update_record(location, update_record)
 
     def send_policy_update_record(self, location: str, policy_update_record: PolicyUpdateRecord) -> None:
         """
@@ -220,7 +228,7 @@ class UserClient(object):
         :param location: The location of the original record.
         :param policy_update_record: The UpdateRecord to send.
         """
-        self.insurance_service.policy_update(location, policy_update_record)
+        self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
     def get_owner_key(self) -> Any:
         """
