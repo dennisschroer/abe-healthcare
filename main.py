@@ -5,6 +5,7 @@ from os.path import isfile, join
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from implementations.base_implementation import BaseImplementation
+from implementations.dacmacs13_implementation import DACMACS13Implementation
 from implementations.rd13_implementation import RD13Implementation
 from implementations.rw15_implementation import RW15Implementation
 from implementations.taac12_implementation import TAAC12Implementation
@@ -44,9 +45,9 @@ class ABEHealthCare(object):
         self.implementation = TAAC12Implementation()
         self.run()
 
-    # def dacmacs13(self):
-    #     self.implementation = DACMACS13Implementation()
-    #     self.run()
+    def dacmacs13(self):
+        self.implementation = DACMACS13Implementation()
+        self.run()
 
     def setup_central_authority(self):
         """
@@ -78,9 +79,9 @@ class ABEHealthCare(object):
         user.registration_data = self.central_authority.register_user(user.gid)
         user_client = UserClient(user, self.insurance_service, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen(user.gid, user.registration_data, insurance_attributes, 1))
+            user.issue_secret_keys(self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes, 1))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen(user.gid, user.registration_data, national_attributes, 1))
+            user.issue_secret_keys(self.national_database.keygen_valid_attributes(user.gid, user.registration_data, national_attributes, 1))
         return user_client
 
     def setup(self):
@@ -189,7 +190,7 @@ class ABEHealthCare(object):
     def run(self):
         self.setup()
         locations = self.run_encryptions()
-        # self.run_updates(locations)
+        self.run_updates(locations)
         self.run_policy_updates(locations)
         self.run_decryptions(locations)
 
@@ -199,5 +200,8 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
+    pr.runcall(abe.rw15)
     pr.runcall(abe.rd13)
+    pr.runcall(abe.taac12)
+    pr.runcall(abe.dacmacs13)
     # pr.print_stats(sort='cumtime')

@@ -45,7 +45,9 @@ class TAAC12Implementation(BaseImplementation):
         taac = Taac(self.group)
         return taac.encrypt(global_parameters.scheme_parameters, public_keys, message, policy, time_period)
 
-    def decryption_keys(self, authorities: Dict[str, Any], secret_keys: SecretKeyStore, time_period: int):
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, Any],
+                        secret_keys: SecretKeyStore,
+                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         update_keys = []
         taac = Taac(self.group)
         for authority_name in authorities:
@@ -53,11 +55,11 @@ class TAAC12Implementation(BaseImplementation):
         merged_update_keys = Taac.merge_timed_keys(*update_keys)
         return taac.decryption_keys_computation(secret_keys, merged_update_keys)
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, decryption_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
+    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
+                    ciphertext: AbeEncryption, registration_data) -> bytes:
         taac = Taac(self.group)
         try:
-            return taac.decrypt(global_parameters.scheme_parameters, decryption_keys, ciphertext, gid)
+            return taac.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext, gid)
         except Exception:
             raise PolicyNotSatisfiedException()
 
@@ -115,9 +117,11 @@ class TAAC12AttributeAuthority(AttributeAuthority):
     def generate_update_keys(self, time_period: int) -> dict:
         if time_period not in self.update_keys:
             taac = Taac(self.global_parameters.group)
+            revocation_list = self.revocation_list_for_time_period(time_period)
             self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
                                                                       self.public_keys_for_time_period(time_period),
-                                                                      self.secret_keys_for_time_period(time_period), {},
+                                                                      self.secret_keys_for_time_period(time_period),
+                                                                      self.states, revocation_list,
                                                                       time_period, self.attributes)
         return self.update_keys[time_period]
 
