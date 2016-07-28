@@ -1,8 +1,8 @@
 import unittest
 
 from charm.core.math.pairing import GT
-from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation
+from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation
 from test.data import lorem
 
 

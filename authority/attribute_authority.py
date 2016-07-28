@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 
-from model.records.global_parameters import GlobalParameters
 from service.central_authority import CentralAuthority
+from shared.model.global_parameters import GlobalParameters
 
 
 class AttributeAuthority(object):

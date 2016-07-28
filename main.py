@@ -2,16 +2,17 @@ import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
+
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
-from implementations.base_implementation import BaseImplementation
-from implementations.dacmacs13_implementation import DACMACS13Implementation
-from implementations.rd13_implementation import RD13Implementation
-from implementations.rw15_implementation import RW15Implementation
-from implementations.taac12_implementation import TAAC12Implementation
-from model.user import User
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
+from shared.implementations.rw15_implementation import RW15Implementation
+from shared.model.user import User
 
 
 class ABEHealthCare(object):
@@ -202,10 +203,10 @@ if __name__ == '__main__':
     pr = cProfile.Profile()
     print("== RW15 ((+) large attribute universe)")
     pr.runcall(abe.rw15)
-    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    pr.runcall(abe.rd13)
-    print("== TAAC ((+) embedded timestamp)")
-    pr.runcall(abe.taac12)
-    print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
-    pr.runcall(abe.dacmacs13)
-    # pr.print_stats(sort='cumtime')
+    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    # pr.runcall(abe.rd13)
+    # print("== TAAC ((+) embedded timestamp)")
+    # pr.runcall(abe.taac12)
+    # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
+    # pr.runcall(abe.dacmacs13)
+    pr.print_stats(sort='cumtime')
