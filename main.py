@@ -2,17 +2,17 @@ import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
-from shared.connection.user_insurance_connection import UserInsuranceConnection
-from shared.implementations.base_implementation import BaseImplementation
-from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
-from shared.implementations.rd13_implementation import RD13Implementation
-from shared.implementations.taac12_implementation import TAAC12Implementation
-
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
+from shared.connection.base_connection import BaseConnection
+from shared.connection.user_insurance_connection import UserInsuranceConnection
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 
 
@@ -25,6 +25,7 @@ class ABEHealthCare(object):
         self.insurance_service = None  # type: InsuranceService
         self.doctor = None  # type: UserClient
         self.bob = None  # type: UserClient
+        self.connections = list()  # type: List[BaseConnection]
         self.check_paths()
 
     def check_paths(self):
@@ -79,11 +80,17 @@ class ABEHealthCare(object):
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
         user.registration_data = self.central_authority.register_user(user.gid)
-        user_client = UserClient(user, UserInsuranceConnection(self.insurance_service), self.implementation)
+        connection = UserInsuranceConnection(self.insurance_service, benchmark=True)
+        self.connections.append(connection)
+        user_client = UserClient(user, connection, self.implementation)
         if insurance_attributes is not None:
-            user.issue_secret_keys(self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes, 1))
+            user.issue_secret_keys(
+                self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes,
+                                                               1))
         if national_attributes is not None:
-            user.issue_secret_keys(self.national_database.keygen_valid_attributes(user.gid, user.registration_data, national_attributes, 1))
+            user.issue_secret_keys(
+                self.national_database.keygen_valid_attributes(user.gid, user.registration_data, national_attributes,
+                                                               1))
         return user_client
 
     def setup(self):
@@ -181,7 +188,8 @@ class ABEHealthCare(object):
 
     def run_policy_updates(self, locations):
         list(map(
-            lambda f: self.update_policy_file(self.bob, f, '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+            lambda f: self.update_policy_file(self.bob, f,
+                                              '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               1),
             locations))
@@ -211,3 +219,5 @@ if __name__ == '__main__':
     # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     # pr.runcall(abe.dacmacs13)
     pr.print_stats(sort='cumtime')
+    for connection in abe.connections:
+        connection.dump_benchmarks()
