@@ -9,10 +9,12 @@ class RandomFileGenerator(object):
         pass
 
     @staticmethod
-    def generate(size, amount, output_path='data/random', debug=False):
+    def generate(size, amount, output_path='data/random', skip_if_exists=False, debug=False):
         if not path.exists(output_path):
             makedirs(output_path)
         for i in range(0, amount):
+            if skip_if_exists and path.exists(path.join(output_path, '%i-%i' % (size, i))):
+                continue
             with open(path.join(output_path, '%i-%i' % (size, i)), 'wb') as f:
                 if debug:
                     print("Generating %s" % path.join(output_path, '%i-%i' % (size, i)))

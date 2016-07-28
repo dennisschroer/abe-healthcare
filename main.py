@@ -209,4 +209,4 @@ if __name__ == '__main__':
     # pr.runcall(abe.taac12)
     # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     # pr.runcall(abe.dacmacs13)
-    pr.print_stats(sort='cumtime')
+    # pr.print_stats(sort='cumtime')
