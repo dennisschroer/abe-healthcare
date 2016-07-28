@@ -1,16 +1,18 @@
 from typing import Any, Dict
 
+from shared.implementations.base_implementation import BaseImplementation
+from shared.model.types import SecretKeyStore, AbeEncryption
+from shared.utils.dict_utils import merge_dicts
+
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.dabe_rd13 import DabeRD13
 from charm.toolbox.secretutil import SecretUtil
-from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-from implementations.serializer.base_serializer import BaseSerializer
-from model.records.global_parameters import GlobalParameters
 from service.central_authority import CentralAuthority
-from utils.attribute_util import add_time_period_to_attribute, translate_policy_to_access_structure
-from utils.dict_utils import merge_dicts
+from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseSerializer
+from shared.model.global_parameters import GlobalParameters
+from shared.utils.attribute_util import add_time_period_to_attribute, translate_policy_to_access_structure
 
 
 class RD13Implementation(BaseImplementation):

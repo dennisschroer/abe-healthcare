@@ -1,7 +1,7 @@
 import os
 
-from implementations.base_implementation import BaseImplementation
-from model.records.data_record import DataRecord
+from shared.implementations.base_implementation import BaseImplementation
+from shared.model.records.data_record import DataRecord
 
 
 class Storage(object):

@@ -1,17 +1,18 @@
 from typing import Any, Dict, Tuple
 
+from shared.implementations.public_key.base_public_key import BasePublicKey
+from shared.implementations.public_key.rsa_public_key import RSAPublicKey
+from shared.implementations.serializer.base_serializer import BaseSerializer
+from shared.implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
+
 from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
-from implementations.public_key.base_public_key import BasePublicKey
-from implementations.public_key.rsa_public_key import RSAPublicKey
-from implementations.serializer.base_serializer import BaseSerializer
-from implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
-from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
-from model.records.global_parameters import GlobalParameters
-from model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys
 from service.central_authority import CentralAuthority
-from utils.key_utils import extract_key_from_group_element
+from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
+from shared.model.global_parameters import GlobalParameters
+from shared.model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys
+from shared.utils.key_utils import extract_key_from_group_element
 
 
 class BaseImplementation(object):
