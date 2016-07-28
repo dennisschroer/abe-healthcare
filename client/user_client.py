@@ -125,8 +125,14 @@ class UserClient(object):
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
         # Retrieve the write secret key
+        decryption_keys = self.implementation.decryption_keys(self.global_parameters,
+                                                              self.insurance_service.authorities,
+                                                              self.user.secret_keys,
+                                                              self.user.registration_data,
+                                                              record.write_private_key[0],
+                                                              record.time_period)
         write_secret_key = RSA.importKey(
-            self.implementation.abe_decrypt_wrapped(self.global_parameters, self.user.secret_keys,
+            self.implementation.abe_decrypt_wrapped(self.global_parameters, decryption_keys,
                                                     self.user.gid, record.write_private_key,
                                                     self.user.registration_data))
         # Encrypt the updated data
