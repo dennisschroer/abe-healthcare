@@ -57,12 +57,8 @@ class RD13Implementation(BaseImplementation):
 
         return dabe.encrypt(global_parameters.scheme_parameters, public_keys, message, access_structure)
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
-                        time_period: int):
-        pass
-
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
+                    ciphertext: AbeEncryption, registration_data) -> bytes:
         dabe = DabeRD13(self.group)
         try:
             return dabe.decrypt(global_parameters.scheme_parameters, secret_keys, ciphertext, gid)
@@ -113,7 +109,7 @@ class RD13AttributeAuthority(AttributeAuthority):
         self._secret_keys[time_period] = sk
 
     def keygen(self, gid, registration_info, attributes, time_period):
-        attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), self.attributes))
+        attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), attributes))
         dabe = DabeRD13(self.global_parameters.group)
         return dabe.keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period),
                            gid, attributes)

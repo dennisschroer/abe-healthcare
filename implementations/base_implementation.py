@@ -1,16 +1,15 @@
 from typing import Any, Dict, Tuple
 
-from implementations.public_key.rsa_public_key import RSAPublicKey
-
 from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from implementations.public_key.base_public_key import BasePublicKey
+from implementations.public_key.rsa_public_key import RSAPublicKey
 from implementations.serializer.base_serializer import BaseSerializer
 from implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
 from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from model.records.global_parameters import GlobalParameters
-from model.types import SecretKeyStore, SecretKeys, AbeEncryption
+from model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys
 from service.central_authority import CentralAuthority
 from utils.key_utils import extract_key_from_group_element
 
@@ -20,8 +19,6 @@ class BaseImplementation(object):
     The base implementation provider for different ABE implementations. Acts as an abstract factory for
     implementation specific subclasses of various scheme classes.
     """
-
-    decryption_keys_required = False
 
     def __init__(self, group: PairingGroup = None) -> None:
         self.group = PairingGroup('SS512') if group is None else group
@@ -149,48 +146,54 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
-    def decryption_keys(self, authorities: Dict[str, AttributeAuthority], secret_keys: SecretKeyStore,
-                        time_period: int):
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+                        secret_keys: SecretKeyStore,
+                        registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         """
         Calculate decryption keys for a user for the given attribute authority.
+        :param global_parameters: The global parameters.
         :param authorities: The attribute authorities to fetch update keys of.
         :param secret_keys: The secret keys of the user.
+        :param registration_data: The registration data of the user
+        :param ciphertext: The ciphertext to create decryption keys for.
         :param time_period: The time period to calculate the decryption keys for.
         :return: The decryption keys for the attributes of the authority the user possesses at the given time period.
         """
-        raise NotImplementedError()
+        return secret_keys
 
-    def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
-                    ciphertext: AbeEncryption) -> bytes:
+    def abe_decrypt(self, global_parameters: GlobalParameters, decryption_keys: DecryptionKeys, gid: str,
+                    ciphertext: AbeEncryption, registration_data: RegistrationData) -> bytes:
         """
         Decrypt some ciphertext resulting from an attribute based encryption to the plaintext.
         :param global_parameters: The global parameters.
-        :param secret_keys: The secret keys of the user.
+        :param decryption_keys: The secret keys of the user.
         :param gid: The global identifier of the user
         :param ciphertext: The ciphertext to decrypt.
+        :param registration_data: The registration data of the user.
         :raise exception.policy_not_satisfied_exception.PolicyNotSatisfiedException: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
         raise NotImplementedError()
 
-    def abe_decrypt_wrapped(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore,
+    def abe_decrypt_wrapped(self, global_parameters: GlobalParameters, decryption_keys: DecryptionKeys,
                             gid: str,
-                            ciphertext_tuple: Tuple[AbeEncryption, bytes]):
+                            ciphertext_tuple: Tuple[AbeEncryption, bytes], registration_data: RegistrationData):
         """
         Decrypt some ciphertext resulting from a wrapped attribute based encryption
         (encrypted with symmetric key encryption and attribute based encryption) to the plaintext.
         :param global_parameters: The global parameters.
         :type global_parameters: records.global_parameters.GlobalParameters
-        :param secret_keys: The secret keys of the user.
+        :param decryption_keys: The decryption keys keys of the user.
         :param gid: The global identifier of the user
         :param ciphertext_tuple: The ciphertext to decrypt. This is a tuple containing the encrypted key and the ciphertext
         encrypted using symmetric key encryption.
+        :param registration_data: The registration data of the user.
         :raise Exception: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
         ske = self.create_symmetric_key_scheme()
         encrypted_key, ciphertext = ciphertext_tuple
-        key = self.abe_decrypt(global_parameters, secret_keys, gid, encrypted_key)
+        key = self.abe_decrypt(global_parameters, decryption_keys, gid, encrypted_key, registration_data)
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
                                                        ske.ske_key_size())
         return ske.ske_decrypt(ciphertext, symmetric_key)
