@@ -1,7 +1,7 @@
 import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
-from implementations.rw15_implementation import RW15Implementation
+from shared.implementations.rw15_implementation import RW15Implementation
 from test.implementations.base_test import ImplementationBaseTestCase
 
 

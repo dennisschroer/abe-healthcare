@@ -1,15 +1,16 @@
 import pickle
 import unittest
 
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
+
 from client.user_client import UserClient
-from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation
-from implementations.dacmacs13_implementation import DACMACS13Implementation
-from implementations.rd13_implementation import RD13Implementation
-from implementations.rw15_implementation import RW15Implementation
-from implementations.taac12_implementation import TAAC12Implementation
-from model.user import User
 from service.insurance_service import InsuranceService
+from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.rw15_implementation import RW15Implementation
+from shared.model.user import User
 
 
 class UserClientTestCase(unittest.TestCase):

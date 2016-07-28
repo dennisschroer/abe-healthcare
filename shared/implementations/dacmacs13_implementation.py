@@ -1,14 +1,15 @@
 from typing import Any, Dict
 
+from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
+
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
-from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-from implementations.serializer.base_serializer import BaseSerializer
-from model.records.global_parameters import GlobalParameters
 from service.central_authority import CentralAuthority
-from utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
+from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.serializer.base_serializer import BaseSerializer
+from shared.model.global_parameters import GlobalParameters
+from shared.utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
 
 
 class DACMACS13Implementation(BaseImplementation):

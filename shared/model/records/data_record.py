@@ -1,8 +1,8 @@
 from typing import Any, Tuple
 
-from model.records.update_record import UpdateRecord
+from shared.model.records.policy_update_record import PolicyUpdateRecord
 
-from model.records.policy_update_record import PolicyUpdateRecord
+from shared.model.records.update_record import UpdateRecord
 
 
 class DataRecord(object):

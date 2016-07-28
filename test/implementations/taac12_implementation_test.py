@@ -1,7 +1,7 @@
 import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
-from implementations.taac12_implementation import TAAC12Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
 from test.implementations.base_test import ImplementationBaseTestCase
 
 

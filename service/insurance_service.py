@@ -2,15 +2,15 @@ import pickle
 from typing import Dict
 
 from Crypto.Hash import SHA
+from shared.model.global_parameters import GlobalParameters
+from shared.model.records.create_record import CreateRecord
+from shared.model.records.data_record import DataRecord
+from shared.model.records.policy_update_record import PolicyUpdateRecord
 
 from authority.attribute_authority import AttributeAuthority
-from implementations.base_implementation import BaseImplementation
-from model.records.create_record import CreateRecord
-from model.records.data_record import DataRecord
-from model.records.global_parameters import GlobalParameters
-from model.records.policy_update_record import PolicyUpdateRecord
-from model.records.update_record import UpdateRecord
 from service.storage import Storage
+from shared.implementations.base_implementation import BaseImplementation
+from shared.model.records.update_record import UpdateRecord
 
 
 class InsuranceService(object):

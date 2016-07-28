@@ -1,10 +1,10 @@
 import unittest
 
 from authority.attribute_authority import AttributeAuthority
-from implementations.rw15_implementation import RW15Implementation
 from main import ABEHealthCare
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
+from shared.implementations.rw15_implementation import RW15Implementation
 
 
 class ABEHealthCareTestCase(unittest.TestCase):

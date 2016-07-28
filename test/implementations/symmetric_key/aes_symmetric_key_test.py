@@ -1,7 +1,8 @@
 import unittest
 
-from implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
-from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
+from shared.implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
+
+from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from test.data import lorem
 
 
