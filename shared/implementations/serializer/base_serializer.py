@@ -2,9 +2,9 @@ import pickle
 from typing import Any
 
 from charm.toolbox.pairinggroup import PairingGroup
-from implementations.public_key.base_public_key import BasePublicKey
-from model.records.data_record import DataRecord
-from model.types import AbeEncryption
+from shared.implementations.public_key.base_public_key import BasePublicKey
+from shared.model.types import AbeEncryption
+from shared.model.records.data_record import DataRecord
 
 DATA_RECORD_READ_POLICY = 'rp'
 DATA_RECORD_WRITE_POLICY = 'wp'

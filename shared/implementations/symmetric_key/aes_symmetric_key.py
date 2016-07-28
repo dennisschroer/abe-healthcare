@@ -1,8 +1,8 @@
-from implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from Crypto import Random
 from Crypto.Cipher import AES
 
-from utils.data_util import pad_data_pksc5, unpad_data_pksc5
+from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
+from shared.utils.data_util import pad_data_pksc5, unpad_data_pksc5
 
 
 class AESSymmetricKey(BaseSymmetricKey):

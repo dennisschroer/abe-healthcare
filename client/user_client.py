@@ -3,18 +3,22 @@ import pickle
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
+from shared.model.global_parameters import GlobalParameters
+from shared.model.records.create_record import CreateRecord
+from shared.model.records.data_record import DataRecord
+from shared.model.records.policy_update_record import PolicyUpdateRecord
+from shared.model.types import AbeEncryption
+from shared.model.user import User
 
-from implementations.base_implementation import BaseImplementation, AbeEncryption
-from model.records.create_record import CreateRecord
-from model.records.data_record import DataRecord
-from model.records.global_parameters import GlobalParameters
-from model.records.policy_update_record import PolicyUpdateRecord
-from model.records.update_record import UpdateRecord
-from model.user import User
 from service.insurance_service import InsuranceService
-from utils.key_utils import extract_key_from_group_element
+from shared.implementations.base_implementation import BaseImplementation
+from shared.model.records.update_record import UpdateRecord
+from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
+
+DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+USER_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users')
 
 
 class UserClient(object):
@@ -237,7 +241,7 @@ class UserClient(object):
         Create a new key pair for this user, to be used for proving ownership.
         :return: A new key pair.
 
-        >>> from implementations.base_implementation import MockImplementation
+        >>> from shared.implementations.base_implementation import MockImplementation
         >>> user_client = UserClient(None, None, MockImplementation())
         >>> key_pair = user_client.create_owner_key()
         >>> key_pair is not None
@@ -251,19 +255,19 @@ class UserClient(object):
         Save the given key pair.
         :param key_pair: The key pair to save.
 
-        >>> from implementations.base_implementation import MockImplementation
+        >>> from shared.implementations.base_implementation import MockImplementation
         >>> implementation = MockImplementation()
         >>> user = User('bob', implementation)
         >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
-        >>> os.path.exists('data/users/%s/owner.der' % user_client.user.gid)
+        >>> os.path.exists(os.path.join(USER_PATH, 'users/%s/owner.der' % user_client.user.gid))
         True
         """
         pke = self.implementation.create_public_key_scheme()
-        if not os.path.exists('data/users/%s' % self.user.gid):
-            os.makedirs('data/users/%s' % self.user.gid)
-        with open('data/users/%s/owner.der' % self.user.gid, 'wb') as f:
+        if not os.path.exists(os.path.join(USER_PATH, 'users/%s' % self.user.gid)):
+            os.makedirs(os.path.join(USER_PATH, 'users/%s' % self.user.gid))
+        with open(os.path.join(USER_PATH, 'users/%s/owner.der' % self.user.gid), 'wb') as f:
             f.write(pke.export_key(key_pair))
 
     def load_owner_keys(self) -> Any:
@@ -271,7 +275,7 @@ class UserClient(object):
         Load the owner key pair for this user.
         :return: The owner key pair.
 
-        >>> from implementations.base_implementation import MockImplementation
+        >>> from shared.implementations.base_implementation import MockImplementation
         >>> implementation = MockImplementation()
         >>> user = User('bob', implementation)
         >>> user_client = UserClient(user, None, implementation)
@@ -282,7 +286,7 @@ class UserClient(object):
         True
         """
         pke = self.implementation.create_public_key_scheme()
-        with open('data/users/%s/owner.der' % self.user.gid, 'rb') as f:
+        with open(os.path.join(USER_PATH, 'users/%s/owner.der' % self.user.gid), 'rb') as f:
             key_pair = pke.import_key(f.read())
         return key_pair
 

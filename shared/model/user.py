@@ -1,6 +1,6 @@
 from typing import Any
 
-from model.records.global_parameters import GlobalParameters
+from shared.model.global_parameters import GlobalParameters
 
 
 class User(object):
@@ -23,7 +23,7 @@ class User(object):
         :param secret_keys:
         :type secret_keys: dict
 
-        >>> from implementations.base_implementation import MockImplementation
+        >>> from shared.implementations.base_implementation import MockImplementation
         >>> dummyImplementation = MockImplementation()
         >>> user = User("bob", dummyImplementation)
         >>> user.secret_keys
