@@ -16,14 +16,18 @@ class UserClientTestCase(unittest.TestCase):
     def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
+        attributes = ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST']
+        user_attributes = ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']
         attribute_authority = implementation.create_attribute_authority('TEST')
-        attribute_authority.setup(central_authority, ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST'])
+        attribute_authority.setup(central_authority, attributes)
+        for attribute in user_attributes:
+            attribute_authority.revoke_attribute_indirect('bob', attribute,2)
         insurance_service = InsuranceService(central_authority.global_parameters, implementation)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(
-            attribute_authority.keygen(user.gid, user.registration_data, ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST'], 1))
+            attribute_authority.keygen_valid_sttributes(user.gid, user.registration_data, user_attributes, 1))
         self.subject = UserClient(user, insurance_service, implementation)
 
     def test_create_record_dacmacs13(self):
