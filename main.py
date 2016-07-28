@@ -2,6 +2,7 @@ import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
 
+from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
 from shared.implementations.rd13_implementation import RD13Implementation
@@ -78,7 +79,7 @@ class ABEHealthCare(object):
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
         user.registration_data = self.central_authority.register_user(user.gid)
-        user_client = UserClient(user, self.insurance_service, self.implementation)
+        user_client = UserClient(user, UserInsuranceConnection(self.insurance_service), self.implementation)
         if insurance_attributes is not None:
             user.issue_secret_keys(self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes, 1))
         if national_attributes is not None:
@@ -191,7 +192,7 @@ class ABEHealthCare(object):
     def run(self):
         self.setup()
         locations = self.run_encryptions()
-        self.run_updates(locations)
+        # self.run_updates(locations)
         self.run_policy_updates(locations)
         self.run_decryptions(locations)
 
