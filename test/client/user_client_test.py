@@ -1,6 +1,5 @@
 import pickle
 import unittest
-from typing import List
 
 from client.user_client import UserClient
 from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
@@ -14,10 +13,6 @@ from service.insurance_service import InsuranceService
 
 
 class UserClientTestCase(unittest.TestCase):
-    def setUp(self):
-        self.implementations = [RW15Implementation(), DACMACS13Implementation(), RD13Implementation(),
-                                TAAC12Implementation()]  # type: List[BaseImplementation]
-
     def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
