@@ -3,16 +3,18 @@ from typing import Any, Tuple
 
 class PolicyUpdateRecord(object):
     def __init__(self,
-                 read_policy: str = None,
-                 write_policy: str = None,
-                 write_public_key: Any = None,
-                 encryption_key_read: dict = None,
-                 encryption_key_owner: bytes = None,
-                 write_private_key: Tuple[dict, bytes] = None,
-                 info: bytes = None,
-                 data: bytes = None,
-                 signature: bytes = None
+                 read_policy: str,
+                 write_policy: str,
+                 write_public_key: Any,
+                 encryption_key_read: dict,
+                 encryption_key_owner: bytes,
+                 write_private_key: Tuple[dict, bytes],
+                 time_period: int,
+                 info: bytes,
+                 data: bytes,
+                 signature: bytes
                  ) -> None:
+        self.time_period = time_period
         self.info = info
         self.read_policy = read_policy
         self.write_policy = write_policy
