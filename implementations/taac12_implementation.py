@@ -117,9 +117,11 @@ class TAAC12AttributeAuthority(AttributeAuthority):
     def generate_update_keys(self, time_period: int) -> dict:
         if time_period not in self.update_keys:
             taac = Taac(self.global_parameters.group)
+            revocation_list = self.revocation_list_for_time_period(time_period)
             self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
                                                                       self.public_keys_for_time_period(time_period),
-                                                                      self.secret_keys_for_time_period(time_period), {},
+                                                                      self.secret_keys_for_time_period(time_period),
+                                                                      self.states, revocation_list,
                                                                       time_period, self.attributes)
         return self.update_keys[time_period]
 
