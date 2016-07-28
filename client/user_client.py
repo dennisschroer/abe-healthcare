@@ -59,8 +59,6 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.get_owner_key()
 
-        self.save_owner_keys(owner_key_pair)
-
         # Retrieve authority public keys
         authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
 
@@ -232,7 +230,7 @@ class UserClient(object):
         if self.user.owner_key_pair is None:
             try:
                 self.user.owner_key_pair = self.load_owner_keys()
-            except IOError:
+            except (IOError, FileNotFoundError):
                 self.user.owner_key_pair = self.create_owner_key()
                 self.save_owner_keys(self.user.owner_key_pair)
         return self.user.owner_key_pair
@@ -266,6 +264,8 @@ class UserClient(object):
         True
         """
         pke = self.implementation.create_public_key_scheme()
+        if not os.path.exists(USER_PATH):
+            os.makedirs(USER_PATH)
         with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
             f.write(pke.export_key(key_pair))
 
@@ -285,6 +285,8 @@ class UserClient(object):
         True
         """
         pke = self.implementation.create_public_key_scheme()
+        if not os.path.exists(USER_PATH):
+            os.makedirs(USER_PATH)
         with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
             key_pair = pke.import_key(f.read())
         return key_pair
