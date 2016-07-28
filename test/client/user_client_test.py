@@ -33,6 +33,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_create_record(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_create_record()
 
@@ -58,6 +59,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_record(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_update_record()
 
@@ -80,6 +82,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_policy(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_update_policy()
 
@@ -116,6 +119,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_policy_insufficient_policy(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_update_policy_insufficient_policy()
 
@@ -141,6 +145,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_update_policy_invalid_timeperiod(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_update_policy_invalid_timeperiod()
 
@@ -167,6 +172,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_decrypt_record(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_decrypt_record()
 
@@ -181,6 +187,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_decrypt_record_insufficient_attributes(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_decrypt_record_insufficient_attributes()
 
@@ -198,6 +205,7 @@ class UserClientTestCase(unittest.TestCase):
 
     def test_decrypt_record_invalid_time_period(self):
         for implementation in self.implementations:
+            self.subTest(implementation=implementation)
             self.setUpWithImplementation(implementation)
             self._test_decrypt_record_invalid_time_period()
 
