@@ -3,13 +3,13 @@ import pickle
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
-from model.records.create_record import CreateRecord
-from model.records.data_record import DataRecord
-from model.records.policy_update_record import PolicyUpdateRecord
-from model.records.update_record import UpdateRecord
 
 from implementations.base_implementation import BaseImplementation, AbeEncryption
+from model.records.create_record import CreateRecord
+from model.records.data_record import DataRecord
 from model.records.global_parameters import GlobalParameters
+from model.records.policy_update_record import PolicyUpdateRecord
+from model.records.update_record import UpdateRecord
 from model.user import User
 from service.insurance_service import InsuranceService
 from utils.key_utils import extract_key_from_group_element
@@ -84,14 +84,14 @@ class UserClient(object):
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: The plaintext
         """
-        if self.implementation.decryption_keys_required:
-            # TODO cache decryption keys
-            decryption_keys = self.implementation.decryption_keys(self.insurance_service.authorities,
-                                                                  self.user.secret_keys, time_period)
-        else:
-            decryption_keys = self.user.secret_keys
-        return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid,
-                                               ciphertext)
+        decryption_keys = self.implementation.decryption_keys(self.global_parameters,
+                                                              self.insurance_service.authorities,
+                                                              self.user.secret_keys,
+                                                              self.user.registration_data,
+                                                              ciphertext,
+                                                              time_period)
+        return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext,
+                                               self.user.registration_data)
 
     def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
         """
@@ -125,9 +125,16 @@ class UserClient(object):
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
         # Retrieve the write secret key
+        decryption_keys = self.implementation.decryption_keys(self.global_parameters,
+                                                              self.insurance_service.authorities,
+                                                              self.user.secret_keys,
+                                                              self.user.registration_data,
+                                                              record.write_private_key[0],
+                                                              record.time_period)
         write_secret_key = RSA.importKey(
-            self.implementation.abe_decrypt_wrapped(self.global_parameters, self.user.secret_keys,
-                                                    self.user.gid, record.write_private_key))
+            self.implementation.abe_decrypt_wrapped(self.global_parameters, decryption_keys,
+                                                    self.user.gid, record.write_private_key,
+                                                    self.user.registration_data))
         # Encrypt the updated data
         data = ske.ske_encrypt(message, symmetric_key)
         # Sign the data
@@ -173,9 +180,9 @@ class UserClient(object):
                                                                       time_period),
             time_period=record.time_period,
             info=ske.ske_encrypt(ske.ske_decrypt(record.info, symmetric_key),
-                                                 new_symmetric_key),
+                                 new_symmetric_key),
             data=ske.ske_encrypt(ske.ske_decrypt(record.data, symmetric_key),
-                                                 new_symmetric_key),
+                                 new_symmetric_key),
             signature=pke.sign(owner_key_pair, pickle.dumps((read_policy, write_policy, time_period)))
         )
 
