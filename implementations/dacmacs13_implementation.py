@@ -48,8 +48,11 @@ class DACMACS13Implementation(BaseImplementation):
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         dacmacs = DACMACS(self.group)
-        return dacmacs.generate_token(global_parameters.scheme_parameters, ciphertext, registration_data['public'],
-                                      secret_keys)
+        try:
+            return dacmacs.generate_token(global_parameters.scheme_parameters, ciphertext, registration_data['public'],
+                                          secret_keys)
+        except Exception:
+            raise PolicyNotSatisfiedException()
 
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption, registration_data) -> bytes:
