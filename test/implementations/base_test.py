@@ -30,17 +30,17 @@ class ImplementationBaseTestCase(unittest.TestCase):
 
         # Just enough secret keys
         self.secret_keys = self.subject.setup_secret_keys('alice')
-        registration_data = self.ca.register_user('alice')
-        self.subject.update_secret_keys(self.secret_keys, self.ma1.keygen('alice', registration_data, ['ONE@A1'], 1))
-        self.subject.update_secret_keys(self.secret_keys, self.ma2.keygen('alice', registration_data, ['THREE@A2'], 1))
+        self.registration_data = self.ca.register_user('alice')
+        self.subject.update_secret_keys(self.secret_keys, self.ma1.keygen('alice', self.registration_data, ['ONE@A1'], 1))
+        self.subject.update_secret_keys(self.secret_keys, self.ma2.keygen('alice', self.registration_data, ['THREE@A2'], 1))
         self.valid_secret_keys.append(self.secret_keys)
 
         # All secret keys
         self.all_secret_keys = self.subject.setup_secret_keys('alice')
         self.subject.update_secret_keys(self.all_secret_keys,
-                                        self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 1))
+                                        self.ma1.keygen('alice', self.registration_data, ['ONE@A1', 'TWO@A1'], 1))
         self.subject.update_secret_keys(self.all_secret_keys,
-                                        self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 1))
+                                        self.ma2.keygen('alice', self.registration_data, ['THREE@A2', 'FOUR@A2'], 1))
         self.valid_secret_keys.append(self.all_secret_keys)
 
         # No secret keys
@@ -49,15 +49,15 @@ class ImplementationBaseTestCase(unittest.TestCase):
         # Not enough secret keys
         self.not_enough_secret_keys = self.subject.setup_secret_keys('alice')
         self.subject.update_secret_keys(self.not_enough_secret_keys,
-                                        self.ma1.keygen('alice', registration_data, ['ONE@A1'], 1))
+                                        self.ma1.keygen('alice', self.registration_data, ['ONE@A1'], 1))
         self.invalid_secret_keys.append(self.not_enough_secret_keys)
 
         # All secret keys, but invalid time period
         self.invalid_time_keys = self.subject.setup_secret_keys('alice')
         self.subject.update_secret_keys(self.invalid_time_keys,
-                                        self.ma1.keygen('alice', registration_data, ['ONE@A1', 'TWO@A1'], 2))
+                                        self.ma1.keygen('alice', self.registration_data, ['ONE@A1', 'TWO@A1'], 2))
         self.subject.update_secret_keys(self.invalid_time_keys,
-                                        self.ma2.keygen('alice', registration_data, ['THREE@A2', 'FOUR@A2'], 2))
+                                        self.ma2.keygen('alice', self.registration_data, ['THREE@A2', 'FOUR@A2'], 2))
 
         self.policy = '(ONE@A1 AND THREE@A2) OR (ONE@A1 AND TWO@A1 AND FOUR@A2) OR (ONE@A1 AND THREE@A2 AND FOUR@A2)'
 
