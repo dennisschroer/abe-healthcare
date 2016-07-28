@@ -19,6 +19,7 @@ RSA_KEY_SIZE = 2048
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 USER_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users')
+USER_OWNER_KEY_FILENAME = '%s.der'
 
 
 class UserClient(object):
@@ -261,13 +262,11 @@ class UserClient(object):
         >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
-        >>> os.path.exists(os.path.join(USER_PATH, 'users/%s/owner.der' % user_client.user.gid))
+        >>> os.path.exists(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % user_client.user.gid))
         True
         """
         pke = self.implementation.create_public_key_scheme()
-        if not os.path.exists(os.path.join(USER_PATH, 'users/%s' % self.user.gid)):
-            os.makedirs(os.path.join(USER_PATH, 'users/%s' % self.user.gid))
-        with open(os.path.join(USER_PATH, 'users/%s/owner.der' % self.user.gid), 'wb') as f:
+        with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
             f.write(pke.export_key(key_pair))
 
     def load_owner_keys(self) -> Any:
@@ -286,7 +285,7 @@ class UserClient(object):
         True
         """
         pke = self.implementation.create_public_key_scheme()
-        with open(os.path.join(USER_PATH, 'users/%s/owner.der' % self.user.gid), 'rb') as f:
+        with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
             key_pair = pke.import_key(f.read())
         return key_pair
 
