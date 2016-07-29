@@ -1,6 +1,7 @@
 import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
+from pstats import Stats
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
@@ -108,96 +109,24 @@ class ABEHealthCare(object):
         self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
         self.bob = self.create_user('bob', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
 
-    def encrypt_file(self, user: UserClient, filename: str) -> str:
-        """
-        Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
-        The first line is the read policy, the second line the write policy.
-        :param user: The user to encrypt with
-        :param filename: The filename (relative to /data/input) to encrypt
-        :return: The name of the encrypted data (in /data/storage/)
-        """
-        # if filename.endswith(".policy"):
-        #     continue
-        policy_filename = '%s.policy' % filename
-        # Read input
-        print('Encrypting %s' % join('data/input', filename))
-        print('           %s' % join('data/input', policy_filename))
-        file = open(join('data/input', filename), 'rb')
-        policy_file = open(join('data/input', policy_filename), 'r')
-        read_policy = policy_file.readline()
-        write_policy = policy_file.readline()
-        # Encrypt a message
-        create_record = user.create_record(read_policy, write_policy, file.read(), {'name': filename}, 1)
-        file.close()
-        # Send to insurance (this also stores the record)
-        return user.send_create_record(create_record)
-
-    def decrypt_file(self, user: UserClient, location: str) -> str:
-        """
-        Decrypt the file with the given name (in /data/storage) and output it to /data/output
-        :param user: The user to decrypt with
-        :param location: The location of the file to decrypt (in /data/storage)
-        :return: The name of the output file (in /data/output)
-        """
-        # Give it to the user
-        record = user.request_record(location)
-
-        print('Decrypting %s' % join('data/storage', location))
-
-        # 'Received record')
-        # print(record.encryption_key_read)
-
-        info, data = user.decrypt_record(record)
-
-        print('Writing    %s' % join('data/output', info['name']))
-        file = open(join('data/output', info['name']), 'wb')
-        file.write(data)
-        file.close()
-        return info['name']
-
-    def update_file(self, user: UserClient, location: str):
-        """
-        Decrypt the file with the given name (in /data/storage) and output it to /data/output
-        :param user: The user to decrypt with
-        :param location: The location of the file to decrypt (in /data/storage)
-        :return: The name of the output file (in /data/output)
-        """
-        # Give it to the user
-        record = user.request_record(location)
-        print('Updating   %s' % join('data/storage', location))
-        # Update the content
-        update_record = user.update_record(record, b'updated content')
-        # Send it to the insurance
-        user.send_update_record(location, update_record)
-
-    def update_policy_file(self, user: UserClient, location: str, read_policy: str, write_policy: str,
-                           time_period: int):
-        # Give it to the user
-        record = user.request_record(location)
-        print('Policy update %s' % join('data/storage', location))
-        # Update the content
-        policy_update_record = user.update_policy(record, read_policy, write_policy, time_period)
-        # Send it to the insurance
-        user.send_policy_update_record(location, policy_update_record)
-
     def run_encryptions(self):
-        return list(map(lambda f: self.encrypt_file(self.bob, f),
+        return list(map(lambda f: self.bob.encrypt_file(f),
                         [f for f in listdir('data/input') if
                          not f.endswith(".policy") and isfile(join('data/input', f))]))
 
     def run_updates(self, locations):
-        list(map(lambda f: self.update_file(self.doctor, f), locations))
+        list(map(lambda f: self.doctor.update_file(f), locations))
 
     def run_policy_updates(self, locations):
         list(map(
-            lambda f: self.update_policy_file(self.bob, f,
+            lambda f: self.bob.update_policy_file(f,
                                               '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
                                               1),
             locations))
 
     def run_decryptions(self, locations):
-        return list(map(lambda f: self.decrypt_file(self.doctor, f), locations))
+        return list(map(lambda f: self.doctor.decrypt_file(f), locations))
 
     def run(self):
         self.setup()
@@ -208,8 +137,6 @@ class ABEHealthCare(object):
 
 
 if __name__ == '__main__':
-    # RandomFileGenerator.clear()
-    # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
 
@@ -219,22 +146,25 @@ if __name__ == '__main__':
     print("== RW15 ((+) large attribute universe)")
     pr.runcall(abe.rw15)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
+    stats = Stats(pr)
+    #
+    stats.strip_dirs().sort_stats('cumtime').print_stats('(user_client|attribute_authority|central|insurance|storage|RSA)')
     pr.clear()
 
-    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    pr.runcall(abe.rd13)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
-    pr.clear()
-
-    print("== TAAC ((+) embedded timestamp)")
-    pr.runcall(abe.taac12)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
-    pr.clear()
-
-    print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
-    pr.runcall(abe.dacmacs13)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
-    pr.clear()
+    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    # pr.runcall(abe.rd13)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
+    # pr.clear()
+    #
+    # print("== TAAC ((+) embedded timestamp)")
+    # pr.runcall(abe.taac12)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
+    # pr.clear()
+    #
+    # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
+    # pr.runcall(abe.dacmacs13)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+    # pr.clear()
 
     for connection in abe.connections:
         connection.dump_benchmarks()
