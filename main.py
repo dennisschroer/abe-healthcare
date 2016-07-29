@@ -15,6 +15,8 @@ from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 
+PROFILE_DATA_DIRECTORY = 'data/profile'
+
 
 class ABEHealthCare(object):
     def __init__(self):
@@ -210,14 +212,29 @@ if __name__ == '__main__':
     # RandomFileGenerator.generate(1024 * 1024, 10, debug=True)
     abe = ABEHealthCare()
     pr = cProfile.Profile()
+
+    if not path.exists(PROFILE_DATA_DIRECTORY):
+        makedirs(PROFILE_DATA_DIRECTORY)
+
     print("== RW15 ((+) large attribute universe)")
     pr.runcall(abe.rw15)
-    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    # pr.runcall(abe.rd13)
-    # print("== TAAC ((+) embedded timestamp)")
-    # pr.runcall(abe.taac12)
-    # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
-    # pr.runcall(abe.dacmacs13)
-    pr.print_stats(sort='cumtime')
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
+    pr.clear()
+
+    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    pr.runcall(abe.rd13)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
+    pr.clear()
+
+    print("== TAAC ((+) embedded timestamp)")
+    pr.runcall(abe.taac12)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
+    pr.clear()
+
+    print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
+    pr.runcall(abe.dacmacs13)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+    pr.clear()
+
     for connection in abe.connections:
         connection.dump_benchmarks()
