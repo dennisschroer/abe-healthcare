@@ -171,7 +171,7 @@ class UserClient(object):
             record.data,
             symmetric_key)
 
-    def update_file(self, location: str, message: str = b'updated content'):
+    def update_file(self, location: str, message: bytes = b'updated content'):
         """
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
         :param user: The user to decrypt with
