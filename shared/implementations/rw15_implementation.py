@@ -85,6 +85,14 @@ class RW15AttributeAuthority(AttributeAuthority):
 
 
 class RW15Serializer(BaseSerializer):
+    def serialize_global_scheme_parameters(self, scheme_parameters):
+        # gp = {'g1': g1, 'g2': g2, 'egg': egg, 'H': H, 'F': F}
+        return {
+            'g1': self.group.serialize(scheme_parameters['g1']),
+            'g2': self.group.serialize(scheme_parameters['g2']),
+            'egg': self.group.serialize(scheme_parameters['egg'])
+        }
+
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
         # C0 = message * (gp['egg'] ** s)
