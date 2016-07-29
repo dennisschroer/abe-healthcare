@@ -13,7 +13,7 @@ from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class UserInsuranceConnection(BaseConnection):
-    def __init__(self, insurance_service: InsuranceService, serializer: PickleSerializer, benchmark: bool = False) -> None:
+    def __init__(self, insurance_service: InsuranceService, serializer: PickleSerializer = None, benchmark: bool = False) -> None:
         super().__init__(benchmark)
         self.insurance_service = insurance_service
         self.serializer = serializer
