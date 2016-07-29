@@ -35,8 +35,7 @@ class PickleSerializer(object):
 
     def data_record(self, data_record: DataRecord) -> bytes:
         return pickle.dumps({
-            'meta': self.serialize_data_record_meta(data_record,
-                                                    self.implementation.create_public_key_scheme()),
+            'meta': self.serialize_data_record_meta(data_record),
             'data': data_record.data
         })
 
@@ -47,8 +46,7 @@ class PickleSerializer(object):
 
     def create_record(self, create_record: CreateRecord) -> bytes:
         return pickle.dumps({
-            'meta': self.serialize_data_record_meta(create_record,
-                                                    self.implementation.create_public_key_scheme()),
+            'meta': self.serialize_data_record_meta(create_record),
             'data': create_record.data
         })
 
@@ -87,13 +85,13 @@ class PickleSerializer(object):
             DATA_RECORD_SIGNATURE: policy_update_record.signature,
         })
 
-    def serialize_data_record_meta(self, data_record: DataRecord, public_key_scheme: BasePublicKey) -> bytes:
+    def serialize_data_record_meta(self, data_record: DataRecord) -> bytes:
         """
         Serialize a data record
         :param data_record:
-        :param public_key_scheme:
-        :return: A generator which yields the serialized fields
+        :return:
         """
+        public_key_scheme = self.implementation.create_public_key_scheme()
         return pickle.dumps({
             DATA_RECORD_READ_POLICY: data_record.read_policy,
             DATA_RECORD_WRITE_POLICY: data_record.write_policy,
@@ -109,7 +107,13 @@ class PickleSerializer(object):
                 data_record.write_private_key[1])
         })
 
-    def deserialize_data_record_meta(self, byte_object: bytes, public_key_scheme: BasePublicKey) -> DataRecord:
+    def deserialize_data_record_meta(self, byte_object: bytes) -> DataRecord:
+        """
+
+        :param byte_object:
+        :return:
+        """
+        public_key_scheme = self.implementation.create_public_key_scheme()
         d = pickle.loads(byte_object)
         return DataRecord(
             read_policy=d[DATA_RECORD_READ_POLICY],

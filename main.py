@@ -77,7 +77,9 @@ class ABEHealthCare(object):
         """
         Setup service
         """
-        self.insurance_service = InsuranceService(self.central_authority.global_parameters, self.implementation)
+        self.insurance_service = InsuranceService(PickleSerializer(self.implementation),
+                                                  self.central_authority.global_parameters,
+                                                  self.implementation.create_public_key_scheme())
         self.insurance_service.add_authority(self.insurance_company)
         self.insurance_service.add_authority(self.national_database)
 
@@ -122,9 +124,9 @@ class ABEHealthCare(object):
     def run_policy_updates(self, locations):
         list(map(
             lambda f: self.bob.update_policy_file(f,
-                                              '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
-                                              'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
-                                              1),
+                                                  '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                                  'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                                  1),
             locations))
 
     def run_decryptions(self, locations):
@@ -150,7 +152,8 @@ if __name__ == '__main__':
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
     stats = Stats(pr)
     print("Times")
-    stats.strip_dirs().sort_stats('cumtime').print_stats('(user_client|attribute_authority|central|insurance|storage|RSA)')
+    stats.strip_dirs().sort_stats('cumtime').print_stats(
+        '(user_client|attribute_authority|central|insurance|storage|RSA)')
     pr.clear()
 
     # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
