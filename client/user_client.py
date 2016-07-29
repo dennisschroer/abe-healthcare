@@ -5,7 +5,6 @@ from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
 
-from client.serializer.client_serializer import ClientSerializer
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
@@ -15,6 +14,7 @@ from shared.model.records.policy_update_record import PolicyUpdateRecord
 from shared.model.records.update_record import UpdateRecord
 from shared.model.types import AbeEncryption
 from shared.model.user import User
+from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
@@ -30,7 +30,7 @@ class UserClient(object):
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
-        self.serializer = ClientSerializer(implementation)
+        self.serializer = PickleSerializer(implementation)
         self._global_parameters = None  # type: GlobalParameters
 
     @property
@@ -176,6 +176,7 @@ class UserClient(object):
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
         :param user: The user to decrypt with
         :param location: The location of the file to decrypt (in /data/storage)
+        :param message: The new message
         :return: The name of the output file (in /data/output)
         """
         # Give it to the user

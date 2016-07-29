@@ -15,6 +15,7 @@ from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
+from shared.serializer.pickle_serializer import PickleSerializer
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
 
@@ -83,7 +84,8 @@ class ABEHealthCare(object):
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
         user.registration_data = self.central_authority.register_user(user.gid)
-        connection = UserInsuranceConnection(self.insurance_service, benchmark=True)
+        serializer = PickleSerializer(self.implementation)
+        connection = UserInsuranceConnection(self.insurance_service, serializer, benchmark=True)
         self.connections.append(connection)
         user_client = UserClient(user, connection, self.implementation)
         if insurance_attributes is not None:
@@ -147,7 +149,7 @@ if __name__ == '__main__':
     pr.runcall(abe.rw15)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
     stats = Stats(pr)
-    #
+    print("Times")
     stats.strip_dirs().sort_stats('cumtime').print_stats('(user_client|attribute_authority|central|insurance|storage|RSA)')
     pr.clear()
 
@@ -166,5 +168,6 @@ if __name__ == '__main__':
     # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
     # pr.clear()
 
+    print("Network usage")
     for connection in abe.connections:
         connection.dump_benchmarks()

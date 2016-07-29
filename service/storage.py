@@ -2,6 +2,7 @@ import os
 
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.records.data_record import DataRecord
+from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class Storage(object):
@@ -16,7 +17,7 @@ class Storage(object):
         :param name: The location of the data record
         :param record: The record to store
         """
-        serializer = implementation.create_serializer()
+        serializer = PickleSerializer(implementation)
         pke = implementation.create_public_key_scheme()
 
         f = open('data/storage/%s.meta' % name, 'wb')
@@ -34,7 +35,7 @@ class Storage(object):
         :param implementation: The implementation
         :return: The loaded data record
         """
-        serializer = implementation.create_serializer()
+        serializer = PickleSerializer(implementation)
         pke = implementation.create_public_key_scheme()
 
         f = open('data/storage/%s.meta' % name, 'rb')
