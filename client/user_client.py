@@ -1,9 +1,11 @@
 import os
 import pickle
+from os.path import join
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
 
+from client.serializer.client_serializer import ClientSerializer
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
@@ -28,6 +30,7 @@ class UserClient(object):
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
+        self.serializer = ClientSerializer(implementation)
         self._global_parameters = None  # type: GlobalParameters
 
     @property
@@ -47,6 +50,34 @@ class UserClient(object):
     def authorities_public_keys(self, time_period):
         # Retrieve authority public keys
         return self.implementation.merge_public_keys(self.authorities, time_period)
+
+    def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None) -> str:
+        """
+        Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
+        The first line is the read policy, the second line the write policy.
+        :param user: The user to encrypt with
+        :param filename: The filename (relative to /data/input) to encrypt
+        :param read_policy: The read policy to use
+        :param write_policy: The write policy to use
+        :return: The name of the encrypted data (in /data/storage/)
+        """
+        # if filename.endswith(".policy"):
+        #     continue
+        policy_filename = '%s.policy' % filename
+        # Read input
+        print('Encrypting %s' % join('data/input', filename))
+        if read_policy is None or write_policy is None:
+            print('           %s' % join('data/input', policy_filename))
+            policy_file = open(join('data/input', policy_filename), 'r')
+            read_policy = policy_file.readline()
+            write_policy = policy_file.readline()
+
+        file = open(join('data/input', filename), 'rb')
+        # Encrypt a message
+        create_record = self.create_record(read_policy, write_policy, file.read(), {'name': filename}, 1)
+        file.close()
+        # Send to insurance (this also stores the record)
+        return self.send_create_record(create_record)
 
     def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict,
                       time_period: int) -> CreateRecord:
@@ -87,6 +118,24 @@ class UserClient(object):
             data=ske.ske_encrypt(message, symmetric_key)
         )
 
+    def decrypt_file(self, location: str) -> str:
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param location: The location of the file to decrypt (in /data/storage)
+        :return: The name of the output file (in /data/output)
+        """
+        record = self.request_record(location)
+
+        print('Decrypting %s' % join('data/storage', location))
+
+        info, data = self.decrypt_record(record)
+
+        print('Writing    %s' % join('data/output', info['name']))
+        file = open(join('data/output', info['name']), 'wb')
+        file.write(data)
+        file.close()
+        return info['name']
+
     def _decrypt_abe(self, ciphertext: AbeEncryption, time_period: int):
         """
         Decrypt the ABE ciphertext. The method calculates decryption keys if necessary.
@@ -122,6 +171,21 @@ class UserClient(object):
             record.data,
             symmetric_key)
 
+    def update_file(self, location: str, message: str = b'updated content'):
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param user: The user to decrypt with
+        :param location: The location of the file to decrypt (in /data/storage)
+        :return: The name of the output file (in /data/output)
+        """
+        # Give it to the user
+        record = self.request_record(location)
+        print('Updating   %s' % join('data/storage', location))
+        # Update the content
+        update_record = self.update_record(record, message)
+        # Send it to the insurance
+        self.send_update_record(location, update_record)
+
     def update_record(self, record: DataRecord, message: bytes) -> UpdateRecord:
         """
         Update the content of a record
@@ -151,6 +215,14 @@ class UserClient(object):
         # Sign the data
         signature = pke.sign(write_secret_key, data)
         return UpdateRecord(data, signature)
+
+    def update_policy_file(self, location: str, read_policy: str, write_policy: str, time_period: int):
+        record = self.request_record(location)
+        print('Policy update %s' % join('data/storage', location))
+        # Update the content
+        policy_update_record = self.update_policy(record, read_policy, write_policy, time_period)
+        # Send it to the insurance
+        self.send_policy_update_record(location, policy_update_record)
 
     def update_policy(self, record: DataRecord, read_policy: str, write_policy: str,
                       time_period: int) -> PolicyUpdateRecord:
