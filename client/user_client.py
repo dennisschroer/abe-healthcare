@@ -1,18 +1,20 @@
 import os
 import pickle
+from os.path import join
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
+
+from shared.connection.user_insurance_connection import UserInsuranceConnection
+from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
+from shared.model.records.update_record import UpdateRecord
 from shared.model.types import AbeEncryption
 from shared.model.user import User
-
-from service.insurance_service import InsuranceService
-from shared.implementations.base_implementation import BaseImplementation
-from shared.model.records.update_record import UpdateRecord
+from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
@@ -23,10 +25,12 @@ USER_OWNER_KEY_FILENAME = '%s.der'
 
 
 class UserClient(object):
-    def __init__(self, user: User, insurance_service: InsuranceService, implementation: BaseImplementation) -> None:
+    def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
+                 implementation: BaseImplementation) -> None:
         self.user = user
-        self.insurance_service = insurance_service
+        self.insurance_connection = insurance_connection
         self.implementation = implementation
+        self.serializer = PickleSerializer(implementation)
         self._global_parameters = None  # type: GlobalParameters
 
     @property
@@ -36,8 +40,44 @@ class UserClient(object):
         :return: The global parameters
         """
         if self._global_parameters is None:
-            self._global_parameters = self.insurance_service.global_parameters
+            self._global_parameters = self.insurance_connection.request_global_parameters()
         return self._global_parameters
+
+    @property
+    def authorities(self):
+        return self.insurance_connection.request_authorities()
+
+    def authorities_public_keys(self, time_period):
+        # Retrieve authority public keys
+        return self.implementation.merge_public_keys(self.authorities, time_period)
+
+    def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None) -> str:
+        """
+        Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
+        The first line is the read policy, the second line the write policy.
+        :param user: The user to encrypt with
+        :param filename: The filename (relative to /data/input) to encrypt
+        :param read_policy: The read policy to use
+        :param write_policy: The write policy to use
+        :return: The name of the encrypted data (in /data/storage/)
+        """
+        # if filename.endswith(".policy"):
+        #     continue
+        policy_filename = '%s.policy' % filename
+        # Read input
+        print('Encrypting %s' % join('data/input', filename))
+        if read_policy is None or write_policy is None:
+            print('           %s' % join('data/input', policy_filename))
+            policy_file = open(join('data/input', policy_filename), 'r')
+            read_policy = policy_file.readline()
+            write_policy = policy_file.readline()
+
+        file = open(join('data/input', filename), 'rb')
+        # Encrypt a message
+        create_record = self.create_record(read_policy, write_policy, file.read(), {'name': filename}, 1)
+        file.close()
+        # Send to insurance (this also stores the record)
+        return self.send_create_record(create_record)
 
     def create_record(self, read_policy: str, write_policy: str, message: bytes, info: dict,
                       time_period: int) -> CreateRecord:
@@ -59,9 +99,6 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.get_owner_key()
 
-        # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
-
         # Encrypt data and create a record
         return CreateRecord(
             read_policy=read_policy,
@@ -69,15 +106,35 @@ class UserClient(object):
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
             encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
-                                                                authority_public_keys, key, read_policy, time_period),
+                                                                self.authorities_public_keys(time_period), key,
+                                                                read_policy, time_period),
             encryption_key_owner=pke.encrypt(symmetric_key, owner_key_pair),
-            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters, authority_public_keys,
+            write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters,
+                                                                      self.authorities_public_keys(time_period),
                                                                       write_key_pair.exportKey('DER'), write_policy,
                                                                       time_period),
             time_period=time_period,
             info=ske.ske_encrypt(pickle.dumps(info), symmetric_key),
             data=ske.ske_encrypt(message, symmetric_key)
         )
+
+    def decrypt_file(self, location: str) -> str:
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param location: The location of the file to decrypt (in /data/storage)
+        :return: The name of the output file (in /data/output)
+        """
+        record = self.request_record(location)
+
+        print('Decrypting %s' % join('data/storage', location))
+
+        info, data = self.decrypt_record(record)
+
+        print('Writing    %s' % join('data/output', info['name']))
+        file = open(join('data/output', info['name']), 'wb')
+        file.write(data)
+        file.close()
+        return info['name']
 
     def _decrypt_abe(self, ciphertext: AbeEncryption, time_period: int):
         """
@@ -88,7 +145,7 @@ class UserClient(object):
         :return: The plaintext
         """
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.insurance_service.authorities,
+                                                              self.authorities,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               ciphertext,
@@ -114,6 +171,22 @@ class UserClient(object):
             record.data,
             symmetric_key)
 
+    def update_file(self, location: str, message: bytes = b'updated content'):
+        """
+        Decrypt the file with the given name (in /data/storage) and output it to /data/output
+        :param user: The user to decrypt with
+        :param location: The location of the file to decrypt (in /data/storage)
+        :param message: The new message
+        :return: The name of the output file (in /data/output)
+        """
+        # Give it to the user
+        record = self.request_record(location)
+        print('Updating   %s' % join('data/storage', location))
+        # Update the content
+        update_record = self.update_record(record, message)
+        # Send it to the insurance
+        self.send_update_record(location, update_record)
+
     def update_record(self, record: DataRecord, message: bytes) -> UpdateRecord:
         """
         Update the content of a record
@@ -129,7 +202,7 @@ class UserClient(object):
                                                        ske.ske_key_size())
         # Retrieve the write secret key
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.insurance_service.authorities,
+                                                              self.authorities,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               record.write_private_key[0],
@@ -143,6 +216,14 @@ class UserClient(object):
         # Sign the data
         signature = pke.sign(write_secret_key, data)
         return UpdateRecord(data, signature)
+
+    def update_policy_file(self, location: str, read_policy: str, write_policy: str, time_period: int):
+        record = self.request_record(location)
+        print('Policy update %s' % join('data/storage', location))
+        # Update the content
+        policy_update_record = self.update_policy(record, read_policy, write_policy, time_period)
+        # Send it to the insurance
+        self.send_policy_update_record(location, policy_update_record)
 
     def update_policy(self, record: DataRecord, read_policy: str, write_policy: str,
                       time_period: int) -> PolicyUpdateRecord:
@@ -168,7 +249,7 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.insurance_service.authorities, time_period)
+        authority_public_keys = self.implementation.merge_public_keys(self.authorities, time_period)
 
         return PolicyUpdateRecord(
             read_policy=read_policy,
@@ -195,7 +276,7 @@ class UserClient(object):
         :param location: The location of the DataRecord to request
         :return: records.data_record.DataRecord the DataRecord, or None.
         """
-        return self.insurance_service.load(location)
+        return self.insurance_connection.request_record(location)
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
@@ -204,7 +285,7 @@ class UserClient(object):
         :type create_record: records.create_record.CreateRecord
         :return: The location of the created record.
         """
-        return self.insurance_service.create(create_record)
+        return self.insurance_connection.send_create_record(create_record)
 
     def send_update_record(self, location: str, update_record: UpdateRecord) -> None:
         """
@@ -212,7 +293,7 @@ class UserClient(object):
         :param location: The location of the original record.
         :param update_record: The UpdateRecord to send.
         """
-        self.insurance_service.update(location, update_record)
+        self.insurance_connection.send_update_record(location, update_record)
 
     def send_policy_update_record(self, location: str, policy_update_record: PolicyUpdateRecord) -> None:
         """
@@ -220,7 +301,7 @@ class UserClient(object):
         :param location: The location of the original record.
         :param policy_update_record: The UpdateRecord to send.
         """
-        self.insurance_service.policy_update(location, policy_update_record)
+        self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
     def get_owner_key(self) -> Any:
         """
