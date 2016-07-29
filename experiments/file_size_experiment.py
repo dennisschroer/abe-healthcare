@@ -1,6 +1,6 @@
 import os
-
 from os.path import join
+from typing import List
 
 from client.user_client import UserClient
 from service.insurance_service import InsuranceService
@@ -17,7 +17,7 @@ class FileSizeExperiment(object):
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
-    def __init__(self, implementation: BaseImplementation, sizes=None):
+    def __init__(self, implementation: BaseImplementation, sizes: List[int] = None) -> None:
         self.implementation = implementation
         if sizes is None:
             sizes = [1, 2 ** 10, 2 ** 20, 2 ** 30]
@@ -54,9 +54,3 @@ class FileSizeExperiment(object):
                 client.update_file(location, update_file.read())
             client.update_policy_file(location, self.policy, self.policy)
             client.decrypt_file(location)
-
-
-if __name__ == '__main__':
-    experiment = FileSizeExperiment()
-    experiment.setup()
-    experiment.run()
