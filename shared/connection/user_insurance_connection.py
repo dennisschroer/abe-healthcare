@@ -21,7 +21,6 @@ class UserInsuranceConnection(BaseConnection):
     def request_global_parameters(self) -> GlobalParameters:
         response = self.insurance_service.global_parameters
         if self.benchmark:
-            print(self.serializer.global_parameters(response))
             self.add_benchmark('< request_global_parameters', len(self.serializer.global_parameters(response)))
         return response
 
