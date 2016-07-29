@@ -1,4 +1,3 @@
-import sys
 from typing import Dict
 
 from authority.attribute_authority import AttributeAuthority
@@ -13,7 +12,8 @@ from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class UserInsuranceConnection(BaseConnection):
-    def __init__(self, insurance_service: InsuranceService, serializer: PickleSerializer = None, benchmark: bool = False) -> None:
+    def __init__(self, insurance_service: InsuranceService, serializer: PickleSerializer = None,
+                 benchmark: bool = False) -> None:
         super().__init__(benchmark)
         self.insurance_service = insurance_service
         self.serializer = serializer
@@ -54,4 +54,5 @@ class UserInsuranceConnection(BaseConnection):
         self.insurance_service.policy_update(location, policy_update_record)
         if self.benchmark:
             self.add_benchmark('> send_policy_update_record.location', len(location))
-            self.add_benchmark('> send_policy_update_record.record', len(self.serializer.policy_update_record(policy_update_record)))
+            self.add_benchmark('> send_policy_update_record.record',
+                               len(self.serializer.policy_update_record(policy_update_record)))
