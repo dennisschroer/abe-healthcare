@@ -1,6 +1,7 @@
 import pickle
 import unittest
 
+from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
 from shared.implementations.rd13_implementation import RD13Implementation
@@ -29,7 +30,7 @@ class UserClientTestCase(unittest.TestCase):
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(
             attribute_authority.keygen_valid_attributes(user.gid, user.registration_data, user_attributes, 1))
-        self.subject = UserClient(user, insurance_service, implementation)
+        self.subject = UserClient(user, UserInsuranceConnection(insurance_service), implementation)
 
     def test_create_record_dacmacs13(self):
         self._test_create_record(DACMACS13Implementation())
