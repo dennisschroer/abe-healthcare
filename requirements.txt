@@ -1,2 +1,2 @@
 pycrypto==2.6.1
-psutil=4.3.0
+psutil==4.3.0
