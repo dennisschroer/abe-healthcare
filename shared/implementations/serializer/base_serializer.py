@@ -33,6 +33,7 @@ class BaseSerializer(object):
 
 
     def serialize_global_scheme_parameters(self, scheme_parameters):
+        return dict()
         raise NotImplementedError()
 
     def attribute_replacement(self, dict: dict, keyword: str) -> int:
