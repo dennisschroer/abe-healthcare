@@ -18,18 +18,18 @@ class FileSizeExperiment(BaseExperiment):
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
-    def __init__(self, implementation: BaseImplementation, sizes: List[int] = None) -> None:
+    def __init__(self, implementation: BaseImplementation, cases: List[int] = None) -> None:
         super().__init__()
         self.implementation = implementation
         self.client = None  # type: UserClient
-        if sizes is None:
-            sizes = [1, 2 ** 10, 2 ** 20]
-        self.cases = sizes
+        if cases is None:
+            cases = [{'name': 1, 'file_size': 1}, {'name': 2**10, 'file_size': 2**10}, {'name': 2**20, 'file_size': 2**20}]
+        self.cases = cases
 
     def setup(self):
         file_generator = RandomFileGenerator()
-        for file_size in self.cases:
-            file_generator.generate(file_size, 2, self.data_location, skip_if_exists=True)
+        for case in self.cases:
+            file_generator.generate(case['file_size'], 2, self.data_location, skip_if_exists=True)
 
         central_authority = self.implementation.create_central_authority()
         central_authority.setup()
@@ -48,8 +48,8 @@ class FileSizeExperiment(BaseExperiment):
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
 
     def run(self, case):
-        first_filename = join(self.data_location, '%i-0' % case)
-        update_filename = join(self.data_location, '%i-1' % case)
+        first_filename = join(self.data_location, '%i-0' % case['file_size'])
+        update_filename = join(self.data_location, '%i-1' % case['file_size'])
 
         location = self.client.encrypt_file(first_filename, self.policy, self.policy)
         with open(update_filename, 'rb') as update_file:

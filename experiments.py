@@ -13,6 +13,6 @@ if __name__ == '__main__':
         experiment.start_measurements()
         experiment.run(case)
         experiment.stop_measurements()
-        experiment.after_run()
+        experiment.after_run(case)
         i += 1
     print("Done")
