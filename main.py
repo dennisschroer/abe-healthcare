@@ -84,10 +84,14 @@ class ABEHealthCare(object):
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
         user.registration_data = self.central_authority.register_user(user.gid)
+
         serializer = PickleSerializer(self.implementation)
         connection = UserInsuranceConnection(self.insurance_service, serializer, benchmark=True)
         self.connections.append(connection)
+
         user_client = UserClient(user, connection, self.implementation)
+
+        # Add attributes
         if insurance_attributes is not None:
             user.issue_secret_keys(
                 self.insurance_company.keygen_valid_attributes(user.gid, user.registration_data, insurance_attributes,
@@ -137,6 +141,17 @@ class ABEHealthCare(object):
         self.run_policy_updates(locations)
         self.run_decryptions(locations)
 
+    def output_measurements(self, stats: Stats, connections):
+        print("Times")
+        stats.strip_dirs().sort_stats('cumtime').print_stats(
+            '(user_client|attribute_authority|central|insurance|storage|RSA)')
+
+        print("Network usage")
+        for connection in connections:
+            connection.dump_benchmarks()
+        connections.clear()
+
+
 
 if __name__ == '__main__':
     abe = ABEHealthCare()
@@ -149,25 +164,28 @@ if __name__ == '__main__':
     pr.runcall(abe.rw15)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
     stats = Stats(pr)
-    print("Times")
-    stats.strip_dirs().sort_stats('cumtime').print_stats('(user_client|attribute_authority|central|insurance|storage|RSA)')
+    abe.output_measurements(stats, abe.connections)
     pr.clear()
 
-    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    # pr.runcall(abe.rd13)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
-    # pr.clear()
-    #
-    # print("== TAAC ((+) embedded timestamp)")
-    # pr.runcall(abe.taac12)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
-    # pr.clear()
-    #
-    # print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
-    # pr.runcall(abe.dacmacs13)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
-    # pr.clear()
+    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    pr.runcall(abe.rd13)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
 
-    print("Network usage")
-    for connection in abe.connections:
-        connection.dump_benchmarks()
+    print("== TAAC ((+) embedded timestamp)")
+    pr.runcall(abe.taac12)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
+
+    print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
+    pr.runcall(abe.dacmacs13)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
+
+
