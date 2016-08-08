@@ -19,15 +19,16 @@ class FileSizeExperiment(BaseExperiment):
     policy = 'TEST@TEST'
 
     def __init__(self, implementation: BaseImplementation, sizes: List[int] = None) -> None:
+        super().__init__()
         self.implementation = implementation
         self.client = None  # type: UserClient
         if sizes is None:
-            sizes = [1, 2 ** 10, 2 ** 20, 2 ** 30]
-        self.sizes = sizes
+            sizes = [1, 2 ** 10, 2 ** 20]
+        self.cases = sizes
 
     def setup(self):
         file_generator = RandomFileGenerator()
-        for file_size in self.sizes:
+        for file_size in self.cases:
             file_generator.generate(file_size, 2, self.data_location, skip_if_exists=True)
 
         central_authority = self.implementation.create_central_authority()
@@ -46,13 +47,14 @@ class FileSizeExperiment(BaseExperiment):
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
 
-    def run(self):
-        for file_size in self.sizes:
-            first_filename = join(self.data_location, '%i-0' % file_size)
-            update_filename = join(self.data_location, '%i-1' % file_size)
+    def run(self, case):
+        first_filename = join(self.data_location, '%i-0' % case)
+        update_filename = join(self.data_location, '%i-1' % case)
 
-            location = self.client.encrypt_file(first_filename, self.policy, self.policy)
-            with open(update_filename, 'rb') as update_file:
-                self.client.update_file(location, update_file.read())
-            self.client.update_policy_file(location, self.policy, self.policy)
-            self.client.decrypt_file(location)
+        location = self.client.encrypt_file(first_filename, self.policy, self.policy)
+        with open(update_filename, 'rb') as update_file:
+            self.client.update_file(location, update_file.read())
+        self.client.update_policy_file(location, self.policy, self.policy)
+        self.client.decrypt_file(location)
+
+

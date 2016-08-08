@@ -7,7 +7,12 @@ if __name__ == '__main__':
     print("Setup...")
     experiment.setup()
     print("Running...")
-    experiment.run()
-    print("Outputting results...")
-
+    i = 1
+    for case in experiment.cases:
+        print("%d/%d" % (i, len(experiment.cases)))
+        experiment.start_measurements()
+        experiment.run(case)
+        experiment.stop_measurements()
+        experiment.after_run()
+        i += 1
     print("Done")
