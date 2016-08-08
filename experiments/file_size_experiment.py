@@ -1,6 +1,6 @@
 import os
 from os.path import join
-from typing import List
+from typing import List, Dict
 
 from client.user_client import UserClient
 from experiments.base_experiment import BaseExperiment
@@ -18,12 +18,11 @@ class FileSizeExperiment(BaseExperiment):
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
-    def __init__(self, implementation: BaseImplementation, cases: List[int] = None) -> None:
-        super().__init__()
-        self.implementation = implementation
+    def __init__(self, implementation: BaseImplementation, cases: List[Dict] = None) -> None:
+        super().__init__(implementation)
         self.client = None  # type: UserClient
         if cases is None:
-            cases = [{'name': 1, 'file_size': 1}, {'name': 2**10, 'file_size': 2**10}, {'name': 2**20, 'file_size': 2**20}]
+            cases = list(map(lambda size: {'name': size, 'file_size': size}, [1, 2**10, 2**20, 2**28]))
         self.cases = cases
 
     def setup(self):

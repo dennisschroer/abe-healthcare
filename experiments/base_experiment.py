@@ -1,15 +1,20 @@
 import cProfile
+from os import path, makedirs
 from pstats import Stats
 
-from os import path
+from shared.implementations.base_implementation import BaseImplementation
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
 
 
 class BaseExperiment(object):
-    def __init__(self):
+    def __init__(self, implementation: BaseImplementation) -> None:
         self.pr = cProfile.Profile()
-        self.cases = list()
+        self.implementation = implementation
+        self.cases = list()  # type: List[Dict]
+
+        if not path.exists(PROFILE_DATA_DIRECTORY):
+            makedirs(PROFILE_DATA_DIRECTORY)
 
     def setup(self):
         raise NotImplementedError()
@@ -25,7 +30,8 @@ class BaseExperiment(object):
 
     def after_run(self, case):
         stats = Stats(self.pr)
-        self.pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, '%s-%s.txt' % (self.__class__.__name__, case['name'])))
+        self.pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, '%s-%s-%s.txt' % (
+        self.__class__.__name__, self.implementation.__class__.__name__, case['name'])))
         stats.strip_dirs().sort_stats('cumtime').print_stats(
             '(user|authority|insurance|storage|RSA)')
         self.pr.clear()
