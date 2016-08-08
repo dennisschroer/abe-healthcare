@@ -3,6 +3,8 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 from pstats import Stats
 
+import psutil
+
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from service.central_authority import CentralAuthority
@@ -146,7 +148,7 @@ class ABEHealthCare(object):
     def output_measurements(self, stats: Stats, connections):
         print("Times")
         stats.strip_dirs().sort_stats('cumtime').print_stats(
-            '(user_client|attribute_authority|central|insurance|storage|RSA)')
+            '(user|authority|insurance|storage|RSA)')
 
         print("Network usage")
         for connection in connections:
@@ -161,12 +163,16 @@ if __name__ == '__main__':
     if not path.exists(PROFILE_DATA_DIRECTORY):
         makedirs(PROFILE_DATA_DIRECTORY)
 
+    process = psutil.Process()
+    process.cpu_percent()
+
     print("== RW15 ((+) large attribute universe)")
     pr.runcall(abe.rw15)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
     pr.runcall(abe.rd13)
@@ -174,6 +180,7 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== TAAC ((+) embedded timestamp)")
     pr.runcall(abe.taac12)
@@ -181,6 +188,7 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     pr.runcall(abe.dacmacs13)
@@ -188,5 +196,6 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
 

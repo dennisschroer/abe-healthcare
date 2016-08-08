@@ -3,6 +3,7 @@ from os.path import join
 from typing import List
 
 from client.user_client import UserClient
+from experiments.base_experiment import BaseExperiment
 from service.insurance_service import InsuranceService
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
@@ -11,14 +12,15 @@ from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.random_file_generator import RandomFileGenerator
 
 
-class FileSizeExperiment(object):
-    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/file_size_experiment')
+class FileSizeExperiment(BaseExperiment):
+    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data/experiments/FileSizeExperiment')
 
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
     def __init__(self, implementation: BaseImplementation, sizes: List[int] = None) -> None:
         self.implementation = implementation
+        self.client = None  # type: UserClient
         if sizes is None:
             sizes = [1, 2 ** 10, 2 ** 20, 2 ** 30]
         self.sizes = sizes
@@ -28,7 +30,6 @@ class FileSizeExperiment(object):
         for file_size in self.sizes:
             file_generator.generate(file_size, 2, self.data_location, skip_if_exists=True)
 
-    def run(self):
         central_authority = self.implementation.create_central_authority()
         central_authority.setup()
 
@@ -41,16 +42,17 @@ class FileSizeExperiment(object):
 
         user = User('bob', self.implementation)
         connection = UserInsuranceConnection(insurance)
-        client = UserClient(user, connection, self.implementation)
+        self.client = UserClient(user, connection, self.implementation)
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
 
+    def run(self):
         for file_size in self.sizes:
             first_filename = join(self.data_location, '%i-0' % file_size)
             update_filename = join(self.data_location, '%i-1' % file_size)
 
-            location = client.encrypt_file(first_filename, self.policy, self.policy)
+            location = self.client.encrypt_file(first_filename, self.policy, self.policy)
             with open(update_filename, 'rb') as update_file:
-                client.update_file(location, update_file.read())
-            client.update_policy_file(location, self.policy, self.policy)
-            client.decrypt_file(location)
+                self.client.update_file(location, update_file.read())
+            self.client.update_policy_file(location, self.policy, self.policy)
+            self.client.decrypt_file(location)

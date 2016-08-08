@@ -118,6 +118,12 @@ class RD13AttributeAuthority(AttributeAuthority):
 
 
 class RD13Serializer(BaseSerializer):
+    def serialize_global_scheme_parameters(self, scheme_parameters):
+        # gp = {'g': g, 'H': h}
+        return {
+            'g': self.group.serialize(scheme_parameters['g'])
+        }
+
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
         result = {
             'A': ciphertext['A']

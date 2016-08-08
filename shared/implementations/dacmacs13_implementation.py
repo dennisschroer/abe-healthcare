@@ -150,6 +150,13 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
 
 
 class DACMACS13Serializer(BaseSerializer):
+    def serialize_global_scheme_parameters(self, scheme_parameters):
+        # GPP = {'g': g, 'g^a': g_a, 'H': H}
+        return {
+            'g': self.group.serialize(scheme_parameters['g']),
+            'g^a': self.group.serialize(scheme_parameters['g^a'])
+        }
+
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
         # {'policy': policy_str, 'C0': C0, 'C1': C1, 'C2': C2, 'C3': C3, 'C4': C4}
         # C0 = message * (gp['egg'] ** s)
