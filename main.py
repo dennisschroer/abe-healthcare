@@ -194,6 +194,10 @@ if __name__ == '__main__':
 
     print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     pr.runcall(abe.dacmacs13)
+    from pympler import muppy, summary
+    all_objects = muppy.get_objects()
+    sum1 = summary.summarize(all_objects)
+    summary.print_(sum1)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
     pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
     connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
