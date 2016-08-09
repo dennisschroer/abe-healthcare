@@ -1,3 +1,4 @@
+import json
 from pprint import pprint
 
 
@@ -6,8 +7,11 @@ class BaseConnection(object):
         self.benchmark = benchmark
         self.benchmarks = dict()  # type: Dict[str, List[int]]
 
-    def dump_benchmarks(self):
+    def dumps(self):
         pprint(self.benchmarks)
+
+    def dump(self, file_pointer):
+        json.dump(self.benchmark, file_pointer)
 
     def add_benchmark(self, name: str, size: int) -> None:
         if name not in self.benchmarks:

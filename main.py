@@ -19,6 +19,8 @@ from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 from shared.serializer.pickle_serializer import PickleSerializer
 
+from shared.utils.measure_util import connections_to_csv, pstats_to_csv
+
 PROFILE_DATA_DIRECTORY = 'data/profile'
 
 
@@ -152,7 +154,7 @@ class ABEHealthCare(object):
 
         print("Network usage")
         for connection in connections:
-            connection.dump_benchmarks()
+            connection.dumps()
         connections.clear()
 
 
@@ -166,33 +168,35 @@ if __name__ == '__main__':
     process = psutil.Process()
     process.cpu_percent()
 
-    print("== RW15 ((+) large attribute universe)")
-    pr.runcall(abe.rw15)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
-    stats = Stats(pr)
-    abe.output_measurements(stats, abe.connections)
-    pr.clear()
-    print("CPU percent: %f" % process.cpu_percent())
-
-    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    pr.runcall(abe.rd13)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
-    stats = Stats(pr)
-    abe.output_measurements(stats, abe.connections)
-    pr.clear()
-    print("CPU percent: %f" % process.cpu_percent())
-
-    print("== TAAC ((+) embedded timestamp)")
-    pr.runcall(abe.taac12)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
-    stats = Stats(pr)
-    abe.output_measurements(stats, abe.connections)
-    pr.clear()
-    print("CPU percent: %f" % process.cpu_percent())
+    # print("== RW15 ((+) large attribute universe)")
+    # pr.runcall(abe.rw15)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
+    # stats = Stats(pr)
+    # abe.output_measurements(stats, abe.connections)
+    # pr.clear()
+    # print("CPU percent: %f" % process.cpu_percent())
+    #
+    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    # pr.runcall(abe.rd13)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
+    # stats = Stats(pr)
+    # abe.output_measurements(stats, abe.connections)
+    # pr.clear()
+    # print("CPU percent: %f" % process.cpu_percent())
+    #
+    # print("== TAAC ((+) embedded timestamp)")
+    # pr.runcall(abe.taac12)
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
+    # stats = Stats(pr)
+    # abe.output_measurements(stats, abe.connections)
+    # pr.clear()
+    # print("CPU percent: %f" % process.cpu_percent())
 
     print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     pr.runcall(abe.dacmacs13)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+    pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
+    connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
