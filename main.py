@@ -200,6 +200,6 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
-    print("CPU percent: %f" % process.cpu_percent())
+    print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
 
 
