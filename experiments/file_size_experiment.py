@@ -3,7 +3,7 @@ from os.path import join
 from typing import List, Dict
 
 from client.user_client import UserClient
-from experiments.base_experiment import BaseExperiment
+from experiments.base_experiment import BaseExperiment, ExperimentCase
 from service.insurance_service import InsuranceService
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
@@ -18,17 +18,17 @@ class FileSizeExperiment(BaseExperiment):
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
-    def __init__(self, implementation: BaseImplementation, cases: List[Dict] = None) -> None:
+    def __init__(self, implementation: BaseImplementation, cases: List[ExperimentCase] = None) -> None:
         super().__init__(implementation)
         self.client = None  # type: UserClient
         if cases is None:
-            cases = list(map(lambda size: {'name': size, 'file_size': size}, [1, 2**10, 2**20, 2**28]))
+            cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2**10, 2**20, 2**28]))
         self.cases = cases
 
     def setup(self):
         file_generator = RandomFileGenerator()
         for case in self.cases:
-            file_generator.generate(case['file_size'], 2, self.data_location, skip_if_exists=True)
+            file_generator.generate(case.arguments['file_size'], 2, self.data_location, skip_if_exists=True)
 
         central_authority = self.implementation.create_central_authority()
         central_authority.setup()
@@ -46,9 +46,9 @@ class FileSizeExperiment(BaseExperiment):
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
 
-    def run(self, case):
-        first_filename = join(self.data_location, '%i-0' % case['file_size'])
-        update_filename = join(self.data_location, '%i-1' % case['file_size'])
+    def run(self, case: ExperimentCase):
+        first_filename = join(self.data_location, '%i-0' % case.arguments['file_size'])
+        update_filename = join(self.data_location, '%i-1' % case.arguments['file_size'])
 
         location = self.client.encrypt_file(first_filename, self.policy, self.policy)
         with open(update_filename, 'rb') as update_file:
