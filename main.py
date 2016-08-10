@@ -198,11 +198,11 @@ if __name__ == '__main__':
     all_objects = muppy.get_objects()
     sum1 = summary.summarize(all_objects)
     summary.print_(sum1)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
     pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
     connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
     stats = Stats(pr)
-    abe.output_measurements(stats, abe.connections)
+    # abe.output_measurements(stats, abe.connections)
     pr.clear()
     print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
 

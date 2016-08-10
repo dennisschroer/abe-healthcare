@@ -1,9 +1,15 @@
+import csv
+from cProfile import Profile
+from collections import namedtuple
 from multiprocessing import Condition
 from multiprocessing import Process
+from multiprocessing import Value
+from os import makedirs
+from os import path
 from time import sleep
+from typing import List
 
 import psutil
-from multiprocessing import Value
 
 from experiments.base_experiment import BaseExperiment, ExperimentCase
 from experiments.file_size_experiment import FileSizeExperiment
@@ -11,12 +17,17 @@ from shared.implementations.dacmacs13_implementation import DACMACS13Implementat
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
+from shared.utils.measure_util import pstats_to_csv
 
 debug = False
+
+OUTPUT_DIRECTORY = 'data/experiments/output'
 
 
 class ExperimentRunner(object):
     def __init__(self):
+        if not path.exists(OUTPUT_DIRECTORY):
+            makedirs(OUTPUT_DIRECTORY)
         self.implementations = [
             RW15Implementation(),
             DACMACS13Implementation(),
@@ -68,6 +79,7 @@ class ExperimentRunner(object):
 
         # Setup is finished, start monitoring
         process = psutil.Process(p.pid)
+        memory_usages = list()
         process.cpu_percent()
 
         # Release the lock, signaling the experiment to start, and wait for the experiment to finish
@@ -76,14 +88,16 @@ class ExperimentRunner(object):
         lock.release()
 
         while is_running.value:
-            print(process.memory_info())
+            memory_usages.append(process.memory_info())
             sleep(0.1)
 
         if debug:
             print("debug 6 -> gather monitoring data")
 
         # Gather process statistics
-        print(process.cpu_percent())
+        self.output_cpu_usage(experiment, case, process.cpu_percent())
+        self.output_memory_usages(experiment, case, memory_usages)
+
 
         # Wait for the cleanup to finish
         p.join()
@@ -92,7 +106,8 @@ class ExperimentRunner(object):
             print("debug 8 -> process stopped")
 
     @staticmethod
-    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition, is_running: Value):
+    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
+                                          is_running: Value):
         experiment.setup()
 
         # We are done, let the main process setup monitoring
@@ -114,10 +129,44 @@ class ExperimentRunner(object):
             print("debug 5 -> stop experiment")
         is_running.value = False
 
+        ExperimentRunner.output_timings(experiment, case, experiment.pr)
+
         # Cleanup
-        experiment.after_run(case)
         if debug:
             print("debug 7 -> cleanup finished")
+
+    @staticmethod
+    def experiment_output_directory(experiment: BaseExperiment):
+        directory = path.join(OUTPUT_DIRECTORY,
+                              experiment.__class__.__name__,
+                              experiment.implementation.__class__.__name__)
+        if not path.exists(directory):
+            makedirs(directory)
+        return directory
+
+    @staticmethod
+    def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage):
+        directory = ExperimentRunner.experiment_output_directory(experiment)
+        with open(path.join(directory, '%s_cpu.txt' % case.name), 'w') as file:
+            file.write(str(cpu_usage))
+
+    @staticmethod
+    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[namedtuple]):
+        directory = ExperimentRunner.experiment_output_directory(experiment)
+        with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
+            writer = csv.DictWriter(file, fieldnames=[
+                'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty'
+            ])
+            writer.writeheader()
+            for row in memory_usages:
+                writer.writerow(row._asdict())
+
+    @staticmethod
+    def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile):
+        directory = ExperimentRunner.experiment_output_directory(experiment)
+        profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
+        pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
+                      path.join(directory, '%s_timings.csv' % case.name))
 
 
 if __name__ == '__main__':

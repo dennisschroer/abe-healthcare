@@ -13,7 +13,7 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class FileSizeExperiment(BaseExperiment):
-    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data/experiments/FileSizeExperiment')
+    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data/experiments/input/FileSizeExperiment')
 
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'

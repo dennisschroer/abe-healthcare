@@ -34,11 +34,3 @@ class BaseExperiment(object):
 
     def run(self, case: ExperimentCase):
         raise NotImplementedError()
-
-    def after_run(self, case: ExperimentCase):
-        stats = Stats(self.pr)
-        self.pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, '%s-%s-%s.txt' % (
-        self.__class__.__name__, self.implementation.__class__.__name__, case.name)))
-        stats.strip_dirs().sort_stats('cumtime').print_stats(
-            '(user|authority|insurance|storage|RSA)')
-        self.pr.clear()
