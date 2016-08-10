@@ -1,6 +1,5 @@
 import cProfile
 from os import path, makedirs
-from pstats import Stats
 from typing import List, Dict, Any
 
 from shared.implementations.base_implementation import BaseImplementation
@@ -23,14 +22,32 @@ class BaseExperiment(object):
         if not path.exists(PROFILE_DATA_DIRECTORY):
             makedirs(PROFILE_DATA_DIRECTORY)
 
-    def setup(self):
+    def global_setup(self) -> None:
+        """
+        Setup all case independent things for this experiment, like generating random input files.
+        """
         raise NotImplementedError()
 
-    def start_measurements(self):
+    def setup(self, case: ExperimentCase):
+        """
+        Setup all case dependant things for this experiment.
+        :return:
+        """
+        raise NotImplementedError()
+
+    def start_measurements(self) -> None:
+        """
+        Start the measurements. These are only part of the measurements, namely the one which need to run
+        in the experiment process.
+        :return:
+        """
         self.pr.enable()
 
-    def stop_measurements(self):
+    def stop_measurements(self) -> None:
+        """
+        Stop the measurements.
+        """
         self.pr.disable()
 
-    def run(self, case: ExperimentCase):
+    def run(self, case: ExperimentCase) -> None:
         raise NotImplementedError()

@@ -42,6 +42,11 @@ class ExperimentRunner(object):
 
     def run_experiment(self, experiment):
         i = 1
+        print("=> Setting up %s, implementation=%s" % (
+            experiment.__class__.__name__,
+            experiment.implementation.__class__.__name__
+        ))
+        experiment.global_setup()
         for case in experiment.cases:
             self.run_experiment_case(experiment, case)
             i += 1

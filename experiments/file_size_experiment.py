@@ -25,7 +25,7 @@ class FileSizeExperiment(BaseExperiment):
             cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2**10, 2**20, 2**28]))
         self.cases = cases
 
-    def setup(self):
+    def global_setup(self):
         file_generator = RandomFileGenerator()
         for case in self.cases:
             file_generator.generate(case.arguments['file_size'], 2, self.data_location, skip_if_exists=True)
@@ -45,6 +45,9 @@ class FileSizeExperiment(BaseExperiment):
         self.client = UserClient(user, connection, self.implementation)
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
+
+    def setup(self, case: ExperimentCase):
+        pass
 
     def run(self, case: ExperimentCase):
         first_filename = join(self.data_location, '%i-0' % case.arguments['file_size'])
