@@ -1,7 +1,9 @@
 from multiprocessing import Condition
 from multiprocessing import Process
+from time import sleep
 
 import psutil
+from multiprocessing import Value
 
 from experiments.base_experiment import BaseExperiment, ExperimentCase
 from experiments.file_size_experiment import FileSizeExperiment
@@ -49,7 +51,8 @@ class ExperimentRunner(object):
         lock.acquire()
 
         # Create a separate process
-        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, lock))
+        is_running = Value('b', False)
+        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, lock, is_running))
 
         if debug:
             print("debug 1 -> start process")
@@ -69,7 +72,12 @@ class ExperimentRunner(object):
 
         # Release the lock, signaling the experiment to start, and wait for the experiment to finish
         lock.notify()
-        lock.wait()
+        is_running.value = True
+        lock.release()
+
+        while is_running.value:
+            print(process.memory_info())
+            sleep(0.1)
 
         if debug:
             print("debug 6 -> gather monitoring data")
@@ -84,7 +92,7 @@ class ExperimentRunner(object):
             print("debug 8 -> process stopped")
 
     @staticmethod
-    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition):
+    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition, is_running: Value):
         experiment.setup()
 
         # We are done, let the main process setup monitoring
@@ -104,8 +112,7 @@ class ExperimentRunner(object):
         # We are done, notify the main process to stop monitoring
         if debug:
             print("debug 5 -> stop experiment")
-        lock.notify()
-        lock.release()
+        is_running.value = False
 
         # Cleanup
         experiment.after_run(case)
