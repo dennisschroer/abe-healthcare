@@ -24,8 +24,8 @@ debug = False
 OUTPUT_DIRECTORY = 'data/experiments/output'
 
 
-class ExperimentRunner(object):
-    def __init__(self):
+class ExperimentsRunner(object):
+    def __init__(self) -> None:
         if not path.exists(OUTPUT_DIRECTORY):
             makedirs(OUTPUT_DIRECTORY)
         self.implementations = [
@@ -40,7 +40,7 @@ class ExperimentRunner(object):
             experiment = FileSizeExperiment(implementation)
             self.run_experiment(experiment)
 
-    def run_experiment(self, experiment):
+    def run_experiment(self, experiment: BaseExperiment) -> None:
         i = 1
         print("=> Setting up %s, implementation=%s" % (
             experiment.__class__.__name__,
@@ -51,7 +51,7 @@ class ExperimentRunner(object):
             self.run_experiment_case(experiment, case)
             i += 1
 
-    def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase):
+    def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase) -> None:
         print("=> Running %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (
             experiment.__class__.__name__,
             experiment.implementation.__class__.__name__,
@@ -103,7 +103,6 @@ class ExperimentRunner(object):
         self.output_cpu_usage(experiment, case, process.cpu_percent())
         self.output_memory_usages(experiment, case, memory_usages)
 
-
         # Wait for the cleanup to finish
         p.join()
 
@@ -112,8 +111,8 @@ class ExperimentRunner(object):
 
     @staticmethod
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
-                                          is_running: Value):
-        experiment.setup()
+                                          is_running: Value) -> None:
+        experiment.setup(case)
 
         # We are done, let the main process setup monitoring
         lock.acquire()
@@ -134,14 +133,14 @@ class ExperimentRunner(object):
             print("debug 5 -> stop experiment")
         is_running.value = False
 
-        ExperimentRunner.output_timings(experiment, case, experiment.pr)
+        ExperimentsRunner.output_timings(experiment, case, experiment.pr)
 
         # Cleanup
         if debug:
             print("debug 7 -> cleanup finished")
 
     @staticmethod
-    def experiment_output_directory(experiment: BaseExperiment):
+    def experiment_output_directory(experiment: BaseExperiment) -> None:
         directory = path.join(OUTPUT_DIRECTORY,
                               experiment.__class__.__name__,
                               experiment.implementation.__class__.__name__)
@@ -150,14 +149,14 @@ class ExperimentRunner(object):
         return directory
 
     @staticmethod
-    def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage):
-        directory = ExperimentRunner.experiment_output_directory(experiment)
+    def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage: float) -> None:
+        directory = ExperimentsRunner.experiment_output_directory(experiment)
         with open(path.join(directory, '%s_cpu.txt' % case.name), 'w') as file:
             file.write(str(cpu_usage))
 
     @staticmethod
-    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[namedtuple]):
-        directory = ExperimentRunner.experiment_output_directory(experiment)
+    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[namedtuple]) -> None:
+        directory = ExperimentsRunner.experiment_output_directory(experiment)
         with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
                 'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty'
@@ -167,13 +166,13 @@ class ExperimentRunner(object):
                 writer.writerow(row._asdict())
 
     @staticmethod
-    def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile):
-        directory = ExperimentRunner.experiment_output_directory(experiment)
+    def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile) -> None:
+        directory = ExperimentsRunner.experiment_output_directory(experiment)
         profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
         pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
                       path.join(directory, '%s_timings.csv' % case.name))
 
 
 if __name__ == '__main__':
-    runner = ExperimentRunner()
+    runner = ExperimentsRunner()
     runner.run_file_size_experiments()
