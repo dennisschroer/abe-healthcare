@@ -2,13 +2,13 @@ import csv
 import traceback
 from cProfile import Profile
 from collections import namedtuple
-from multiprocessing import Condition
+from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from multiprocessing import Value
 from os import makedirs
 from os import path
 from time import sleep
-from typing import List
+from typing import List, NamedTuple, Any
 
 import psutil
 
@@ -84,16 +84,16 @@ class ExperimentsRunner(object):
             print("debug 3 -> start monitoring")
 
         # Setup is finished, start monitoring
-        process = psutil.Process(p.pid)
+        process = psutil.Process(p.pid) # type: ignore
         memory_usages = list()
         process.cpu_percent()
 
         # Release the lock, signaling the experiment to start, and wait for the experiment to finish
         lock.notify()
-        is_running.value = True
+        is_running.value = True # type: ignore
         lock.release()
 
-        while is_running.value:
+        while is_running.value: # type: ignore
             memory_usages.append(process.memory_info())
             sleep(0.1)
 
@@ -133,7 +133,7 @@ class ExperimentsRunner(object):
             # We are done, notify the main process to stop monitoring
             if debug:
                 print("debug 5 -> stop experiment")
-            is_running.value = False
+            is_running.value = False # type: ignore
 
             ExperimentsRunner.output_timings(experiment, case, experiment.pr)
 
@@ -144,7 +144,7 @@ class ExperimentsRunner(object):
             ExperimentsRunner.output_error(experiment, case, e)
         finally:
             try:
-                is_running.value = False
+                is_running.value = False # type: ignore
                 lock.notify()
                 lock.release()
             except:
@@ -172,7 +172,7 @@ class ExperimentsRunner(object):
             traceback.print_exc(file=file)
 
     @staticmethod
-    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[namedtuple]) -> None:
+    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[Any]) -> None:
         directory = ExperimentsRunner.experiment_output_directory(experiment)
         with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
