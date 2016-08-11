@@ -65,5 +65,4 @@ class FileSizeExperiment(BaseExperiment):
         self.client.decrypt_file(location)
 
     def get_connections(self) -> List[BaseConnection]:
-        print(self.client.insurance_connection.benchmarks)
         return [self.client.insurance_connection]
