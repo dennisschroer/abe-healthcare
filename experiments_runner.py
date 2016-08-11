@@ -14,6 +14,7 @@ from typing import List, Any
 import psutil
 
 from experiments.base_experiment import BaseExperiment, ExperimentCase
+from experiments.experiment_result_uploader import ExperimentResultUploader
 from experiments.file_size_experiment import FileSizeExperiment
 from shared.connection.base_connection import BaseConnection
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
@@ -33,11 +34,22 @@ class ExperimentsRunner(object):
         if not path.exists(OUTPUT_DIRECTORY):
             makedirs(OUTPUT_DIRECTORY)
         self.implementations = [
-            RW15Implementation(),
-            DACMACS13Implementation(),
-            RD13Implementation(),
+            # RW15Implementation(),
+            # DACMACS13Implementation(),
+            # RD13Implementation(),
             TAAC12Implementation()
         ]
+
+    def run(self) -> None:
+        """
+        Run all experiments
+        """
+        self.run_file_size_experiments()
+
+    def upload_results(self):
+        print("Uploading all results...")
+        uploader = ExperimentResultUploader()
+        uploader.upload_directory(OUTPUT_DIRECTORY)
 
     def run_file_size_experiments(self):
         for implementation in self.implementations:
@@ -215,4 +227,5 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_file_size_experiments()
+    runner.run()
+    runner.upload_results()
