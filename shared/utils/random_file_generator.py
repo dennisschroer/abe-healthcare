@@ -9,17 +9,19 @@ class RandomFileGenerator(object):
         pass
 
     @staticmethod
-    def generate(size, amount, output_path='data/random', skip_if_exists=False, debug=False):
+    def generate(size, amount, output_path='data/random', skip_if_exists=False, verbose=False):
         if not path.exists(output_path):
             makedirs(output_path)
         for i in range(0, amount):
             if skip_if_exists and path.exists(path.join(output_path, '%i-%i' % (size, i))):
                 continue
             with open(path.join(output_path, '%i-%i' % (size, i)), 'wb') as f:
-                if debug:
+                if verbose:
                     print("Generating %s" % path.join(output_path, '%i-%i' % (size, i)))
-                # We write in blocks of 1 kb
-                for j in range(0, size // RandomFileGenerator.block_size):
+                number_of_blocks = size // RandomFileGenerator.block_size
+                for j in range(0, number_of_blocks):
+                    if verbose and (j % 100) == 0:
+                        print("Block %d of %d" % (j + 1, number_of_blocks))
                     f.write(urandom(RandomFileGenerator.block_size))
                 # Write the remainder
                 f.write(urandom(size % RandomFileGenerator.block_size))
