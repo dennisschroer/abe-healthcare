@@ -26,7 +26,7 @@ class ABEHealthCareTestCase(unittest.TestCase):
         self.assertIsNone(self.subject.insurance_company)
         self.assertIsNone(self.subject.national_database)
 
-        self.subject.setup_attribute_authorities(['ONE', 'TWO'], ['THREE', 'FOUR'])
+        self.subject.setup_attribute_authorities()
 
         self.assertIsNotNone(self.subject.insurance_company)
         self.assertIsNotNone(self.subject.national_database)
@@ -38,7 +38,7 @@ class ABEHealthCareTestCase(unittest.TestCase):
     def test_setup_service_rw15(self):
         self.subject.implementation = RW15Implementation()
         self.subject.setup_central_authority()
-        self.subject.setup_attribute_authorities(['ONE', 'TWO'], ['THREE', 'FOUR'])
+        self.subject.setup_attribute_authorities()
 
         self.assertIsNone(self.subject.insurance_service)
         self.subject.setup_service()
