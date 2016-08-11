@@ -22,7 +22,7 @@ class FileSizeExperiment(BaseExperiment):
         super().__init__(implementation)
         self.client = None  # type: UserClient
         if cases is None:
-            cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2**10, 2**20, 2**28]))
+            cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2**10, 2**20, 2**30]))
         self.cases = cases
 
     def global_setup(self):

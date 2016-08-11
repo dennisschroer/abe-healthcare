@@ -1,4 +1,5 @@
 import csv
+import traceback
 from cProfile import Profile
 from collections import namedtuple
 from multiprocessing import Condition
@@ -112,32 +113,43 @@ class ExperimentsRunner(object):
     @staticmethod
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
                                           is_running: Value) -> None:
-        experiment.setup(case)
+        try:
+            experiment.setup(case)
 
-        # We are done, let the main process setup monitoring
-        lock.acquire()
-        if debug:
-            print("debug 2 -> experiment setup finished")
-        lock.notify()
-        lock.wait()
-        if debug:
-            print("debug 4 -> start experiment")
+            # We are done, let the main process setup monitoring
+            lock.acquire()
+            if debug:
+                print("debug 2 -> experiment setup finished")
+            lock.notify()
+            lock.wait()
+            if debug:
+                print("debug 4 -> start experiment")
 
-        # And off we go
-        experiment.start_measurements()
-        experiment.run(case)
-        experiment.stop_measurements()
+            # And off we go
+            experiment.start_measurements()
+            experiment.run(case)
+            experiment.stop_measurements()
 
-        # We are done, notify the main process to stop monitoring
-        if debug:
-            print("debug 5 -> stop experiment")
-        is_running.value = False
+            # We are done, notify the main process to stop monitoring
+            if debug:
+                print("debug 5 -> stop experiment")
+            is_running.value = False
 
-        ExperimentsRunner.output_timings(experiment, case, experiment.pr)
+            ExperimentsRunner.output_timings(experiment, case, experiment.pr)
 
-        # Cleanup
-        if debug:
-            print("debug 7 -> cleanup finished")
+            # Cleanup
+            if debug:
+                print("debug 7 -> cleanup finished")
+        except BaseException as e:
+            ExperimentsRunner.output_error(experiment, case, e)
+        finally:
+            try:
+                is_running.value = False
+                lock.notify()
+                lock.release()
+            except:
+                pass
+
 
     @staticmethod
     def experiment_output_directory(experiment: BaseExperiment) -> None:
@@ -153,6 +165,12 @@ class ExperimentsRunner(object):
         directory = ExperimentsRunner.experiment_output_directory(experiment)
         with open(path.join(directory, '%s_cpu.txt' % case.name), 'w') as file:
             file.write(str(cpu_usage))
+
+    @staticmethod
+    def output_error(experiment: BaseExperiment, case: ExperimentCase, error: BaseException) -> None:
+        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
+            traceback.print_exc(file=file)
 
     @staticmethod
     def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[namedtuple]) -> None:
