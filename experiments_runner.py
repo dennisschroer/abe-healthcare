@@ -82,6 +82,11 @@ class ExperimentsRunner(object):
         lock = Condition()
         lock.acquire()
 
+        # Create output directory
+        output_directory = self.experiment_output_directory(experiment)
+        if not path.exists(output_directory):
+            makedirs(output_directory)
+
         # Create a separate process
         is_running = Value('b', False)
         p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, lock, is_running))
@@ -168,14 +173,11 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def experiment_output_directory(experiment: BaseExperiment) -> str:
-        directory = path.join(OUTPUT_DIRECTORY,
+        return path.join(OUTPUT_DIRECTORY,
                               experiment.device_name,
                               experiment.get_name(),
                               experiment.implementation.get_name(),
                               experiment.timestamp)
-        if not path.exists(directory):
-            makedirs(directory)
-        return directory
 
     @staticmethod
     def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage: float) -> None:
