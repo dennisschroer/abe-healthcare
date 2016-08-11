@@ -17,7 +17,7 @@ class ExperimentCase(object):
 class BaseExperiment(object):
     def __init__(self, implementation: BaseImplementation) -> None:
         self.pr = cProfile.Profile()
-        self.implementation = implementation
+        self.implementation = implementation  # type: BaseImplementation
         self.cases = list()  # type: List[ExperimentCase]
 
         if not path.exists(PROFILE_DATA_DIRECTORY):
@@ -59,3 +59,6 @@ class BaseExperiment(object):
         :return: A list of connections
         """
         raise NotImplementedError()
+
+    def get_name(self):
+        return self.__class__.__name__
