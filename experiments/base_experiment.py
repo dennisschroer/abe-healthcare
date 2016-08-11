@@ -19,6 +19,8 @@ class BaseExperiment(object):
         self.pr = cProfile.Profile()
         self.implementation = implementation  # type: BaseImplementation
         self.cases = list()  # type: List[ExperimentCase]
+        self.device_name = None  # type: str
+        self.timestamp = None  # type: str
 
         if not path.exists(PROFILE_DATA_DIRECTORY):
             makedirs(PROFILE_DATA_DIRECTORY)

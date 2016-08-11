@@ -1,14 +1,15 @@
 import csv
+import datetime
+import socket
 import traceback
 from cProfile import Profile
-from collections import namedtuple
 from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from multiprocessing import Value
 from os import makedirs
 from os import path
 from time import sleep
-from typing import List, NamedTuple, Any
+from typing import List, Any
 
 import psutil
 
@@ -24,6 +25,7 @@ from shared.utils.measure_util import pstats_to_csv, connections_to_csv
 debug = False
 
 OUTPUT_DIRECTORY = 'data/experiments/output'
+TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
 class ExperimentsRunner(object):
@@ -42,11 +44,23 @@ class ExperimentsRunner(object):
             experiment = FileSizeExperiment(implementation)
             self.run_experiment(experiment)
 
+    def get_timestamp(self):
+        return datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
+
+    @staticmethod
+    def get_device_name():
+        return socket.gethostname()
+
     def run_experiment(self, experiment: BaseExperiment) -> None:
+        experiment.timestamp = self.get_timestamp()
+        experiment.device_name = self.get_device_name()
+        print("Device '%s' starting experiment '%s' with timestamp '%s'" % (
+            experiment.device_name, experiment.get_name(), experiment.timestamp))
+
         i = 1
         print("=> Setting up %s, implementation=%s" % (
-            experiment.__class__.__name__,
-            experiment.implementation.__class__.__name__
+            experiment.get_name(),
+            experiment.implementation.get_name()
         ))
         experiment.global_setup()
         for case in experiment.cases:
@@ -55,8 +69,8 @@ class ExperimentsRunner(object):
 
     def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase) -> None:
         print("=> Running %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (
-            experiment.__class__.__name__,
-            experiment.implementation.__class__.__name__,
+            experiment.get_name(),
+            experiment.implementation.get_name(),
             self.implementations.index(experiment.implementation) + 1,
             len(self.implementations),
             case.name,
@@ -85,16 +99,16 @@ class ExperimentsRunner(object):
             print("debug 3 -> start monitoring")
 
         # Setup is finished, start monitoring
-        process = psutil.Process(p.pid) # type: ignore
+        process = psutil.Process(p.pid)  # type: ignore
         memory_usages = list()
         process.cpu_percent()
 
         # Release the lock, signaling the experiment to start, and wait for the experiment to finish
         lock.notify()
-        is_running.value = True # type: ignore
+        is_running.value = True  # type: ignore
         lock.release()
 
-        while is_running.value: # type: ignore
+        while is_running.value:  # type: ignore
             memory_usages.append(process.memory_info())
             sleep(0.1)
 
@@ -134,7 +148,7 @@ class ExperimentsRunner(object):
             # We are done, notify the main process to stop monitoring
             if debug:
                 print("debug 5 -> stop experiment")
-            is_running.value = False # type: ignore
+            is_running.value = False  # type: ignore
 
             ExperimentsRunner.output_timings(experiment, case, experiment.pr)
             ExperimentsRunner.output_connections(experiment, case, experiment.get_connections())
@@ -146,7 +160,7 @@ class ExperimentsRunner(object):
             ExperimentsRunner.output_error(experiment, case, e)
         finally:
             try:
-                is_running.value = False # type: ignore
+                is_running.value = False  # type: ignore
                 lock.notify()
                 lock.release()
             except:
@@ -155,8 +169,10 @@ class ExperimentsRunner(object):
     @staticmethod
     def experiment_output_directory(experiment: BaseExperiment) -> str:
         directory = path.join(OUTPUT_DIRECTORY,
-                              experiment.__class__.__name__,
-                              experiment.implementation.__class__.__name__)
+                              experiment.device_name,
+                              experiment.get_name(),
+                              experiment.implementation.get_name(),
+                              experiment.timestamp)
         if not path.exists(directory):
             makedirs(directory)
         return directory
