@@ -168,41 +168,44 @@ if __name__ == '__main__':
     process = psutil.Process()
     process.cpu_percent()
 
-    # print("== RW15 ((+) large attribute universe)")
-    # pr.runcall(abe.rw15)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
-    # stats = Stats(pr)
-    # abe.output_measurements(stats, abe.connections)
-    # pr.clear()
-    # print("CPU percent: %f" % process.cpu_percent())
-    #
-    # print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
-    # pr.runcall(abe.rd13)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
-    # stats = Stats(pr)
-    # abe.output_measurements(stats, abe.connections)
-    # pr.clear()
-    # print("CPU percent: %f" % process.cpu_percent())
-    #
-    # print("== TAAC ((+) embedded timestamp)")
-    # pr.runcall(abe.taac12)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
-    # stats = Stats(pr)
-    # abe.output_measurements(stats, abe.connections)
-    # pr.clear()
-    # print("CPU percent: %f" % process.cpu_percent())
+    print("== RW15 ((+) large attribute universe)")
+    pr.runcall(abe.rw15)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
+
+    print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
+    pr.runcall(abe.rd13)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rd13.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
+
+    print("== TAAC ((+) embedded timestamp)")
+    pr.runcall(abe.taac12)
+    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'taac12.txt'))
+    stats = Stats(pr)
+    abe.output_measurements(stats, abe.connections)
+    pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     pr.runcall(abe.dacmacs13)
-    from pympler import muppy, summary
-    all_objects = muppy.get_objects()
-    sum1 = summary.summarize(all_objects)
-    summary.print_(sum1)
-    # pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+
+    # from pympler import muppy, summary
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+
     pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
     connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
+
     stats = Stats(pr)
-    # abe.output_measurements(stats, abe.connections)
+    abe.output_measurements(stats, abe.connections)
+
     pr.clear()
     print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
 
