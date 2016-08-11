@@ -4,6 +4,7 @@ from os.path import join
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
+from os import path
 
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
@@ -23,6 +24,8 @@ DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 USER_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users')
 USER_OWNER_KEY_FILENAME = '%s.der'
 
+OUTPUT_DATA_DIRECTORY = 'data/output'
+
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
@@ -32,6 +35,8 @@ class UserClient(object):
         self.implementation = implementation
         self.serializer = PickleSerializer(implementation)
         self._global_parameters = None  # type: GlobalParameters
+        if not path.exists(OUTPUT_DATA_DIRECTORY):
+            os.makedirs(OUTPUT_DATA_DIRECTORY)
 
     @property
     def global_parameters(self) -> GlobalParameters:
@@ -133,7 +138,7 @@ class UserClient(object):
         info, data = self.decrypt_record(record)
 
         print('Writing    %s' % join('data/output', info['name']))
-        file = open(join('data/output', info['name']), 'wb')
+        file = open(join(OUTPUT_DATA_DIRECTORY, info['name']), 'wb')
         file.write(data)
         file.close()
         return info['name']
