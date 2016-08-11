@@ -1,6 +1,6 @@
 import os
 from os.path import join
-from typing import List, Dict
+from typing import List
 
 from client.user_client import UserClient
 from experiments.base_experiment import BaseExperiment, ExperimentCase
@@ -14,9 +14,8 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class FileSizeExperiment(BaseExperiment):
-
-
-    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data/experiments/input/FileSizeExperiment')
+    data_location = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 '../data/experiments/input/FileSizeExperiment')
 
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
@@ -25,15 +24,14 @@ class FileSizeExperiment(BaseExperiment):
         super().__init__(implementation)
         self.client = None  # type: UserClient
         if cases is None:
-            cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2**10, 2**20, 2**30]))
+            cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2 ** 10, 2 ** 20, 2 ** 30]))
         self.cases = cases
-
-
 
     def global_setup(self):
         file_generator = RandomFileGenerator()
         for case in self.cases:
-            file_generator.generate(case.arguments['file_size'], 2, self.data_location, skip_if_exists=True, verbose=True)
+            file_generator.generate(case.arguments['file_size'], 2, self.data_location, skip_if_exists=True,
+                                    verbose=True)
 
         central_authority = self.implementation.create_central_authority()
         central_authority.setup()
@@ -69,5 +67,3 @@ class FileSizeExperiment(BaseExperiment):
     def get_connections(self) -> List[BaseConnection]:
         print(self.client.insurance_connection.benchmarks)
         return [self.client.insurance_connection]
-
-
