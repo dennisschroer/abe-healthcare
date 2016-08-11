@@ -26,6 +26,9 @@ class BaseImplementation(object):
         self._public_key_scheme = None  # type:BasePublicKey
         self._symmetric_key_scheme = None  # type:BaseSymmetricKey
 
+    def get_name(self):
+        return self.__class__.__name__
+
     def create_central_authority(self) -> CentralAuthority:
         """
         Create a new central authority.
