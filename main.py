@@ -3,6 +3,8 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 from pstats import Stats
 
+import psutil
+
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from service.central_authority import CentralAuthority
@@ -16,6 +18,8 @@ from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 from shared.serializer.pickle_serializer import PickleSerializer
+
+from shared.utils.measure_util import connections_to_csv, pstats_to_csv
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
 
@@ -77,7 +81,9 @@ class ABEHealthCare(object):
         """
         Setup service
         """
-        self.insurance_service = InsuranceService(self.central_authority.global_parameters, self.implementation)
+        self.insurance_service = InsuranceService(PickleSerializer(self.implementation),
+                                                  self.central_authority.global_parameters,
+                                                  self.implementation.create_public_key_scheme())
         self.insurance_service.add_authority(self.insurance_company)
         self.insurance_service.add_authority(self.national_database)
 
@@ -126,9 +132,9 @@ class ABEHealthCare(object):
     def run_policy_updates(self, locations):
         list(map(
             lambda f: self.bob.update_policy_file(f,
-                                              '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
-                                              'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
-                                              1),
+                                                  '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                                  'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                                  1),
             locations))
 
     def run_decryptions(self, locations):
@@ -144,13 +150,12 @@ class ABEHealthCare(object):
     def output_measurements(self, stats: Stats, connections):
         print("Times")
         stats.strip_dirs().sort_stats('cumtime').print_stats(
-            '(user_client|attribute_authority|central|insurance|storage|RSA)')
+            '(user|authority|insurance|storage|RSA)')
 
         print("Network usage")
         for connection in connections:
-            connection.dump_benchmarks()
+            connection.dumps()
         connections.clear()
-
 
 
 if __name__ == '__main__':
@@ -160,12 +165,16 @@ if __name__ == '__main__':
     if not path.exists(PROFILE_DATA_DIRECTORY):
         makedirs(PROFILE_DATA_DIRECTORY)
 
+    process = psutil.Process()
+    process.cpu_percent()
+
     print("== RW15 ((+) large attribute universe)")
     pr.runcall(abe.rw15)
     pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'rw15.txt'))
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== RD13 ((+) fast decryption, (-) possible large ciphertext, (-) binary user tree)")
     pr.runcall(abe.rd13)
@@ -173,6 +182,7 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== TAAC ((+) embedded timestamp)")
     pr.runcall(abe.taac12)
@@ -180,12 +190,23 @@ if __name__ == '__main__':
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
     pr.clear()
+    print("CPU percent: %f" % process.cpu_percent())
 
     print("== DACMACS ((+) outsourced decryption and/or re-encryption)")
     pr.runcall(abe.dacmacs13)
-    pr.dump_stats(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'))
+
+    # from pympler import muppy, summary
+    # all_objects = muppy.get_objects()
+    # sum1 = summary.summarize(all_objects)
+    # summary.print_(sum1)
+
+    pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
+    connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
+
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
+
     pr.clear()
+    print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
 
 
