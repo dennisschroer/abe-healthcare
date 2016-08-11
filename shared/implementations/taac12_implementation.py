@@ -128,6 +128,12 @@ class TAAC12AttributeAuthority(AttributeAuthority):
 
 
 class TAAC12Serializer(BaseSerializer):
+    def serialize_global_scheme_parameters(self, scheme_parameters):
+        # gp = {'g': g, 'H': h}
+        return {
+            'g': self.group.serialize(scheme_parameters['g'])
+        }
+
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
         # ct = {'A': access_policy, 't': t, 'c': c}
         # for attribute in vshares.keys():

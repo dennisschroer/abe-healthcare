@@ -51,7 +51,8 @@ class UserClient(object):
         # Retrieve authority public keys
         return self.implementation.merge_public_keys(self.authorities, time_period)
 
-    def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None) -> str:
+    def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
+                     time_period: int = 1) -> str:
         """
         Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
         The first line is the read policy, the second line the write policy.
@@ -59,6 +60,7 @@ class UserClient(object):
         :param filename: The filename (relative to /data/input) to encrypt
         :param read_policy: The read policy to use
         :param write_policy: The write policy to use
+        :param time_period: The time period to use
         :return: The name of the encrypted data (in /data/storage/)
         """
         # if filename.endswith(".policy"):
@@ -74,7 +76,7 @@ class UserClient(object):
 
         file = open(join('data/input', filename), 'rb')
         # Encrypt a message
-        create_record = self.create_record(read_policy, write_policy, file.read(), {'name': filename}, 1)
+        create_record = self.create_record(read_policy, write_policy, file.read(), {'name': filename}, time_period)
         file.close()
         # Send to insurance (this also stores the record)
         return self.send_create_record(create_record)
@@ -217,7 +219,7 @@ class UserClient(object):
         signature = pke.sign(write_secret_key, data)
         return UpdateRecord(data, signature)
 
-    def update_policy_file(self, location: str, read_policy: str, write_policy: str, time_period: int):
+    def update_policy_file(self, location: str, read_policy: str, write_policy: str, time_period: int = 1):
         record = self.request_record(location)
         print('Policy update %s' % join('data/storage', location))
         # Update the content
