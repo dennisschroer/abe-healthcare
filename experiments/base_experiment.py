@@ -2,6 +2,7 @@ import cProfile
 from os import path, makedirs
 from typing import List, Dict, Any
 
+from shared.connection.base_connection import BaseConnection
 from shared.implementations.base_implementation import BaseImplementation
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
@@ -50,4 +51,11 @@ class BaseExperiment(object):
         self.pr.disable()
 
     def run(self, case: ExperimentCase) -> None:
+        raise NotImplementedError()
+
+    def get_connections(self) -> List[BaseConnection]:
+        """
+        Get all connections used in this experiment of which the usage should be outputted.
+        :return: A list of connections
+        """
         raise NotImplementedError()

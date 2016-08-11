@@ -8,10 +8,10 @@ class BaseConnection(object):
         self.benchmarks = dict()  # type: Dict[str, List[int]]
 
     def dumps(self):
-        pprint(self.benchmarks)
+        return json.dumps(self.benchmarks)
 
     def dump(self, file_pointer):
-        json.dump(self.benchmark, file_pointer)
+        json.dump(self.benchmarks, file_pointer)
 
     def add_benchmark(self, name: str, size: int) -> None:
         if name not in self.benchmarks:

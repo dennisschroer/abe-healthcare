@@ -14,11 +14,12 @@ import psutil
 
 from experiments.base_experiment import BaseExperiment, ExperimentCase
 from experiments.file_size_experiment import FileSizeExperiment
+from shared.connection.base_connection import BaseConnection
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
-from shared.utils.measure_util import pstats_to_csv
+from shared.utils.measure_util import pstats_to_csv, connections_to_csv
 
 debug = False
 
@@ -136,6 +137,7 @@ class ExperimentsRunner(object):
             is_running.value = False # type: ignore
 
             ExperimentsRunner.output_timings(experiment, case, experiment.pr)
+            ExperimentsRunner.output_connections(experiment, case, experiment.get_connections())
 
             # Cleanup
             if debug:
@@ -170,6 +172,11 @@ class ExperimentsRunner(object):
         directory = ExperimentsRunner.experiment_output_directory(experiment)
         with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
             traceback.print_exc(file=file)
+
+    @staticmethod
+    def output_connections(experiment: BaseExperiment, case: ExperimentCase, connections: List[BaseConnection]) -> None:
+        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        connections_to_csv(connections, path.join(directory, '%s_network.csv' % case.name))
 
     @staticmethod
     def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[Any]) -> None:

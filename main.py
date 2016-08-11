@@ -1,6 +1,7 @@
 import cProfile
 from os import listdir, path, makedirs
 from os.path import isfile, join
+from pprint import pprint
 from pstats import Stats
 
 import psutil
@@ -154,7 +155,7 @@ class ABEHealthCare(object):
 
         print("Network usage")
         for connection in connections:
-            connection.dumps()
+            pprint(connection.benchmarks)
         connections.clear()
 
 
