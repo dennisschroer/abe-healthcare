@@ -3,12 +3,13 @@ import os
 from shared.model.records.data_record import DataRecord
 from shared.serializer.pickle_serializer import PickleSerializer
 
+STORAGE_DATA_DIRECTORY = 'data/storage'
 
 class Storage(object):
     def __init__(self, serializer: PickleSerializer) -> None:
         self.serializer = serializer
-        if not os.path.exists('data/storage'):
-            os.makedirs('data/storage')
+        if not os.path.exists(STORAGE_DATA_DIRECTORY):
+            os.makedirs(STORAGE_DATA_DIRECTORY)
 
     def store(self, name: str, record: DataRecord) -> None:
         """

@@ -22,6 +22,7 @@ from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.measure_util import connections_to_csv, pstats_to_csv
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
+INPUT_DATA_DIRECTORY = 'data/input'
 
 
 class ABEHealthCare(object):
@@ -50,12 +51,8 @@ class ABEHealthCare(object):
         self.check_paths()
 
     def check_paths(self):
-        if not path.exists('data/input'):
-            makedirs('data/input')
-        if not path.exists('data/storage'):
-            makedirs('data/storage')
-        if not path.exists('data/output'):
-            makedirs('data/output')
+        if not path.exists(INPUT_DATA_DIRECTORY):
+            makedirs(INPUT_DATA_DIRECTORY)
 
     def rw15(self):
         self.implementation = RW15Implementation()
@@ -133,8 +130,8 @@ class ABEHealthCare(object):
 
     def run_encryptions(self):
         return list(map(lambda f: self.bob.encrypt_file(f),
-                        [f for f in listdir('data/input') if
-                         not f.endswith(".policy") and isfile(join('data/input', f))]))
+                        [f for f in listdir(INPUT_DATA_DIRECTORY) if
+                         not f.endswith(".policy") and isfile(join(INPUT_DATA_DIRECTORY, f))]))
 
     def run_updates(self, locations):
         list(map(lambda f: self.doctor.update_file(f), locations))
@@ -217,4 +214,5 @@ if __name__ == '__main__':
     abe.output_measurements(stats, abe.connections)
 
     pr.clear()
-    print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
+    print("CPU percent: %f" % process.cpu_percent())
+    # print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
