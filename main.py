@@ -19,13 +19,25 @@ from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 from shared.serializer.pickle_serializer import PickleSerializer
-
 from shared.utils.measure_util import connections_to_csv, pstats_to_csv
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
 
 
 class ABEHealthCare(object):
+    insurance_name = 'INSURANCE'
+    national_name = 'NDB'
+    insurance_attributes = ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE']
+    national_attributes = ['DOCTOR@NDB', 'RADIOLOGIST@NDB']
+
+    doctor_insurance_attributes = ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE']
+    doctor_national_attributes = ['DOCTOR@NDB']
+    bob_insurance_attributes = ['REVIEWER@INSURANCE']
+    bob_national_attributes = ['DOCTOR@NDB']
+
+    policy_update_read = '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)'
+    policy_update_write = 'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)'
+
     def __init__(self):
         self.implementation = None  # type: BaseImplementation
         self.central_authority = None  # type: CentralAuthority
@@ -69,14 +81,14 @@ class ABEHealthCare(object):
         self.central_authority = self.implementation.create_central_authority()
         self.central_authority.setup()
 
-    def setup_attribute_authorities(self, insurance_attributes, national_attributes):
+    def setup_attribute_authorities(self):
         """
         Setup attribute authorities
         """
-        self.insurance_company = self.implementation.create_attribute_authority('INSURANCE')
-        self.national_database = self.implementation.create_attribute_authority('NDB')
-        self.insurance_company.setup(self.central_authority, insurance_attributes)
-        self.national_database.setup(self.central_authority, national_attributes)
+        self.insurance_company = self.implementation.create_attribute_authority(self.insurance_name)
+        self.national_database = self.implementation.create_attribute_authority(self.national_name)
+        self.insurance_company.setup(self.central_authority, self.insurance_attributes)
+        self.national_database.setup(self.central_authority, self.national_attributes)
 
     def setup_service(self):
         """
@@ -112,15 +124,12 @@ class ABEHealthCare(object):
     def setup(self):
         assert self.implementation is not None
 
-        insurance_attributes = ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE']
-        national_attributes = ['DOCTOR@NDB', 'RADIOLOGIST@NDB']
-
         self.setup_central_authority()
-        self.setup_attribute_authorities(insurance_attributes, national_attributes)
+        self.setup_attribute_authorities()
         self.setup_service()
 
-        self.doctor = self.create_user('doctor', ['REVIEWER@INSURANCE', 'ADMINISTRATION@INSURANCE'], ['DOCTOR@NDB'])
-        self.bob = self.create_user('bob', ['REVIEWER@INSURANCE'], ['DOCTOR@NDB'])
+        self.doctor = self.create_user('doctor', self.doctor_insurance_attributes, self.doctor_national_attributes)
+        self.bob = self.create_user('bob', self.bob_insurance_attributes, self.bob_national_attributes)
 
     def run_encryptions(self):
         return list(map(lambda f: self.bob.encrypt_file(f),
@@ -133,8 +142,8 @@ class ABEHealthCare(object):
     def run_policy_updates(self, locations):
         list(map(
             lambda f: self.bob.update_policy_file(f,
-                                                  '(DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
-                                                  'ADMINISTRATION@INSURANCE or (DOCTOR@NDB and REVIEWER@INSURANCE) or (RADIOLOGIST@NDB and REVIEWER@INSURANCE)',
+                                                  self.policy_update_read,
+                                                  self.policy_update_write,
                                                   1),
             locations))
 
@@ -209,5 +218,3 @@ if __name__ == '__main__':
 
     pr.clear()
     print("(INVALID, IS OVER ENTIRE PROCCESS) CPU percentage: %f" % process.cpu_percent())
-
-
