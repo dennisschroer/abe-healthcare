@@ -29,11 +29,12 @@ OUTPUT_DATA_DIRECTORY = 'data/output'
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
-                 implementation: BaseImplementation) -> None:
+                 implementation: BaseImplementation, verbose=False) -> None:
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
         self.serializer = PickleSerializer(implementation)
+        self.verbose = verbose
         self._global_parameters = None  # type: GlobalParameters
         if not path.exists(OUTPUT_DATA_DIRECTORY):
             os.makedirs(OUTPUT_DATA_DIRECTORY)
@@ -72,9 +73,11 @@ class UserClient(object):
         #     continue
         policy_filename = '%s.policy' % filename
         # Read input
-        print('Encrypting %s' % join('data/input', filename))
+        if self.verbose:
+            print('Encrypting %s' % join('data/input', filename))
         if read_policy is None or write_policy is None:
-            print('           %s' % join('data/input', policy_filename))
+            if self.verbose:
+                print('           %s' % join('data/input', policy_filename))
             policy_file = open(join('data/input', policy_filename), 'r')
             read_policy = policy_file.readline()
             write_policy = policy_file.readline()
@@ -133,11 +136,13 @@ class UserClient(object):
         """
         record = self.request_record(location)
 
-        print('Decrypting %s' % join('data/storage', location))
+        if self.verbose:
+            print('Decrypting %s' % join('data/storage', location))
 
         info, data = self.decrypt_record(record)
 
-        print('Writing    %s' % join('data/output', info['name']))
+        if self.verbose:
+            print('Writing    %s' % join('data/output', info['name']))
         file = open(join(OUTPUT_DATA_DIRECTORY, info['name']), 'wb')
         file.write(data)
         file.close()
@@ -188,7 +193,8 @@ class UserClient(object):
         """
         # Give it to the user
         record = self.request_record(location)
-        print('Updating   %s' % join('data/storage', location))
+        if self.verbose:
+            print('Updating   %s' % join('data/storage', location))
         # Update the content
         update_record = self.update_record(record, message)
         # Send it to the insurance
@@ -226,7 +232,8 @@ class UserClient(object):
 
     def update_policy_file(self, location: str, read_policy: str, write_policy: str, time_period: int = 1):
         record = self.request_record(location)
-        print('Policy update %s' % join('data/storage', location))
+        if self.verbose:
+            print('Policy update %s' % join('data/storage', location))
         # Update the content
         policy_update_record = self.update_policy(record, read_policy, write_policy, time_period)
         # Send it to the insurance

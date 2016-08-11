@@ -105,7 +105,7 @@ class ABEHealthCare(object):
         connection = UserInsuranceConnection(self.insurance_service, serializer, benchmark=True)
         self.connections.append(connection)
 
-        user_client = UserClient(user, connection, self.implementation)
+        user_client = UserClient(user, connection, self.implementation, verbose=True)
 
         # Add attributes
         if insurance_attributes is not None:
