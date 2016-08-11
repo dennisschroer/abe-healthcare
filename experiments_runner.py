@@ -150,9 +150,8 @@ class ExperimentsRunner(object):
             except:
                 pass
 
-
     @staticmethod
-    def experiment_output_directory(experiment: BaseExperiment) -> None:
+    def experiment_output_directory(experiment: BaseExperiment) -> str:
         directory = path.join(OUTPUT_DIRECTORY,
                               experiment.__class__.__name__,
                               experiment.implementation.__class__.__name__)
