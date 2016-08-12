@@ -117,7 +117,7 @@ class ExperimentsRunner(object):
         lock.release()
 
         while is_running.value:  # type: ignore
-            memory_usages.append(process.memory_info())
+            memory_usages.append(process.memory_full_info())
             sleep(0.1)
 
         if debug:
@@ -212,7 +212,7 @@ class ExperimentsRunner(object):
         directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
-                'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty'
+                'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
             ])
             writer.writeheader()
             for row in memory_usages:
