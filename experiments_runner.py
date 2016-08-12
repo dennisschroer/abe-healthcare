@@ -33,12 +33,12 @@ class ExperimentsRunner(object):
     def __init__(self) -> None:
         if not path.exists(OUTPUT_DIRECTORY):
             makedirs(OUTPUT_DIRECTORY)
-        self.implementations = [
-            RW15Implementation(),
-            DACMACS13Implementation(),
-            RD13Implementation(),
-            TAAC12Implementation()
-        ]
+            self.implementations = [
+                DACMACS13Implementation(),
+                RD13Implementation(),
+                RW15Implementation(),
+                TAAC12Implementation()
+            ]
 
     def run_file_size_experiments(self) -> None:
         self.run_experiment(FileSizeExperiment())
