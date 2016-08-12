@@ -29,15 +29,16 @@ OUTPUT_DATA_DIRECTORY = 'data/output'
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
-                 implementation: BaseImplementation, verbose=False) -> None:
+                 implementation: BaseImplementation, verbose=False, storage_path=None) -> None:
+        self.storage_path = OUTPUT_DATA_DIRECTORY if storage_path is None else storage_path
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
         self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
         self._global_parameters = None  # type: GlobalParameters
-        if not path.exists(OUTPUT_DATA_DIRECTORY):
-            os.makedirs(OUTPUT_DATA_DIRECTORY)
+        if not path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
 
     @property
     def global_parameters(self) -> GlobalParameters:
@@ -143,7 +144,7 @@ class UserClient(object):
 
         if self.verbose:
             print('Writing    %s' % join('data/output', info['name']))
-        file = open(join(OUTPUT_DATA_DIRECTORY, info['name']), 'wb')
+        file = open(join(self.storage_path, info['name']), 'wb')
         file.write(data)
         file.close()
         return info['name']
