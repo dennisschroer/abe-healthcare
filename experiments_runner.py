@@ -24,7 +24,7 @@ from shared.utils.measure_util import pstats_to_csv, connections_to_csv
 
 debug = False
 
-OUTPUT_DIRECTORY = 'data/experiments/output'
+OUTPUT_DIRECTORY = 'data/experiments/results'
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
@@ -39,16 +39,17 @@ class ExperimentsRunner(object):
             TAAC12Implementation()
         ]
 
-    def run_file_size_experiments(self):
+    def run_file_size_experiments(self) -> None:
         for implementation in self.implementations:
             experiment = FileSizeExperiment(implementation)
             self.run_experiment(experiment)
 
-    def get_timestamp(self):
+    @staticmethod
+    def get_timestamp() -> str:
         return datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
 
     @staticmethod
-    def get_device_name():
+    def get_device_name() -> str:
         return socket.gethostname()
 
     def run_experiment(self, experiment: BaseExperiment) -> None:
@@ -83,9 +84,11 @@ class ExperimentsRunner(object):
         lock.acquire()
 
         # Create output directory
-        output_directory = self.experiment_output_directory(experiment)
+        output_directory = self.experiment_results_directory(experiment)
         if not path.exists(output_directory):
             makedirs(output_directory)
+
+        # Empty the storage directories
 
         # Create a separate process
         is_running = Value('b', False)
@@ -134,6 +137,7 @@ class ExperimentsRunner(object):
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
                                           is_running: Value) -> None:
         try:
+            experiment.setup_directories()
             experiment.setup(case)
 
             # We are done, let the main process setup monitoring
@@ -172,33 +176,33 @@ class ExperimentsRunner(object):
                 pass
 
     @staticmethod
-    def experiment_output_directory(experiment: BaseExperiment) -> str:
+    def experiment_results_directory(experiment: BaseExperiment) -> str:
         return path.join(OUTPUT_DIRECTORY,
-                              experiment.device_name,
-                              experiment.get_name(),
-                              experiment.implementation.get_name(),
-                              experiment.timestamp)
+                         experiment.device_name,
+                         experiment.get_name(),
+                         experiment.implementation.get_name(),
+                         experiment.timestamp)
 
     @staticmethod
     def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage: float) -> None:
-        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
         with open(path.join(directory, '%s_cpu.txt' % case.name), 'w') as file:
             file.write(str(cpu_usage))
 
     @staticmethod
     def output_error(experiment: BaseExperiment, case: ExperimentCase, error: BaseException) -> None:
-        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
         with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
             traceback.print_exc(file=file)
 
     @staticmethod
     def output_connections(experiment: BaseExperiment, case: ExperimentCase, connections: List[BaseConnection]) -> None:
-        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
         connections_to_csv(connections, path.join(directory, '%s_network.csv' % case.name))
 
     @staticmethod
     def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[Any]) -> None:
-        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
         with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
                 'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty'
@@ -209,7 +213,7 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile) -> None:
-        directory = ExperimentsRunner.experiment_output_directory(experiment)
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
         profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
         pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
                       path.join(directory, '%s_timings.csv' % case.name))
