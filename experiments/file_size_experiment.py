@@ -1,8 +1,9 @@
 from os.path import join
-from typing import List
+from typing import List, Dict, Any
 
 from client.user_client import UserClient
 from experiments.base_experiment import BaseExperiment, ExperimentCase
+from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
 from shared.connection.user_insurance_connection import UserInsuranceConnection
@@ -41,20 +42,17 @@ class FileSizeExperiment(BaseExperiment):
         central_authority = implementation.create_central_authority()
         central_authority.setup()
 
-        attribute_authority = implementation.create_attribute_authority('TEST')
-        attribute_authority.setup(central_authority, self.attributes)
-
         serializer = PickleSerializer(implementation)
-
         insurance = InsuranceService(serializer, central_authority.global_parameters,
                                      implementation.create_public_key_scheme(),
                                      storage_path=self.get_insurance_storage_path())
-        insurance.add_authority(attribute_authority)
 
-        user = User('bob', implementation)
-        connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
-        self.client = UserClient(user, connection, implementation,
-                                 storage_path=self.get_user_client_storage_path())
+        authorities = self.create_attribute_authorities(central_authority, implementation)
+        for authority in authorities:
+            insurance.add_authority(authority)
+
+        user_clients = self.create_user_clients(implementation, insurance)
+
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
 

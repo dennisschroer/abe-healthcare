@@ -1,11 +1,16 @@
 import cProfile
 import os
+import shutil
 from typing import List, Dict, Any
 
-import shutil
-
+from client.user_client import UserClient
+from service.central_authority import CentralAuthority
+from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
+from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
+from shared.model.user import User
+from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class ExperimentCase(object):
@@ -15,6 +20,37 @@ class ExperimentCase(object):
 
 
 class BaseExperiment(object):
+    # Default configurations
+    attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
+        {
+            'name': 'AUTHORITY1',
+            'attributes': list(map(lambda a: a + '@AUTHORITY1', [
+                'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
+            ]))
+        },
+        {
+            'name': 'AUTHORITY2',
+            'attributes': list(map(lambda a: a + '@AUTHORITY2', [
+                'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
+            ]))
+        }
+    ]
+    user_descriptions = [
+        {
+            'gid': 'USER1',
+            'attributes': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1',
+                           'SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+        },
+        {
+            'gid': 'USER2',
+            'attributes': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1',
+                           'SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+        },
+    ]
+    file_sizes = [10 * 1024 * 1024]  # type: List[int]
+    read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
+    write_policy = read_policy
+
     def __init__(self) -> None:
         self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
@@ -62,6 +98,32 @@ class BaseExperiment(object):
 
     def get_name(self):
         return self.__class__.__name__
+
+    def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation):
+        return list(map(
+            lambda d: self.create_attribute_authority(d, central_authority, implementation),
+            self.attribute_authority_descriptions
+        ))
+
+    # noinspection PyMethodMayBeStatic
+    def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
+                                   implementation: BaseImplementation):
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'])
+        attribute_authority.setup(central_authority, authority_description['attributes'])
+        return attribute_authority
+
+    def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService):
+        return list(map(
+            lambda d: self.create_user_client(d, insurance, implementation),
+            self.user_descriptions
+        ))
+
+    def create_user_client(self, user_description: Dict[str, Any], insurance: InsuranceService, implementation: BaseImplementation):
+        user = User(user_description['gid'], implementation)
+        serializer = PickleSerializer(implementation)
+        connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
+        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path())
+        return client
 
     def setup_directories(self):
         # Empty storage directories
