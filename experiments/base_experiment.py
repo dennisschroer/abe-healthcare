@@ -17,7 +17,6 @@ class ExperimentCase(object):
 class BaseExperiment(object):
     def __init__(self) -> None:
         self.pr = cProfile.Profile()
-        self.implementation = None  # type: BaseImplementation
         self.cases = list()  # type: List[ExperimentCase]
         self.device_name = None  # type: str
         self.timestamp = None  # type: str
@@ -34,7 +33,7 @@ class BaseExperiment(object):
         Setup all case dependant things for this experiment.
         :return:
         """
-        self.implementation = implementation
+        raise NotImplementedError()
 
     def start_measurements(self) -> None:
         """

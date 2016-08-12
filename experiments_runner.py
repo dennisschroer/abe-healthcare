@@ -67,14 +67,14 @@ class ExperimentsRunner(object):
 
     def run_experiment_for_implementation(self, experiment: BaseExperiment, implementation: BaseImplementation) -> None:
         for case in experiment.cases:
-            experiment.setup(implementation, case)
-            self.run_experiment_case(experiment, case)
+            self.run_experiment_case(experiment, case, implementation)
 
-    def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase) -> None:
+    def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase,
+                            implementation: BaseImplementation) -> None:
         print("=> Running %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (
             experiment.get_name(),
-            experiment.implementation.get_name(),
-            self.implementations.index(experiment.implementation) + 1,
+            implementation.get_name(),
+            self.implementations.index(implementation) + 1,
             len(self.implementations),
             case.name,
             experiment.cases.index(case) + 1,
@@ -86,13 +86,13 @@ class ExperimentsRunner(object):
         lock.acquire()
 
         # Create output directory
-        output_directory = self.experiment_results_directory(experiment)
+        output_directory = self.experiment_results_directory(experiment, implementation)
         if not path.exists(output_directory):
             makedirs(output_directory)
 
         # Create a separate process
         is_running = Value('b', False)
-        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, lock, is_running))
+        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, implementation, lock, is_running))
 
         if debug:
             print("debug 1 -> start process")
@@ -124,9 +124,9 @@ class ExperimentsRunner(object):
             print("debug 6 -> gather monitoring data")
 
         # Gather process statistics
-        self.output_cpu_usage(experiment, case, process.cpu_percent())
-        self.output_memory_usages(experiment, case, memory_usages)
-        self.output_storage_space(experiment, case)
+        self.output_cpu_usage(experiment, case, implementation, process.cpu_percent())
+        self.output_memory_usages(experiment, case, implementation, memory_usages)
+        self.output_storage_space(experiment, case, implementation)
 
         # Wait for the cleanup to finish
         p.join()
@@ -135,12 +135,13 @@ class ExperimentsRunner(object):
             print("debug 8 -> process stopped")
 
     @staticmethod
-    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
+    def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase,
+                                          implementation: BaseImplementation, lock: Condition,
                                           is_running: Value) -> None:
         try:
             # Empty the storage directories
             experiment.setup_directories()
-            experiment.setup(case)
+            experiment.setup(implementation, case)
 
             # We are done, let the main process setup monitoring
             lock.acquire()
@@ -161,14 +162,14 @@ class ExperimentsRunner(object):
                 print("debug 5 -> stop experiment")
             is_running.value = False  # type: ignore
 
-            ExperimentsRunner.output_timings(experiment, case, experiment.pr)
-            ExperimentsRunner.output_connections(experiment, case, experiment.get_connections())
+            ExperimentsRunner.output_timings(experiment, case, implementation, experiment.pr)
+            ExperimentsRunner.output_connections(experiment, case, implementation, experiment.get_connections())
 
             # Cleanup
             if debug:
                 print("debug 7 -> cleanup finished")
         except BaseException as e:
-            ExperimentsRunner.output_error(experiment, case, e)
+            ExperimentsRunner.output_error(experiment, case, implementation, e)
         finally:
             try:
                 is_running.value = False  # type: ignore
@@ -178,33 +179,37 @@ class ExperimentsRunner(object):
                 pass
 
     @staticmethod
-    def experiment_results_directory(experiment: BaseExperiment) -> str:
+    def experiment_results_directory(experiment: BaseExperiment, implementation: BaseImplementation) -> str:
         return path.join(OUTPUT_DIRECTORY,
                          experiment.device_name,
                          experiment.get_name(),
-                         experiment.implementation.get_name(),
+                         implementation.get_name(),
                          experiment.timestamp)
 
     @staticmethod
-    def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, cpu_usage: float) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_cpu_usage(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
+                         cpu_usage: float) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_cpu.txt' % case.name), 'w') as file:
             file.write(str(cpu_usage))
 
     @staticmethod
-    def output_error(experiment: BaseExperiment, case: ExperimentCase, error: BaseException) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_error(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
+                     error: BaseException) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
             traceback.print_exc(file=file)
 
     @staticmethod
-    def output_connections(experiment: BaseExperiment, case: ExperimentCase, connections: List[BaseConnection]) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_connections(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
+                           connections: List[BaseConnection]) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         connections_to_csv(connections, path.join(directory, '%s_network.csv' % case.name))
 
     @staticmethod
-    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, memory_usages: List[Any]) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_memory_usages(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
+                             memory_usages: List[Any]) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_memory.csv' % case.name), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
                 'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty'
@@ -214,8 +219,9 @@ class ExperimentsRunner(object):
                 writer.writerow(row._asdict())
 
     @staticmethod
-    def output_storage_space(experiment: BaseExperiment, case: ExperimentCase) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_storage_space(experiment: BaseExperiment, case: ExperimentCase,
+                             implementation: BaseImplementation) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         insurance_storage = experiment.get_insurance_storage_path()
         with open(path.join(directory, '%s_storage_insurance.csv' % case.name), 'w') as output:
             writer = csv.writer(output)
@@ -225,8 +231,9 @@ class ExperimentsRunner(object):
                 writer.writerow((file, size))
 
     @staticmethod
-    def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile) -> None:
-        directory = ExperimentsRunner.experiment_results_directory(experiment)
+    def output_timings(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
+                       profile: Profile) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
         pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
                       path.join(directory, '%s_timings.csv' % case.name))
