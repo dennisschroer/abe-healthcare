@@ -118,7 +118,7 @@ class ExperimentsRunner(object):
 
         while is_running.value:  # type: ignore
             memory_usages.append(process.memory_full_info())
-            sleep(0.1)
+            sleep(experiment.memory_measure_interval)
 
         if debug:
             print("debug 6 -> gather monitoring data")

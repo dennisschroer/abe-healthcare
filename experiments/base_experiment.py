@@ -16,6 +16,7 @@ class ExperimentCase(object):
 
 class BaseExperiment(object):
     def __init__(self) -> None:
+        self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
         self.cases = list()  # type: List[ExperimentCase]
         self.device_name = None  # type: str
