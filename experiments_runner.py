@@ -16,6 +16,7 @@ import psutil
 from experiments.base_experiment import BaseExperiment, ExperimentCase
 from experiments.file_size_experiment import FileSizeExperiment
 from shared.connection.base_connection import BaseConnection
+from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
@@ -40,9 +41,7 @@ class ExperimentsRunner(object):
         ]
 
     def run_file_size_experiments(self) -> None:
-        for implementation in self.implementations:
-            experiment = FileSizeExperiment(implementation)
-            self.run_experiment(experiment)
+        self.run_experiment(FileSizeExperiment())
 
     @staticmethod
     def get_timestamp() -> str:
@@ -52,21 +51,24 @@ class ExperimentsRunner(object):
     def get_device_name() -> str:
         return socket.gethostname()
 
-    def run_experiment(self, experiment: BaseExperiment) -> None:
+    def run_experiment(self, experiment: BaseExperiment):
         experiment.timestamp = self.get_timestamp()
         experiment.device_name = self.get_device_name()
+
         print("Device '%s' starting experiment '%s' with timestamp '%s'" % (
             experiment.device_name, experiment.get_name(), experiment.timestamp))
 
-        i = 1
-        print("=> Setting up %s, implementation=%s" % (
-            experiment.get_name(),
-            experiment.implementation.get_name()
-        ))
         experiment.global_setup()
+
+        print("Global setup finished")
+
+        for implementation in self.implementations:
+            self.run_experiment_for_implementation(experiment, implementation)
+
+    def run_experiment_for_implementation(self, experiment: BaseExperiment, implementation: BaseImplementation) -> None:
         for case in experiment.cases:
+            experiment.setup(implementation, case)
             self.run_experiment_case(experiment, case)
-            i += 1
 
     def run_experiment_case(self, experiment: BaseExperiment, case: ExperimentCase) -> None:
         print("=> Running %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (

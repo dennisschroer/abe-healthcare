@@ -16,8 +16,8 @@ class FileSizeExperiment(BaseExperiment):
     attributes = ['TEST@TEST']
     policy = 'TEST@TEST'
 
-    def __init__(self, implementation: BaseImplementation, cases: List[ExperimentCase] = None) -> None:
-        super().__init__(implementation)
+    def __init__(self, cases: List[ExperimentCase] = None) -> None:
+        super().__init__()
         self.client = None  # type: UserClient
         if cases is None:
             cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2 ** 10, 2 ** 20, 2 ** 30]))
@@ -32,6 +32,12 @@ class FileSizeExperiment(BaseExperiment):
         for case in self.cases:
             file_generator.generate(case.arguments['file_size'], 2, input_path, skip_if_exists=True,
                                     verbose=True)
+
+    def setup(self, implementation: BaseImplementation, case: ExperimentCase):
+        super().setup(implementation, case)
+        input_path = self.get_experiment_input_path()
+        self.first_filename = join(input_path, '%i-0' % case.arguments['file_size'])
+        self.update_filename = join(input_path, '%i-1' % case.arguments['file_size'])
 
         central_authority = self.implementation.create_central_authority()
         central_authority.setup()
@@ -52,11 +58,6 @@ class FileSizeExperiment(BaseExperiment):
                                  storage_path=self.get_user_client_storage_path())
         user.registration_data = central_authority.register_user(user.gid)
         user.issue_secret_keys(attribute_authority.keygen(user.gid, user.registration_data, self.attributes, 1))
-
-    def setup(self, case: ExperimentCase):
-        input_path = self.get_experiment_input_path()
-        self.first_filename = join(input_path, '%i-0' % case.arguments['file_size'])
-        self.update_filename = join(input_path, '%i-1' % case.arguments['file_size'])
 
     def run(self, case: ExperimentCase):
         location = self.client.encrypt_file(self.first_filename, self.policy, self.policy)

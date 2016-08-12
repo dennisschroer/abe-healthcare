@@ -15,25 +15,26 @@ class ExperimentCase(object):
 
 
 class BaseExperiment(object):
-    def __init__(self, implementation: BaseImplementation) -> None:
+    def __init__(self) -> None:
         self.pr = cProfile.Profile()
-        self.implementation = implementation  # type: BaseImplementation
+        self.implementation = None  # type: BaseImplementation
         self.cases = list()  # type: List[ExperimentCase]
         self.device_name = None  # type: str
         self.timestamp = None  # type: str
 
     def global_setup(self) -> None:
         """
-        Setup all case independent things for this experiment, like generating random input files.
+        Setup all implementation and case independent things for this experiment, like generating random input files.
+        This method is only called once for each experiment, namely at the very start.
         """
         raise NotImplementedError()
 
-    def setup(self, case: ExperimentCase):
+    def setup(self, implementation: BaseImplementation, case: ExperimentCase):
         """
         Setup all case dependant things for this experiment.
         :return:
         """
-        raise NotImplementedError()
+        self.implementation = implementation
 
     def start_measurements(self) -> None:
         """
