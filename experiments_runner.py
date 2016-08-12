@@ -6,7 +6,7 @@ from cProfile import Profile
 from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from multiprocessing import Value
-from os import makedirs
+from os import makedirs, listdir
 from os import path
 from time import sleep
 from typing import List, Any
@@ -88,8 +88,6 @@ class ExperimentsRunner(object):
         if not path.exists(output_directory):
             makedirs(output_directory)
 
-        # Empty the storage directories
-
         # Create a separate process
         is_running = Value('b', False)
         p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, lock, is_running))
@@ -126,6 +124,7 @@ class ExperimentsRunner(object):
         # Gather process statistics
         self.output_cpu_usage(experiment, case, process.cpu_percent())
         self.output_memory_usages(experiment, case, memory_usages)
+        self.output_storage_space(experiment, case)
 
         # Wait for the cleanup to finish
         p.join()
@@ -137,6 +136,7 @@ class ExperimentsRunner(object):
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase, lock: Condition,
                                           is_running: Value) -> None:
         try:
+            # Empty the storage directories
             experiment.setup_directories()
             experiment.setup(case)
 
@@ -210,6 +210,17 @@ class ExperimentsRunner(object):
             writer.writeheader()
             for row in memory_usages:
                 writer.writerow(row._asdict())
+
+    @staticmethod
+    def output_storage_space(experiment: BaseExperiment, case: ExperimentCase) -> None:
+        directory = ExperimentsRunner.experiment_results_directory(experiment)
+        insurance_storage = experiment.get_insurance_storage_path()
+        with open(path.join(directory, '%s_storage_insurance.csv' % case.name), 'w') as output:
+            writer = csv.writer(output)
+            writer.writerow(('filename', 'size'))
+            for file in listdir(insurance_storage):
+                size = path.getsize(path.join(insurance_storage, file))
+                writer.writerow((file, size))
 
     @staticmethod
     def output_timings(experiment: BaseExperiment, case: ExperimentCase, profile: Profile) -> None:
