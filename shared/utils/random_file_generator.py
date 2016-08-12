@@ -20,7 +20,7 @@ class RandomFileGenerator(object):
                     print("Generating %s" % path.join(output_path, '%i-%i' % (size, i)))
                 number_of_blocks = size // RandomFileGenerator.block_size
                 for j in range(0, number_of_blocks):
-                    if verbose and (j % 100) == 0:
+                    if verbose and (j % 100) == 99:
                         print("Block %d of %d" % (j + 1, number_of_blocks))
                     f.write(urandom(RandomFileGenerator.block_size))
                 # Write the remainder

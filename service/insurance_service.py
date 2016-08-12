@@ -20,9 +20,10 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, serializer: PickleSerializer, global_parameters: GlobalParameters, public_key_scheme: BasePublicKey) -> None:
+    def __init__(self, serializer: PickleSerializer, global_parameters: GlobalParameters,
+                 public_key_scheme: BasePublicKey, storage_path: str = None) -> None:
         self.global_parameters = global_parameters
-        self.storage = Storage(serializer)
+        self.storage = Storage(serializer, storage_path)
         self.public_key_scheme = public_key_scheme
         self.authorities = dict()  # type: Dict[str, AttributeAuthority]
 

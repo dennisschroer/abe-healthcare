@@ -1,15 +1,19 @@
 import os
 
+from os import path
+
 from shared.model.records.data_record import DataRecord
 from shared.serializer.pickle_serializer import PickleSerializer
 
 STORAGE_DATA_DIRECTORY = 'data/storage'
 
+
 class Storage(object):
-    def __init__(self, serializer: PickleSerializer) -> None:
+    def __init__(self, serializer: PickleSerializer, storage_path: str = None) -> None:
+        self.storage_path = STORAGE_DATA_DIRECTORY if storage_path is None else storage_path
         self.serializer = serializer
-        if not os.path.exists(STORAGE_DATA_DIRECTORY):
-            os.makedirs(STORAGE_DATA_DIRECTORY)
+        if not os.path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
 
     def store(self, name: str, record: DataRecord) -> None:
         """
@@ -17,11 +21,11 @@ class Storage(object):
         :param name: The location of the data record
         :param record: The record to store
         """
-        f = open('data/storage/%s.meta' % name, 'wb')
+        f = open(path.join(self.storage_path, '%s.meta' % name), 'wb')
         f.write(self.serializer.serialize_data_record_meta(record))
         f.close()
 
-        f = open('data/storage/%s.dat' % name, 'wb')
+        f = open(path.join(self.storage_path, '%s.dat' % name), 'wb')
         f.write(record.data)
         f.close()
 
@@ -29,14 +33,13 @@ class Storage(object):
         """
         Load a data record from storage.
         :param name: The location of the data record
-        :param implementation: The implementation
         :return: The loaded data record
         """
-        f = open('data/storage/%s.meta' % name, 'rb')
+        f = open(path.join(self.storage_path, '%s.meta' % name), 'rb')
         result = self.serializer.deserialize_data_record_meta(f.read())
         f.close()
 
-        f = open('data/storage/%s.dat' % name, 'rb')
+        f = open(path.join(self.storage_path, '%s.dat' % name), 'rb')
         result.data = f.read()
         f.close()
         return result
