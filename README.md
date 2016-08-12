@@ -41,8 +41,13 @@ The `.csv` file is this result converted to CSV.
 
 #### Memory
 
-res is what is used, in total
+rss is what is used, in total, and almost equal to uss,
+
 data is what is available for data only
+
+swap is what is in swap
+
+**rss + swap is used mem**
 
 See [psutil.Process.memory_info](https://pythonhosted.org/psutil/#psutil.Process.memory_info).
 
@@ -59,6 +64,13 @@ See [psutil.Process.memory_info](https://pythonhosted.org/psutil/#psutil.Process
   It matches “top“‘s DATA column (see doc).
 - lib (Linux): the memory used by shared libraries.
 - dirty (Linux): the number of dirty pages.
+- uss (Linux, OSX, Windows): aka “Unique Set Size”, this is the memory which is unique to a process and which would be 
+  freed if the process was terminated right now.
+- pss (Linux): aka “Proportional Set Size”, is the amount of memory shared with other processes, accounted in a way 
+  that the amount is divided evenly between the processes that share it. I.e. if a process has 10 MBs all to itself 
+  and 10 MBs shared with another process its PSS will be 15 MBs.
+- swap (Linux): amount of memory that has been swapped out to disk.
+
 
 Relevant link: [What is the simplest and most accurate way to measure the memory used by a program in a programming contest environment?](https://www.quora.com/What-is-the-simplest-and-most-accurate-way-to-measure-the-memory-used-by-a-program-in-a-programming-contest-environment)
 
