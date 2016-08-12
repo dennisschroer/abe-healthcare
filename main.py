@@ -207,8 +207,8 @@ if __name__ == '__main__':
     # sum1 = summary.summarize(all_objects)
     # summary.print_(sum1)
 
-    pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
-    connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
+    # pstats_to_csv(path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.txt'), path.join(PROFILE_DATA_DIRECTORY, 'dacmacs.csv'))
+    # connections_to_csv(abe.connections, path.join(PROFILE_DATA_DIRECTORY, 'dacmacs_network.csv'))
 
     stats = Stats(pr)
     abe.output_measurements(stats, abe.connections)
