@@ -1,8 +1,10 @@
 import cProfile
 import os
 import shutil
+from os.path import join
 from typing import List, Dict, Any
 
+from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
@@ -11,6 +13,7 @@ from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.user import User
 from shared.serializer.pickle_serializer import PickleSerializer
+from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class ExperimentCase(object):
@@ -38,13 +41,17 @@ class BaseExperiment(object):
     user_descriptions = [
         {
             'gid': 'USER1',
-            'attributes': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1',
-                           'SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+            'attributes': {
+                'AUTHORITY1': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1'],
+                'AUTHORITY2': ['SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+            }
         },
         {
             'gid': 'USER2',
-            'attributes': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1',
-                           'SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+            'attributes': {
+                'AUTHORITY1': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1'],
+                'AUTHORITY2': ['SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+            }
         },
     ]
     file_sizes = [10 * 1024 * 1024]  # type: List[int]
@@ -57,20 +64,99 @@ class BaseExperiment(object):
         self.cases = list()  # type: List[ExperimentCase]
         self.device_name = None  # type: str
         self.timestamp = None  # type: str
+        self.file_name = None
+
+        self.central_authority = None  # type: CentralAuthority
+        self.attribute_authorities = None  # type: List[AttributeAuthority]
+        self.user_clients = None  # type: List[UserClient]
 
     def global_setup(self) -> None:
         """
         Setup all implementation and case independent things for this experiment, like generating random input files.
         This method is only called once for each experiment, namely at the very start.
         """
-        raise NotImplementedError()
+        file_generator = RandomFileGenerator()
+        input_path = self.get_experiment_input_path()
+        for size in self.file_sizes:
+            file_generator.generate(size, 1, input_path, skip_if_exists=True, verbose=True)
 
     def setup(self, implementation: BaseImplementation, case: ExperimentCase):
         """
         Setup all case dependant things for this experiment.
         :return:
         """
-        raise NotImplementedError()
+        input_path = self.get_experiment_input_path()
+        serializer = PickleSerializer(implementation)
+
+        self.file_name = join(input_path, '%i-0' % case.arguments['file_size'])
+
+        # Create central authority
+        self.central_authority = implementation.create_central_authority()
+        self.central_authority.setup()
+
+        # Create insurance service
+        insurance = InsuranceService(serializer, self.central_authority.global_parameters,
+                                     implementation.create_public_key_scheme(),
+                                     storage_path=self.get_insurance_storage_path())
+
+        # Create attribute authorities
+        self.attribute_authorities = self.create_attribute_authorities(self.central_authority, implementation)
+        for authority in self.attribute_authorities:
+            insurance.add_authority(authority)
+
+        # Create user clients
+        self.user_clients = self.create_user_clients(implementation, insurance)  # type: List[UserClient]
+        self.register_user_clients()
+        self.generate_user_keys()
+
+    def register_user_clients(self):
+        for user_client in self.user_clients:
+            user_client.registration_data = self.central_authority.register_user(user_client.user.gid)
+
+    def get_user_client(self, gid):
+        return next((x for x in self.user_clients if x.user.gid == gid), None)
+
+    def get_attribute_authority(self, name):
+        return next((x for x in self.attribute_authorities if x.name == name), None)
+
+    def generate_user_keys(self):
+        for user_description in self.user_descriptions:
+            print(user_description['gid'])
+            user_client = self.get_user_client(user_description['gid'])
+            for authority_name, attributes in user_description['attributes'].items():
+                print(authority_name)
+                authority = self.get_attribute_authority(authority_name)
+                print(authority)
+                user_client.user.issue_secret_keys(
+                    authority.keygen(user_client.user.gid, user_client.user.registration_data, attributes, 1))
+
+    def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
+            List[AttributeAuthority]:
+        return list(map(
+            lambda d: self.create_attribute_authority(d, central_authority, implementation),
+            self.attribute_authority_descriptions
+        ))
+
+    # noinspection PyMethodMayBeStatic
+    def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
+                                   implementation: BaseImplementation) -> AttributeAuthority:
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'])
+        attribute_authority.setup(central_authority, authority_description['attributes'])
+        return attribute_authority
+
+    def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:
+        return list(map(
+            lambda d: self.create_user_client(d, insurance, implementation),
+            self.user_descriptions
+        ))
+
+    def create_user_client(self, user_description: Dict[str, Any], insurance: InsuranceService,
+                           implementation: BaseImplementation) -> UserClient:
+        user = User(user_description['gid'], implementation)
+        serializer = PickleSerializer(implementation)
+        connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
+        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path())
+        return client
 
     def start_measurements(self) -> None:
         """
@@ -86,46 +172,24 @@ class BaseExperiment(object):
         """
         self.pr.disable()
 
-    def run(self, case: ExperimentCase) -> None:
-        raise NotImplementedError()
+    def run(self):
+        location = self.client.encrypt_file(self.file_name, self.read_policy, self.write_policy)
+        self.client.decrypt_file(location)
 
     def get_connections(self) -> List[BaseConnection]:
         """
         Get all connections used in this experiment of which the usage should be outputted.
         :return: A list of connections
         """
-        raise NotImplementedError()
+        result = []
+        for user_client in self.user_clients:
+            result += [user_client.insurance_connection]
+        return result
 
     def get_name(self):
         return self.__class__.__name__
 
-    def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation):
-        return list(map(
-            lambda d: self.create_attribute_authority(d, central_authority, implementation),
-            self.attribute_authority_descriptions
-        ))
-
-    # noinspection PyMethodMayBeStatic
-    def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
-                                   implementation: BaseImplementation):
-        attribute_authority = implementation.create_attribute_authority(authority_description['name'])
-        attribute_authority.setup(central_authority, authority_description['attributes'])
-        return attribute_authority
-
-    def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService):
-        return list(map(
-            lambda d: self.create_user_client(d, insurance, implementation),
-            self.user_descriptions
-        ))
-
-    def create_user_client(self, user_description: Dict[str, Any], insurance: InsuranceService, implementation: BaseImplementation):
-        user = User(user_description['gid'], implementation)
-        serializer = PickleSerializer(implementation)
-        connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
-        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path())
-        return client
-
-    def setup_directories(self):
+    def setup_directories(self) -> None:
         # Empty storage directories
         if os.path.exists(self.get_user_client_storage_path()):
             shutil.rmtree(self.get_user_client_storage_path())
@@ -138,15 +202,15 @@ class BaseExperiment(object):
         os.makedirs(self.get_user_client_storage_path())
         os.makedirs(self.get_insurance_storage_path())
 
-    def get_experiment_storage_base_path(self):
+    def get_experiment_storage_base_path(self) -> str:
         return os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             '../data/experiments/%s' % self.get_name())
 
-    def get_experiment_input_path(self):
+    def get_experiment_input_path(self) -> str:
         return os.path.join(self.get_experiment_storage_base_path(), 'input')
 
-    def get_user_client_storage_path(self):
+    def get_user_client_storage_path(self) -> str:
         return os.path.join(self.get_experiment_storage_base_path(), 'client')
 
-    def get_insurance_storage_path(self):
+    def get_insurance_storage_path(self) -> str:
         return os.path.join(self.get_experiment_storage_base_path(), 'insurance')
