@@ -54,7 +54,7 @@ class BaseExperiment(object):
             }
         },
     ]
-    file_sizes = [10 * 1024 * 1024]  # type: List[int]
+    file_size = 10 * 1024 * 1024  # type: int
     read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
     write_policy = read_policy
 
@@ -62,6 +62,7 @@ class BaseExperiment(object):
         self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
         self.cases = list()  # type: List[ExperimentCase]
+        self.current_case = None  # type: ExperimentCase
         self.device_name = None  # type: str
         self.timestamp = None  # type: str
         self.file_name = None  # type: str
@@ -77,18 +78,18 @@ class BaseExperiment(object):
         """
         file_generator = RandomFileGenerator()
         input_path = self.get_experiment_input_path()
-        for size in self.file_sizes:
-            file_generator.generate(size, 1, input_path, skip_if_exists=True, verbose=True)
+        file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
     def setup(self, implementation: BaseImplementation, case: ExperimentCase) -> None:
         """
         Setup all case dependant things for this experiment and this case.
         :return:
         """
+        self.current_case = case
         input_path = self.get_experiment_input_path()
         serializer = PickleSerializer(implementation)
 
-        self.file_name = join(input_path, '%i-0' % case.arguments['file_size'])
+        self.file_name = join(input_path, '%i-0' % self.file_size)
 
         # Create central authority
         self.central_authority = implementation.create_central_authority()

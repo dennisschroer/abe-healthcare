@@ -15,6 +15,7 @@ import psutil
 
 from experiments.base_experiment import BaseExperiment, ExperimentCase
 from experiments.file_size_experiment import FileSizeExperiment
+from experiments.policy_size_experiment import PolicySizeExperiment
 from shared.connection.base_connection import BaseConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
@@ -42,6 +43,9 @@ class ExperimentsRunner(object):
 
     def run_file_size_experiments(self) -> None:
         self.run_experiment(FileSizeExperiment())
+
+    def run_policy_size_experiments(self) -> None:
+        self.run_experiment(PolicySizeExperiment())
 
     @staticmethod
     def get_timestamp() -> str:
@@ -244,4 +248,4 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_file_size_experiments()
+    runner.run_policy_size_experiments()
