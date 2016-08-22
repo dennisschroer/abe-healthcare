@@ -22,7 +22,7 @@ from shared.implementations.dacmacs13_implementation import DACMACS13Implementat
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
-from shared.utils.measure_util import pstats_to_csv, connections_to_csv
+from shared.utils.measure_util import pstats_to_csv, connections_to_csv, pstats_to_csv2
 
 debug = False
 
@@ -40,6 +40,9 @@ class ExperimentsRunner(object):
             RW15Implementation(),
             TAAC12Implementation()
         ]
+
+    def run_base_experiments(self) -> None:
+        self.run_experiment(BaseExperiment())
 
     def run_file_size_experiments(self) -> None:
         self.run_experiment(FileSizeExperiment())
@@ -244,8 +247,10 @@ class ExperimentsRunner(object):
         profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
         pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
                       path.join(directory, '%s_timings.csv' % case.name))
+        pstats_to_csv2(path.join(directory, '%s_timings.txt' % case.name),
+                      path.join(directory, '%s_timings2.csv' % case.name))
 
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_policy_size_experiments()
+    runner.run_base_experiments()

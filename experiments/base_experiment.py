@@ -58,11 +58,9 @@ class BaseExperiment(object):
     read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
     write_policy = read_policy
 
-    def __init__(self) -> None:
+    def __init__(self, cases: List[ExperimentCase] = None) -> None:
         self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
-        self.cases = list()  # type: List[ExperimentCase]
-        self.current_case = None  # type: ExperimentCase
         self.device_name = None  # type: str
         self.timestamp = None  # type: str
         self.file_name = None  # type: str
@@ -70,6 +68,14 @@ class BaseExperiment(object):
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
         self.user_clients = None  # type: List[UserClient]
+
+        if cases is None:
+            cases = [ExperimentCase('base', None)]
+
+        self.cases = cases  # type: List[ExperimentCase]
+        self.current_case = None  # type: ExperimentCase
+        self.current_implementation = None  # type:BaseImplementation
+        self.serializer = None  # type: PickleSerializer
 
     def global_setup(self) -> None:
         """
@@ -86,29 +92,12 @@ class BaseExperiment(object):
         :return:
         """
         self.current_case = case
+        self.current_implementation = implementation
+
         input_path = self.get_experiment_input_path()
-        serializer = PickleSerializer(implementation)
+        self.serializer = PickleSerializer(implementation)
 
         self.file_name = join(input_path, '%i-0' % self.file_size)
-
-        # Create central authority
-        self.central_authority = implementation.create_central_authority()
-        self.central_authority.setup()
-
-        # Create insurance service
-        insurance = InsuranceService(serializer, self.central_authority.global_parameters,
-                                     implementation.create_public_key_scheme(),
-                                     storage_path=self.get_insurance_storage_path())
-
-        # Create attribute authorities
-        self.attribute_authorities = self.create_attribute_authorities(self.central_authority, implementation)
-        for authority in self.attribute_authorities:
-            insurance.add_authority(authority)
-
-        # Create user clients
-        self.user_clients = self.create_user_clients(implementation, insurance)  # type: List[UserClient]
-        self.register_user_clients()
-        self.generate_user_keys()
 
     def register_user_clients(self):
         """
@@ -217,6 +206,26 @@ class BaseExperiment(object):
         self.pr.disable()
 
     def run(self):
+        # Create central authority
+        self.central_authority = self.current_implementation.create_central_authority()
+        self.central_authority.setup()
+
+        # Create insurance service
+        insurance = InsuranceService(self.serializer, self.central_authority.global_parameters,
+                                     self.current_implementation.create_public_key_scheme(),
+                                     storage_path=self.get_insurance_storage_path())
+
+        # Create attribute authorities
+        self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
+                                                                       self.current_implementation)
+        for authority in self.attribute_authorities:
+            insurance.add_authority(authority)
+
+        # Create user clients
+        self.user_clients = self.create_user_clients(self.current_implementation, insurance)  # type: List[UserClient]
+        self.register_user_clients()
+        self.generate_user_keys()
+
         location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
         self.user_clients[1].decrypt_file(location)
 

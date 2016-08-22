@@ -15,10 +15,9 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 class FileSizeExperiment(BaseExperiment):
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
-        super().__init__()
         if cases is None:
             cases = list(map(lambda size: ExperimentCase(size, {'file_size': size}), [1, 2 ** 10, 2 ** 20, 2 ** 30]))
-        self.cases = cases
+            super().__init__(cases)
 
         self.file_sizes = list(map(lambda case: case.arguments['file_size'], self.cases))
 
