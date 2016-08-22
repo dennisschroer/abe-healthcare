@@ -158,7 +158,7 @@ class ExperimentsRunner(object):
 
             # And off we go
             experiment.start_measurements()
-            experiment.run(case)
+            experiment.run()
             experiment.stop_measurements()
 
             # We are done, notify the main process to stop monitoring
