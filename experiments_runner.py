@@ -104,7 +104,7 @@ class ExperimentsRunner(object):
         lock.wait()
 
         if debug:
-            print("debug 3 -> start monitoring")
+            print("debug 4 -> start monitoring")
 
         # Setup is finished, start monitoring
         process = psutil.Process(p.pid)  # type: ignore
@@ -121,7 +121,7 @@ class ExperimentsRunner(object):
             sleep(experiment.memory_measure_interval)
 
         if debug:
-            print("debug 6 -> gather monitoring data")
+            print("debug 7 -> gather monitoring data")
 
         # Gather process statistics
         self.output_cpu_usage(experiment, case, implementation, process.cpu_percent())
@@ -132,13 +132,16 @@ class ExperimentsRunner(object):
         p.join()
 
         if debug:
-            print("debug 8 -> process stopped")
+            print("debug 9 -> process stopped")
 
     @staticmethod
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase,
                                           implementation: BaseImplementation, lock: Condition,
                                           is_running: Value) -> None:
         try:
+            if debug:
+                print("debug 2 -> process started")
+
             # Empty the storage directories
             experiment.setup_directories()
             experiment.setup(implementation, case)
@@ -146,11 +149,11 @@ class ExperimentsRunner(object):
             # We are done, let the main process setup monitoring
             lock.acquire()
             if debug:
-                print("debug 2 -> experiment setup finished")
+                print("debug 3 -> experiment setup finished")
             lock.notify()
             lock.wait()
             if debug:
-                print("debug 4 -> start experiment")
+                print("debug 5 -> start experiment")
 
             # And off we go
             experiment.start_measurements()
@@ -159,7 +162,7 @@ class ExperimentsRunner(object):
 
             # We are done, notify the main process to stop monitoring
             if debug:
-                print("debug 5 -> stop experiment")
+                print("debug 6 -> stop experiment")
             is_running.value = False  # type: ignore
 
             ExperimentsRunner.output_timings(experiment, case, implementation, experiment.pr)
@@ -167,7 +170,7 @@ class ExperimentsRunner(object):
 
             # Cleanup
             if debug:
-                print("debug 7 -> cleanup finished")
+                print("debug 8 -> cleanup finished")
         except BaseException as e:
             ExperimentsRunner.output_error(experiment, case, implementation, e)
         finally:
