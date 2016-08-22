@@ -92,7 +92,8 @@ class ExperimentsRunner(object):
 
         # Create a separate process
         is_running = Value('b', False)
-        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, implementation, lock, is_running))
+        p = Process(target=self.run_experiment_case_synchronously,
+                    args=(experiment, case, implementation, lock, is_running))
 
         if debug:
             print("debug 1 -> start process")
@@ -104,7 +105,7 @@ class ExperimentsRunner(object):
         lock.wait()
 
         if debug:
-            print("debug 3 -> start monitoring")
+            print("debug 4 -> start monitoring")
 
         # Setup is finished, start monitoring
         process = psutil.Process(p.pid)  # type: ignore
@@ -121,7 +122,7 @@ class ExperimentsRunner(object):
             sleep(experiment.memory_measure_interval)
 
         if debug:
-            print("debug 6 -> gather monitoring data")
+            print("debug 7 -> gather monitoring data")
 
         # Gather process statistics
         self.output_cpu_usage(experiment, case, implementation, process.cpu_percent())
@@ -132,13 +133,16 @@ class ExperimentsRunner(object):
         p.join()
 
         if debug:
-            print("debug 8 -> process stopped")
+            print("debug 9 -> process stopped")
 
     @staticmethod
     def run_experiment_case_synchronously(experiment: BaseExperiment, case: ExperimentCase,
                                           implementation: BaseImplementation, lock: Condition,
                                           is_running: Value) -> None:
         try:
+            if debug:
+                print("debug 2 -> process started")
+
             # Empty the storage directories
             experiment.setup_directories()
             experiment.setup(implementation, case)
@@ -146,20 +150,20 @@ class ExperimentsRunner(object):
             # We are done, let the main process setup monitoring
             lock.acquire()
             if debug:
-                print("debug 2 -> experiment setup finished")
+                print("debug 3 -> experiment setup finished")
             lock.notify()
             lock.wait()
             if debug:
-                print("debug 4 -> start experiment")
+                print("debug 5 -> start experiment")
 
             # And off we go
             experiment.start_measurements()
-            experiment.run(case)
+            experiment.run()
             experiment.stop_measurements()
 
             # We are done, notify the main process to stop monitoring
             if debug:
-                print("debug 5 -> stop experiment")
+                print("debug 6 -> stop experiment")
             is_running.value = False  # type: ignore
 
             ExperimentsRunner.output_timings(experiment, case, implementation, experiment.pr)
@@ -167,9 +171,9 @@ class ExperimentsRunner(object):
 
             # Cleanup
             if debug:
-                print("debug 7 -> cleanup finished")
-        except BaseException as e:
-            ExperimentsRunner.output_error(experiment, case, implementation, e)
+                print("debug 8 -> cleanup finished")
+        except BaseException:
+            ExperimentsRunner.output_error(experiment, case, implementation)
         finally:
             try:
                 is_running.value = False  # type: ignore
@@ -194,8 +198,7 @@ class ExperimentsRunner(object):
             file.write(str(cpu_usage))
 
     @staticmethod
-    def output_error(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
-                     error: BaseException) -> None:
+    def output_error(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation) -> None:
         directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
             traceback.print_exc(file=file)
