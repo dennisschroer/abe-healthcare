@@ -111,7 +111,7 @@ class BaseExperiment(object):
 
     def register_user_clients(self):
         for user_client in self.user_clients:
-            user_client.registration_data = self.central_authority.register_user(user_client.user.gid)
+            user_client.user.registration_data = self.central_authority.register_user(user_client.user.gid)
 
     def get_user_client(self, gid):
         return next((x for x in self.user_clients if x.user.gid == gid), None)
@@ -121,12 +121,9 @@ class BaseExperiment(object):
 
     def generate_user_keys(self):
         for user_description in self.user_descriptions:
-            print(user_description['gid'])
             user_client = self.get_user_client(user_description['gid'])
             for authority_name, attributes in user_description['attributes'].items():
-                print(authority_name)
                 authority = self.get_attribute_authority(authority_name)
-                print(authority)
                 user_client.user.issue_secret_keys(
                     authority.keygen(user_client.user.gid, user_client.user.registration_data, attributes, 1))
 

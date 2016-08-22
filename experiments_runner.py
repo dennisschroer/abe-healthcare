@@ -92,7 +92,8 @@ class ExperimentsRunner(object):
 
         # Create a separate process
         is_running = Value('b', False)
-        p = Process(target=self.run_experiment_case_synchronously, args=(experiment, case, implementation, lock, is_running))
+        p = Process(target=self.run_experiment_case_synchronously,
+                    args=(experiment, case, implementation, lock, is_running))
 
         if debug:
             print("debug 1 -> start process")
@@ -171,8 +172,8 @@ class ExperimentsRunner(object):
             # Cleanup
             if debug:
                 print("debug 8 -> cleanup finished")
-        except BaseException as e:
-            ExperimentsRunner.output_error(experiment, case, implementation, e)
+        except BaseException:
+            ExperimentsRunner.output_error(experiment, case, implementation)
         finally:
             try:
                 is_running.value = False  # type: ignore
@@ -197,8 +198,7 @@ class ExperimentsRunner(object):
             file.write(str(cpu_usage))
 
     @staticmethod
-    def output_error(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
-                     error: BaseException) -> None:
+    def output_error(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation) -> None:
         directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
         with open(path.join(directory, '%s_ERROR.txt' % case.name), 'w') as file:
             traceback.print_exc(file=file)
