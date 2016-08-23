@@ -58,7 +58,7 @@ def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
                 path = list(function)[0]
                 # Do not include lib functions
                 if 'abe-healthcare' in path:
-                    step = function_step_mapping[function[2]] + " " + path + " " + function[2] if function[2] in function_step_mapping else None
+                    step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
                     value = statistics[3]
                     if step is not None:
                         timings[step] = timings[step] + value if step in timings else value
@@ -69,9 +69,7 @@ def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
             writer.writerow(headers)
 
             for step, time in timings.items():
-                print(step)
-                print(time)
-                # writer.writerow(step, time)
+                writer.writerow((step, time))
 
 
 def connections_to_csv(connections: List[BaseConnection], output_file_path: str) -> None:
