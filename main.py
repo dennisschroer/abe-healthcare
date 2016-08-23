@@ -76,7 +76,7 @@ class ABEHealthCare(object):
         :return:
         """
         self.central_authority = self.implementation.create_central_authority()
-        self.central_authority.setup()
+        self.central_authority.central_setup()
 
     def setup_attribute_authorities(self):
         """

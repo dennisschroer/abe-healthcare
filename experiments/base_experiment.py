@@ -208,7 +208,7 @@ class BaseExperiment(object):
     def run(self):
         # Create central authority
         self.central_authority = self.current_implementation.create_central_authority()
-        self.central_authority.setup()
+        self.central_authority.central_setup()
 
         # Create insurance service
         insurance = InsuranceService(self.serializer, self.central_authority.global_parameters,
