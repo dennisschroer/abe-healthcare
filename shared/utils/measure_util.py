@@ -26,7 +26,7 @@ def pstats_to_csv(input_file_path: str, output_file_path: str, filtered_function
 
 
 def pstats_to_csv2(input_file_path: str, output_file_path: str):
-    return pstats_to_csv(input_file_path, output_file_path, function_step_mapping.values())
+    return pstats_to_csv(input_file_path, output_file_path, function_step_mapping.keys())
 
 
 def strip_directories(path: str) -> str:
@@ -44,6 +44,7 @@ function_step_mapping = {
     'decrypt_record': 'decrypt',
     'update_record': 'update',
     'update_policy': 'policy_update',
+    'decryption_keys': 'decryption_keys'
 }
 
 
@@ -51,27 +52,26 @@ def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
     with open(input_file_path, 'rb') as input_file:
         with open(output_file_path, 'w') as output_file:
             stats = marshal.load(input_file)
-
-            headers = ['step', 'time']
-            writer = csv.writer(output_file)
-            writer.writerow(headers)
-
             timings = {}
 
             for (function, statistics) in stats.items():
+                path = list(function)[0]
                 # Do not include lib functions
-                if 'abe-healthcare' in list(function)[0]:
-                    file_name = strip_directories(list(function)[0])
-                    step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
-                    step += list(function)[0]
+                if 'abe-healthcare' in path:
+                    step = function_step_mapping[function[2]] + " " + path + " " + function[2] if function[2] in function_step_mapping else None
                     value = statistics[3]
-
                     if step is not None:
                         timings[step] = timings[step] + value if step in timings else value
 
             # Write to file
+            headers = ['step', 'time']
+            writer = csv.writer(output_file)
+            writer.writerow(headers)
+
             for step, time in timings.items():
-                writer.writerow(step, time)
+                print(step)
+                print(time)
+                # writer.writerow(step, time)
 
 
 def connections_to_csv(connections: List[BaseConnection], output_file_path: str) -> None:
