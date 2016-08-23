@@ -244,13 +244,15 @@ class ExperimentsRunner(object):
     def output_timings(experiment: BaseExperiment, case: ExperimentCase, implementation: BaseImplementation,
                        profile: Profile) -> None:
         directory = ExperimentsRunner.experiment_results_directory(experiment, implementation)
-        profile.dump_stats(path.join(directory, '%s_timings.txt' % case.name))
-        pstats_to_csv(path.join(directory, '%s_timings.txt' % case.name),
+        stats_file_path = path.join(directory, '%s_timings.txt' % case.name)
+        profile.dump_stats(stats_file_path)
+        pstats_to_step_timings(stats_file_path,
+                               path.join(directory, '%s_step_timings.csv' % case.name))
+        pstats_to_csv(stats_file_path,
                       path.join(directory, '%s_timings.csv' % case.name))
-        pstats_to_csv2(path.join(directory, '%s_timings.txt' % case.name),
-                      path.join(directory, '%s_timings2.csv' % case.name))
-        pstats_to_step_timings(path.join(directory, '%s_timings.txt' % case.name),
-                      path.join(directory, '%s_step_timings.csv' % case.name))
+        pstats_to_csv2(stats_file_path,
+                       path.join(directory, '%s_timings2.csv' % case.name))
+
 
 
 if __name__ == '__main__':
