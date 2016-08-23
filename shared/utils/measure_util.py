@@ -6,7 +6,7 @@ from typing import Dict, List
 from shared.connection.base_connection import BaseConnection
 
 
-def pstats_to_csv(input_file_path, output_file_path, filtered_functions=None):
+def pstats_to_csv(input_file_path: str, output_file_path: str, filtered_functions: List[str] = None):
     with open(input_file_path, 'rb') as input_file:
         with open(output_file_path, 'w') as output_file:
             stats = marshal.load(input_file)  # type: Dict
@@ -20,30 +20,61 @@ def pstats_to_csv(input_file_path, output_file_path, filtered_functions=None):
             writer.writerow(headers)
             for (function, statistics) in stats.items():
                 if filtered_functions is None or function[2] in filtered_functions:
-                    writer.writerow([list(function)[0], strip_directories(list(function)[0])] + list(function)[1:3] + list(statistics)[0:4])
+                    writer.writerow(
+                        [list(function)[0], strip_directories(list(function)[0])] + list(function)[1:3] + list(
+                            statistics)[0:4])
 
 
-def strip_directories(path):
+def pstats_to_csv2(input_file_path: str, output_file_path: str):
+    return pstats_to_csv(input_file_path, output_file_path, function_step_mapping.values())
+
+
+def strip_directories(path: str) -> str:
     return os.path.basename(path)
 
-filtered_functions = [
-    'create_record',
-    'decrypt_record',
-    'update_record',
-    'update_policy',
-    'keygen',
-    'setup',
-    'register_user',
-    'public_keys_for_time_period',
-    'secret_keys_for_time_period'
-]
+
+function_step_mapping = {
+    'setup': 'authsetup',
+    'central_setup': 'setup',
+    'keygen': 'keygen',
+    'secret_keys_for_time_period': 'keygen',
+    'public_keys_for_time_period': 'keygen',
+    'register_user': 'register',
+    'create_record': 'encrypt',
+    'decrypt_record': 'decrypt',
+    'update_record': 'update',
+    'update_policy': 'policy_update',
+}
 
 
-def pstats_to_csv2(input_file_path, output_file_path):
-    return pstats_to_csv(input_file_path, output_file_path, filtered_functions)
+def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
+    with open(input_file_path, 'rb') as input_file:
+        with open(output_file_path, 'w') as output_file:
+            stats = marshal.load(input_file)
+
+            headers = ['step', 'time']
+            writer = csv.writer(output_file)
+            writer.writerow(headers)
+
+            timings = {}
+
+            for (function, statistics) in stats.items():
+                # Do not include lib functions
+                if 'abe-healthcare' in list(function)[0]:
+                    file_name = strip_directories(list(function)[0])
+                    step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
+                    step += list(function)[0]
+                    value = statistics[3]
+
+                    if step is not None:
+                        timings[step] = timings[step] + value if step in timings else value
+
+            # Write to file
+            for step, time in timings.items():
+                writer.writerow(step, time)
 
 
-def connections_to_csv(connections: List[BaseConnection], output_file_path):
+def connections_to_csv(connections: List[BaseConnection], output_file_path: str) -> None:
     with open(output_file_path, 'w') as output_file:
         headers = ['connection', 'name', 'size']
         writer = csv.writer(output_file)
