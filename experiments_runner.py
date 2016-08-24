@@ -56,6 +56,10 @@ class ExperimentsRunner(object):
         self.run_experiments_run(ExperimentsRun(PolicySizeExperiment(), 1))
 
     def run_experiments_run(self, experiments_run: ExperimentsRun) -> None:
+        """
+        Run the experiments as defined in the ExperimentsRun and repeat it the amount defined in the ExperimentsRun.
+        :param experiments_run:
+        """
         self.current_run = experiments_run
 
         # Create directories
@@ -81,7 +85,10 @@ class ExperimentsRunner(object):
             experiments_run.device_name, experiments_run.experiment.get_name(), experiments_run.timestamp,
             experiments_run.current_time()))
 
-    def run_current_experiment(self):
+    def run_current_experiment(self) -> None:
+        """
+        Run the experiment of the current run a single time.
+        """
         for implementation in self.implementations:
             self.current_run.current_implementation = implementation
             for case in self.current_run.experiment.cases:
@@ -89,6 +96,11 @@ class ExperimentsRunner(object):
                 self.run_current_experiment_case()
 
     def run_current_experiment_case(self) -> None:
+        """
+        Run the current case with the current implementation of the current experiment.
+
+        This is done by starting the experiment in a seperate process.
+        """
         logging.info("=> Run %d/%d of %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (
             self.current_run.iteration + 1,
             self.current_run.amount,
@@ -153,6 +165,12 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def run_experiment_case_synchronously(experiments_run: ExperimentsRun, lock: Condition, is_running: Value) -> None:
+        """
+        Run the experiment in this process.
+        :param experiments_run: The current running experiment
+        :param lock: A lock, required for synchronization
+        :param is_running: A flag indicating whether the experiment is running
+        """
         try:
             logging.debug("debug 2 -> process started")
 
@@ -193,13 +211,22 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def experiment_results_directory(experiments_run: ExperimentsRun) -> str:
+        """
+        Gets the base directory for the results of the experiment
+        :param experiments_run: The current experiment run
+        """
         return path.join(OUTPUT_DIRECTORY,
                          experiments_run.experiment.get_name(),
                          experiments_run.device_name,
                          experiments_run.timestamp)
 
     @staticmethod
-    def experiment_case_iteration_results_directory(experiments_run: ExperimentsRun):
+    def experiment_case_iteration_results_directory(experiments_run: ExperimentsRun) -> str:
+        """
+        Gets the base directory for the results of the experiment for the current case and implementation.
+        :require: experiments_run.current_implementation is not None and experiments_run.current_case is not None
+        :param experiments_run: The current experiment run.
+        """
         return path.join(ExperimentsRunner.experiment_results_directory(experiments_run),
                          experiments_run.current_implementation.get_name(),
                          experiments_run.current_case.name,
@@ -207,12 +234,21 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def output_cpu_usage(experiments_run: ExperimentsRun, cpu_usage: float) -> None:
+        """
+        Output the cpu usage of the previous experiment.
+        :param experiments_run: The current experiments run
+        :param cpu_usage: The measured cpu usage
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         with open(path.join(directory, 'cpu.txt'), 'w') as file:
             file.write(str(cpu_usage))
 
     @staticmethod
     def output_error(experiments_run: ExperimentsRun) -> None:
+        """
+        Output an error. The last exception is printed.
+        :param experiments_run: The current experiments run
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         logging.error(traceback.format_exc())
         with open(path.join(directory, 'ERROR.txt'), 'w') as file:
@@ -220,11 +256,22 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def output_connections(experiments_run: ExperimentsRun, connections: List[BaseConnection]) -> None:
+        """
+        Output the network usage.
+        :param experiments_run: The current experiments run.
+        :param connections: The connections to output the usage of.
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         connections_to_csv(connections, path.join(directory, 'network.csv'))
 
     @staticmethod
     def output_memory_usages(experiments_run: ExperimentsRun, memory_usages: List[Any]) -> None:
+        """
+        Output the memory usages.
+        :param experiments_run: The current experiments run.
+        :param memory_usages: The list of memory usages.
+        :return:
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         with open(path.join(directory, 'memory.csv'), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
@@ -236,6 +283,10 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def output_storage_space(experiments_run: ExperimentsRun) -> None:
+        """
+        Output the storage space used by the different parties.
+        :param experiments_run: The current experiments run.
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         insurance_storage = experiments_run.experiment.get_insurance_storage_path()
         with open(path.join(directory, 'storage_insurance.csv'),
@@ -248,6 +299,11 @@ class ExperimentsRunner(object):
 
     @staticmethod
     def output_timings(experiments_run: ExperimentsRun, profile: Profile) -> None:
+        """
+        Output the timings measured by the profiler.
+        :param experiments_run: The current experiments run.
+        :param profile: The profile.
+        """
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         stats_file_path = path.join(directory, 'timings.txt')
         profile.dump_stats(stats_file_path)
@@ -258,7 +314,10 @@ class ExperimentsRunner(object):
         pstats_to_csv2(stats_file_path,
                        path.join(directory, 'timings2.csv'))
 
-    def setup_logging(self):
+    def setup_logging(self) -> None:
+        """
+        Setup logging for the current experiments run.
+        """
         directory = self.experiment_results_directory(self.current_run)
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
 

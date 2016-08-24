@@ -2,14 +2,22 @@ from os import urandom, makedirs, path
 
 
 class RandomFileGenerator(object):
-    block_size = 1024 * 1024
+    """
+    Generator for generating files with random content of the given size.
+    """
+    block_size = 4 * 1024
 
     @staticmethod
-    def clear(output_path='data/random'):
-        pass
-
-    @staticmethod
-    def generate(size, amount, output_path='data/random', skip_if_exists=False, verbose=False):
+    def generate(size, amount, output_path='data/random', skip_if_exists=False, verbose=False) -> None:
+        """
+        Generate the given amount of files of the given size. The file names will have the format {size}-{number},
+        where {size} is replaced by the given size and {number} by the number of the file. The first file has number 0.
+        :param size: The size of the generated files.
+        :param amount: The required amount of files to be generated.
+        :param output_path: The path in which the files should be generated.
+        :param skip_if_exists: Skip the generation when the files already exist.
+        :param verbose: If true, print debug information.
+        """
         if not path.exists(output_path):
             makedirs(output_path)
         for i in range(0, amount):
