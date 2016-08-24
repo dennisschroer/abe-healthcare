@@ -61,9 +61,8 @@ class BaseExperiment(object):
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
-        self.device_name = None  # type: str
-        self.timestamp = None  # type: str
         self.file_name = None  # type: str
+        self.run_counter = None  # type: int
 
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
@@ -79,7 +78,8 @@ class BaseExperiment(object):
 
     def global_setup(self) -> None:
         """
-        Setup all implementation and case independent things for this experiment, like generating random input files.
+        Setup all things for this experiment independent of run, implementation and case,
+        like generating random input files.
         This method is only called once for each experiment, namely at the very start.
         """
         file_generator = RandomFileGenerator()
@@ -88,8 +88,7 @@ class BaseExperiment(object):
 
     def setup(self, implementation: BaseImplementation, case: ExperimentCase) -> None:
         """
-        Setup all case dependant things for this experiment and this case.
-        :return:
+        Setup this experiment for a single implementation and a single case in a single run.
         """
         self.current_case = case
         self.current_implementation = implementation
