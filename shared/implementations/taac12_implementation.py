@@ -12,7 +12,7 @@ from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.utils.dict_utils import merge_dicts
 
-BINARY_TREE_HEIGHT = 9
+BINARY_TREE_HEIGHT = 5
 
 
 class TAAC12Implementation(BaseImplementation):
