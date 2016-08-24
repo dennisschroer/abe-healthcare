@@ -77,7 +77,7 @@ class DACMACS13CentralAuthority(CentralAuthority):
         del private['cert']
         return {'public': public, 'private': private, 'cert': cert}
 
-    def setup(self):
+    def central_setup(self):
         dacmacs = DACMACS(self.global_parameters.group)
         public_key, master_key = dacmacs.setup()
         self.master_key = master_key

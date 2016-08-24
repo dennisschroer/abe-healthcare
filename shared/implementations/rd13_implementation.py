@@ -69,7 +69,7 @@ class RD13Implementation(BaseImplementation):
 
 
 class RD13CentralAuthority(CentralAuthority):
-    def setup(self):
+    def central_setup(self):
         maabe = DabeRD13(self.global_parameters.group)
         self.global_parameters.scheme_parameters = maabe.setup()
         return self.global_parameters

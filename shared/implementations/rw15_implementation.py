@@ -62,7 +62,7 @@ class RW15CentralAuthority(CentralAuthority):
     def register_user(self, gid: str) -> dict:
         return None
 
-    def setup(self):
+    def central_setup(self):
         maabe = MaabeRW15(self.global_parameters.group)
         self.global_parameters.scheme_parameters = maabe.setup()
         return self.global_parameters

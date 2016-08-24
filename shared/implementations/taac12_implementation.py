@@ -90,7 +90,7 @@ class TAAC12CentralAuthority(CentralAuthority):
     def register_user(self, gid: str) -> dict:
         return None
 
-    def setup(self):
+    def central_setup(self):
         taac = Taac(self.global_parameters.group)
         self.global_parameters.scheme_parameters = taac.setup()
         return self.global_parameters

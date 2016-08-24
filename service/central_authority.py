@@ -15,7 +15,7 @@ class CentralAuthority(object):
         """
         self.global_parameters = GlobalParameters(group=group, scheme_parameters=None)
 
-    def setup(self):
+    def central_setup(self):
         """
         Setup the central authority, creating the global parameters to be used.
         """
