@@ -9,12 +9,12 @@ TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
 class ExperimentsRun(object):
-    def __init__(self, experiment: BaseExperiment, amount: int):
+    def __init__(self, experiment: BaseExperiment, amount: int) -> None:
         self.amount = amount
         self.experiment = experiment
         self.current_implementation = None  # type:BaseImplementation
         self.current_case = None  # type: ExperimentCase
-        self.iteration = None # type: int
+        self.iteration = None  # type: int
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
@@ -25,7 +25,7 @@ class ExperimentsRun(object):
             self._timestamp = self.current_time()
         return self._timestamp
 
-    def current_time(self):
+    def current_time(self) -> str:
         return datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
 
     @property
