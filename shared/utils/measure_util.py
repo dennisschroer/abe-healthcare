@@ -26,7 +26,7 @@ def pstats_to_csv(input_file_path: str, output_file_path: str, filtered_function
 
 
 def pstats_to_csv2(input_file_path: str, output_file_path: str):
-    return pstats_to_csv(input_file_path, output_file_path, list(function_step_mapping.keys()))
+    return pstats_to_csv(input_file_path, output_file_path, timing_functions)
 
 
 def strip_directories(path: str) -> str:
@@ -46,6 +46,8 @@ function_step_mapping = {
     'update_policy': 'policy_update',
     'decryption_keys': 'decryption_keys'
 }
+timing_functions = list(function_step_mapping.keys())
+algorithm_steps = set(list(function_step_mapping.values()))
 
 
 def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
@@ -70,6 +72,8 @@ def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
 
             for step, time in timings.items():
                 writer.writerow((step, time))
+
+            return timings
 
 
 def connections_to_csv(connections: List[BaseConnection], output_file_path: str) -> None:

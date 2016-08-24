@@ -21,7 +21,8 @@ from shared.implementations.dacmacs13_implementation import DACMACS13Implementat
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
-from shared.utils.measure_util import pstats_to_csv, connections_to_csv, pstats_to_csv2, pstats_to_step_timings
+from shared.utils.measure_util import pstats_to_csv, connections_to_csv, pstats_to_csv2, pstats_to_step_timings, \
+    algorithm_steps
 
 debug = False
 
@@ -47,7 +48,7 @@ class ExperimentsRunner(object):
         self.current_run = None  # type: ExperimentsRun
 
     def run_base_experiments(self) -> None:
-        self.run_experiments_run(ExperimentsRun(BaseExperiment(), 10))
+        self.run_experiments_run(ExperimentsRun(BaseExperiment(), 2))
 
     def run_file_size_experiments(self) -> None:
         self.run_experiments_run(ExperimentsRun(FileSizeExperiment(), 1))
@@ -83,7 +84,21 @@ class ExperimentsRunner(object):
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
             experiments_run.device_name, experiments_run.experiment.get_name(), experiments_run.timestamp,
-            experiments_run.current_time()))
+            experiments_run.current_time_formatted()))
+
+        logging.info("Gathering results")
+
+        self.gather_results()
+
+    def gather_results(self):
+        # timings
+        with open(path.join(ExperimentsRunner.experiment_results_directory(self.current_run), 'timings.csv'), 'w') as file:
+            #headers = ['path', 'filename', 'line number', 'name', 'number of calls', 'number or non-recursive calls',
+            #           'total time', 'cumtime']
+            writer = csv.DictWriter(file, fieldnames=algorithm_steps)
+            writer.writeheader()
+            for experiment_timings in self.current_run.timings:
+                writer.writerow(experiment_timings._asdict())
 
     def run_current_experiment(self) -> None:
         """
@@ -307,8 +322,8 @@ class ExperimentsRunner(object):
         directory = ExperimentsRunner.experiment_case_iteration_results_directory(experiments_run)
         stats_file_path = path.join(directory, 'timings.txt')
         profile.dump_stats(stats_file_path)
-        pstats_to_step_timings(stats_file_path,
-                               path.join(directory, 'step_timings.csv'))
+        experiments_run.timings.append(pstats_to_step_timings(stats_file_path,
+                               path.join(directory, 'step_timings.csv')))
         pstats_to_csv(stats_file_path,
                       path.join(directory, 'timings.csv'))
         pstats_to_csv2(stats_file_path,
