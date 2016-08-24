@@ -210,27 +210,27 @@ class ExperimentsRunner(object):
     def output_cpu_usage(experiments_run: ExperimentsRun, implementation: BaseImplementation, case: ExperimentCase,
                          cpu_usage: float) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
-        with open(path.join(directory, 'cpu.txt'), 'w') as file:
+        with open(path.join(directory, '%d_cpu.txt' % experiments_run.experiment.run_counter), 'w') as file:
             file.write(str(cpu_usage))
 
     @staticmethod
     def output_error(experiments_run: ExperimentsRun, implementation: BaseImplementation, case: ExperimentCase) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
         logging.error(traceback.format_exc())
-        with open(path.join(directory, 'ERROR.txt'), 'w') as file:
+        with open(path.join(directory, '%d_ERROR.txt' % experiments_run.experiment.run_counter), 'w') as file:
             traceback.print_exc(file=file)
 
     @staticmethod
     def output_connections(experiments_run: ExperimentsRun, implementation: BaseImplementation, case: ExperimentCase,
                            connections: List[BaseConnection]) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
-        connections_to_csv(connections, path.join(directory, 'network.csv'))
+        connections_to_csv(connections, path.join(directory, '%d_network.csv' % experiments_run.experiment.run_counter))
 
     @staticmethod
     def output_memory_usages(experiments_run: ExperimentsRun, implementation: BaseImplementation, case: ExperimentCase,
                              memory_usages: List[Any]) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
-        with open(path.join(directory, 'memory.csv'), 'w') as file:
+        with open(path.join(directory, '%d_memory.csv' % experiments_run.experiment.run_counter), 'w') as file:
             writer = csv.DictWriter(file, fieldnames=[
                 'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
             ])
@@ -243,7 +243,7 @@ class ExperimentsRunner(object):
                              case: ExperimentCase) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
         insurance_storage = experiments_run.experiment.get_insurance_storage_path()
-        with open(path.join(directory, 'storage_insurance.csv'), 'w') as output:
+        with open(path.join(directory, '%d_storage_insurance.csv' % experiments_run.experiment.run_counter), 'w') as output:
             writer = csv.writer(output)
             writer.writerow(('filename', 'size'))
             for file in listdir(insurance_storage):
@@ -254,14 +254,14 @@ class ExperimentsRunner(object):
     def output_timings(experiments_run: ExperimentsRun, implementation: BaseImplementation, case: ExperimentCase,
                        profile: Profile) -> None:
         directory = ExperimentsRunner.experiment_case_results_directory(experiments_run, implementation, case)
-        stats_file_path = path.join(directory, 'timings.txt')
+        stats_file_path = path.join(directory, '%d_timings.txt' % experiments_run.experiment.run_counter)
         profile.dump_stats(stats_file_path)
         pstats_to_step_timings(stats_file_path,
-                               path.join(directory, 'step_timings.csv'))
+                               path.join(directory, '%d_step_timings.csv' % experiments_run.experiment.run_counter))
         pstats_to_csv(stats_file_path,
-                      path.join(directory, 'timings.csv'))
+                      path.join(directory, '%d_timings.csv' % experiments_run.experiment.run_counter))
         pstats_to_csv2(stats_file_path,
-                       path.join(directory, 'timings2.csv'))
+                       path.join(directory, '%d_timings2.csv' % experiments_run.experiment.run_counter))
 
     def setup_logging(self):
         directory = self.experiment_results_directory(self.current_run)
