@@ -9,7 +9,7 @@ from os.path import exists
 
 from experiments.experiment_run import ExperimentsRun
 from shared.connection.base_connection import BaseConnection
-from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings, pstats_to_csv, pstats_to_csv2, \
+from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings, pstats_to_csv, pstats_to_csv_filtered, \
     algorithm_steps
 
 OUTPUT_DIRECTORY = 'data/experiments/results'
@@ -116,19 +116,32 @@ class ExperimentResults(object):
         :param profile: The profile.
         """
         directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
+
+        # Write raw measurements
         stats_file_path = path.join(directory, 'timings.txt')
         profile.dump_stats(stats_file_path)
 
+        # Write formatted measurements
+        pstats_to_csv(stats_file_path,
+                      path.join(directory, 'timings.csv'))
+        pstats_to_csv_filtered(stats_file_path,
+                               path.join(directory, 'timings2.csv'))
+
+        # Convert to step names and append to file
         step_timings = pstats_to_step_timings(stats_file_path, path.join(directory, 'step_timings.csv'))
 
         write_header = not path.exists(path.join(ExperimentResults.experiment_results_directory(experiments_run), 'timings.csv'))
+        headers = ['implementation', 'case', 'iteration'] + list(algorithm_steps)
         with open(path.join(ExperimentResults.experiment_results_directory(experiments_run), 'timings.csv'), 'a') as file:
-            writer = csv.DictWriter(file, fieldnames=algorithm_steps)
+            writer = csv.DictWriter(file, fieldnames=headers)
             if write_header:
                 writer.writeheader()
-            writer.writerow(step_timings)
+            values = {
+                'implementation': experiments_run.current_implementation.get_name(),
+                'case': experiments_run.current_case.name,
+                'iteration': experiments_run.iteration
+            }
+            values.update(step_timings)
+            writer.writerow(values)
 
-        pstats_to_csv(stats_file_path,
-                      path.join(directory, 'timings.csv'))
-        pstats_to_csv2(stats_file_path,
-                       path.join(directory, 'timings2.csv'))
+

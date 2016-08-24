@@ -25,7 +25,7 @@ def pstats_to_csv(input_file_path: str, output_file_path: str, filtered_function
                             statistics)[0:4])
 
 
-def pstats_to_csv2(input_file_path: str, output_file_path: str):
+def pstats_to_csv_filtered(input_file_path: str, output_file_path: str):
     return pstats_to_csv(input_file_path, output_file_path, timing_functions)
 
 
