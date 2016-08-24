@@ -14,6 +14,7 @@ class ExperimentsRun(object):
         self.experiment = experiment
         self.current_implementation = None  # type:BaseImplementation
         self.current_case = None  # type: ExperimentCase
+        self.iteration = None # type: int
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
@@ -21,8 +22,11 @@ class ExperimentsRun(object):
     @property
     def timestamp(self) -> str:
         if self._timestamp is None:
-            self._timestamp = datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
+            self._timestamp = self.current_time()
         return self._timestamp
+
+    def current_time(self):
+        return datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
 
     @property
     def device_name(self) -> str:

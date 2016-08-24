@@ -62,7 +62,6 @@ class BaseExperiment(object):
         self.memory_measure_interval = 0.05
         self.pr = cProfile.Profile()
         self.file_name = None  # type: str
-        self.run_counter = None  # type: int
 
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
