@@ -14,8 +14,6 @@ class ExperimentsRun(object):
     to keep track of the state of the experiment: which implementation is currently used and which iteration are we running?
     """
     def __init__(self, experiment: BaseExperiment, amount: int) -> None:
-        self.timings = list()
-
         self.amount = amount
         self.experiment = experiment
         self.current_implementation = None  # type:BaseImplementation

@@ -50,7 +50,7 @@ timing_functions = list(function_step_mapping.keys())
 algorithm_steps = set(list(function_step_mapping.values()))
 
 
-def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> None:
+def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> Dict[str, float]:
     with open(input_file_path, 'rb') as input_file:
         with open(output_file_path, 'w') as output_file:
             stats = marshal.load(input_file)
