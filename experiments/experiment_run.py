@@ -2,14 +2,18 @@ import datetime
 import socket
 
 from experiments.base_experiment import BaseExperiment
+from experiments.base_experiment import ExperimentCase
+from shared.implementations.base_implementation import BaseImplementation
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
 class ExperimentsRun(object):
-    def __init__(self,  experiment: BaseExperiment, amount: int):
+    def __init__(self, experiment: BaseExperiment, amount: int):
         self.amount = amount
         self.experiment = experiment
+        self.current_implementation = None  # type:BaseImplementation
+        self.current_case = None  # type: ExperimentCase
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
