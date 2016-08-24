@@ -18,7 +18,7 @@ from shared.serializer.pickle_serializer import PickleSerializer
 class UserClientTestCase(unittest.TestCase):
     def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
-        central_authority.setup()
+        central_authority.central_setup()
         attributes = ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST']
         user_attributes = ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']
         attribute_authority = implementation.create_attribute_authority('TEST')

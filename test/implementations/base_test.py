@@ -17,7 +17,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.ca = self.subject.create_central_authority()
         self.ma1 = self.subject.create_attribute_authority('A1')
         self.ma2 = self.subject.create_attribute_authority('A2')
-        self.global_parameters = self.ca.setup()
+        self.global_parameters = self.ca.central_setup()
         self.ma1.setup(self.ca, ['ONE@A1', 'TWO@A1'])
         self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'])
 
