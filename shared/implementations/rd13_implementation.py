@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from shared.implementations.base_implementation import BaseImplementation
-from shared.model.types import SecretKeyStore, AbeEncryption
+from shared.model.types import SecretKeyStore, AbeEncryption, PublicKeyStore
 from shared.utils.dict_utils import merge_dicts
 
 from authority.attribute_authority import AttributeAuthority
@@ -40,8 +40,8 @@ class RD13Implementation(BaseImplementation):
             self._serializer = RD13Serializer(self.group)
         return self._serializer
 
-    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period: int) -> Dict[str, Any]:
-        return merge_dicts(*[authority.public_keys_for_time_period(time_period) for authority in authorities.values()])
+    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
+        return merge_dicts(*public_keys.values())
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:

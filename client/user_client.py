@@ -73,7 +73,7 @@ class UserClient(object):
                 name: authority.public_keys_for_time_period(time_period)
                 for name, authority
                 in self.authority_connections.items()
-            }, time_period)
+            })
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
                      time_period: int = 1) -> str:

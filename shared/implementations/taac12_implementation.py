@@ -10,6 +10,7 @@ from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
+from shared.model.types import PublicKeyStore
 from shared.utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 5
@@ -64,12 +65,11 @@ class TAAC12Implementation(BaseImplementation):
         except Exception:
             raise PolicyNotSatisfiedException()
 
-    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
-        :param time_period: The time period to get the public keys for.
-        :param authorities: A dict from authority name to authority
+        :param public_keys: A dict from authority name to public keys
         :return: A dict containing the public keys of the authorities.
 
         >>> from authority.attribute_authority import AttributeAuthority
@@ -78,12 +78,11 @@ class TAAC12Implementation(BaseImplementation):
         >>> a1._public_keys = {'foo': 'bar'}
         >>> a2._public_keys = {'a': 'b'}
         >>> taac_implementation = TAAC12Implementation()
-        >>> public_keys = taac_implementation.merge_public_keys({a1.name: a1, a2.name: a2}, 1)
+        >>> public_keys = taac_implementation.merge_public_keys({a1.name: a1._public_keys, a2.name: a2._public_keys})
         >>> public_keys == {'foo': 'bar', 'a': 'b'}
         True
         """
-        return merge_dicts(
-            *[authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()])
+        return merge_dicts(*public_keys.items())
 
 
 class TAAC12CentralAuthority(CentralAuthority):
