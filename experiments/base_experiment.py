@@ -234,6 +234,7 @@ class BaseExperiment(object):
         result = []  # type: List[BaseConnection]
         for user_client in self.user_clients:
             result += [user_client.insurance_connection]
+            result += user_client.authority_connections
         return result
 
     def get_name(self):
