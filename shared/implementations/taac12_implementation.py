@@ -82,7 +82,7 @@ class TAAC12Implementation(BaseImplementation):
         >>> public_keys == {'foo': 'bar', 'a': 'b'}
         True
         """
-        return merge_dicts(*public_keys.items())
+        return merge_dicts(*public_keys.values())
 
 
 class TAAC12CentralAuthority(CentralAuthority):
