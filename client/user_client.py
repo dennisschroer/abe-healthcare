@@ -62,7 +62,7 @@ class UserClient(object):
             self._authority_connections = {
                 name: UserAttributeAuthorityConnection(authority, self.serializer)
                 for name, authority
-                in self.authoritiesbla.items()
+                in self.authorities.items()
                 }
         return self._authority_connections
 
