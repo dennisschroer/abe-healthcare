@@ -132,10 +132,10 @@ class PickleSerializer(object):
         )
 
     def public_keys(self, public_keys) -> bytes:
-        return public_keys
+        return pickle.dumps(public_keys)
 
     def keygen(self, request) -> bytes:
-        return request
+        return pickle.dumps(request)
 
     def secret_keys(self, secret_keys) -> bytes:
-        return secret_keys
+        return pickle.dumps(secret_keys)

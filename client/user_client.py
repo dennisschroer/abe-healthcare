@@ -30,13 +30,14 @@ OUTPUT_DATA_DIRECTORY = 'data/output'
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
-                 implementation: BaseImplementation, verbose=False, storage_path=None) -> None:
+                 implementation: BaseImplementation, verbose=False, storage_path=None, benchmark=False) -> None:
         self.storage_path = OUTPUT_DATA_DIRECTORY if storage_path is None else storage_path
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
         self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
+        self.benchmark = benchmark
         self._global_parameters = None  # type: GlobalParameters
         self._authority_connections = None  # type: Dict[str, UserAttributeAuthorityConnection]
         if not path.exists(self.storage_path):
@@ -60,7 +61,7 @@ class UserClient(object):
     def authority_connections(self) -> Dict[str, UserAttributeAuthorityConnection]:
         if self._authority_connections is None:
             self._authority_connections = {
-                name: UserAttributeAuthorityConnection(authority, self.serializer)
+                name: UserAttributeAuthorityConnection(authority, self.serializer, benchmark=self.benchmark)
                 for name, authority
                 in self.authorities.items()
                 }

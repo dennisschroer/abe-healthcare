@@ -185,7 +185,7 @@ class BaseExperiment(object):
         user = User(user_description['gid'], implementation)
         serializer = PickleSerializer(implementation)
         connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
-        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path())
+        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path(), benchmark=True)
         return client
 
     def start_measurements(self) -> None:
@@ -235,6 +235,7 @@ class BaseExperiment(object):
         for user_client in self.user_clients:
             result += [user_client.insurance_connection]
             result += user_client.authority_connections.values()
+        print(result)
         return result
 
     def get_name(self):
