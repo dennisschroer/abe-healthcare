@@ -11,7 +11,8 @@ from charm.toolbox.pairinggroup import PairingGroup
 from service.central_authority import CentralAuthority
 from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from shared.model.global_parameters import GlobalParameters
-from shared.model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys
+from shared.model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys, \
+    PublicKeyStore
 from shared.utils.key_utils import extract_key_from_group_element
 
 
@@ -85,12 +86,12 @@ class BaseImplementation(object):
         """
         base_keys.update(secret_keys)
 
-    def merge_public_keys(self, authorities: Dict[str, AttributeAuthority], time_period: int) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore], time_period: int) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
         :param time_period: The time period to get the public of.
-        :param authorities: A dict from authority name to authority
+        :param public_keys: A dict from authority name to public keys of the authority
         :return: A dict containing the public keys of the authorities.
 
         >>> from authority.attribute_authority import AttributeAuthority
@@ -99,11 +100,11 @@ class BaseImplementation(object):
         >>> a1._public_keys = {'foo': 'bar'}
         >>> a2._public_keys = {'a': 'b'}
         >>> base_implementation = BaseImplementation()
-        >>> public_keys = base_implementation.merge_public_keys({a1.name: a1, a2.name: a2}, 1)
+        >>> public_keys = base_implementation.merge_public_keys({a1.name: a1._public_keys, a2.name: a2._public_keys}, 1)
         >>> public_keys == {'A1': {'foo': 'bar'}, 'A2': {'a': 'b'}}
         True
         """
-        return {name: authority.public_keys_for_time_period(time_period) for name, authority in authorities.items()}
+        return public_keys
 
     def generate_abe_key(self, global_parameters: GlobalParameters) -> Tuple[Any, bytes]:
         """
