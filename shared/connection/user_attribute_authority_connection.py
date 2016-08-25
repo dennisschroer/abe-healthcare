@@ -33,6 +33,6 @@ class UserAttributeAuthorityConnection(BaseConnection):
         }
         response = self.attribute_authority.keygen_valid_attributes(gid, registration_data, attributes, time_period)
         if self.benchmark:
-            self.add_benchmark('> keygen_valid_attributes', len(self.serializer.keygen_request(response)))
-            self.add_benchmark('< keygen_valid_attributes', len(self.serializer.keygen_response(response)))
+            self.add_benchmark('> keygen_valid_attributes', len(self.serializer.keygen(response)))
+            self.add_benchmark('< keygen_valid_attributes', len(self.serializer.secret_keys(response)))
         return response

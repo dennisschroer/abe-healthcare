@@ -130,3 +130,12 @@ class PickleSerializer(object):
             info=d[DATA_RECORD_INFO],
             data=None
         )
+
+    def public_keys(self, public_keys) -> bytes:
+        return public_keys
+
+    def keygen(self, request) -> bytes:
+        return request
+
+    def secret_keys(self, secret_keys) -> bytes:
+        return secret_keys
