@@ -24,7 +24,10 @@ class ImplementationBaseTestCase(unittest.TestCase):
         self.registration_data = self.ca.register_user('alice')
 
         # Setup keys
-        self.public_keys = self.subject.merge_public_keys({self.ma1.name: self.ma1, self.ma2.name: self.ma2}, 1)
+        self.public_keys = self.subject.merge_public_keys({
+            self.ma1.name: self.ma1.public_keys_for_time_period(1),
+            self.ma2.name: self.ma2.public_keys_for_time_period(1)
+        }, 1)
         self.valid_secret_keys = []  # type: list
         self.invalid_secret_keys = []  # type:list
 

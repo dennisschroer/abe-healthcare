@@ -1,11 +1,12 @@
 import os
 import pickle
+from os import path
 from os.path import join
 from typing import Tuple, Any
 
 from Crypto.PublicKey import RSA
-from os import path
 
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
@@ -37,6 +38,7 @@ class UserClient(object):
         self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
         self._global_parameters = None  # type: GlobalParameters
+        self._authority_connections = None  # type: List[UserAttributeAuthorityConnection]
         if not path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
@@ -54,9 +56,24 @@ class UserClient(object):
     def authorities(self):
         return self.insurance_connection.request_authorities()
 
+    @property
+    def authority_connections(self):
+        if self._authority_connections is None:
+            self._authority_connections = {
+                name: UserAttributeAuthorityConnection(authority, self.serializer)
+                for name, authority
+                in self.authoritiesbla.items()
+                }
+        return self._authority_connections
+
     def authorities_public_keys(self, time_period):
         # Retrieve authority public keys
-        return self.implementation.merge_public_keys(self.authorities, time_period)
+        return self.implementation.merge_public_keys(
+            {
+                name: authority.public_keys_for_time_period(time_period)
+                for name, authority
+                in self.authority_connections.items()
+            }, time_period)
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
                      time_period: int = 1) -> str:
@@ -264,7 +281,7 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.authorities, time_period)
+        authority_public_keys = self.authorities_public_keys(time_period)
 
         return PolicyUpdateRecord(
             read_policy=read_policy,
