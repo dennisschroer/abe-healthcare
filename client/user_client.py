@@ -2,7 +2,7 @@ import os
 import pickle
 from os import path
 from os.path import join
-from typing import Tuple, Any
+from typing import Tuple, Any, List, Dict
 
 from Crypto.PublicKey import RSA
 
@@ -38,7 +38,7 @@ class UserClient(object):
         self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
         self._global_parameters = None  # type: GlobalParameters
-        self._authority_connections = None  # type: List[UserAttributeAuthorityConnection]
+        self._authority_connections = None  # type: Dict[str, UserAttributeAuthorityConnection]
         if not path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
@@ -57,7 +57,7 @@ class UserClient(object):
         return self.insurance_connection.request_authorities()
 
     @property
-    def authority_connections(self):
+    def authority_connections(self) -> Dict[str, UserAttributeAuthorityConnection]:
         if self._authority_connections is None:
             self._authority_connections = {
                 name: UserAttributeAuthorityConnection(authority, self.serializer)
@@ -309,6 +309,20 @@ class UserClient(object):
         :return: records.data_record.DataRecord the DataRecord, or None.
         """
         return self.insurance_connection.request_record(location)
+
+    def request_secret_keys(self, authority_name: str, attributes: List[str], time_period: int):
+        """
+        Request secret keys form the authority with the given name for the given attributes, valid in the given
+        time_period. The secret keys are stored on the user model. The authority only issues non-revoked attributes,
+        so it is not guaranteed that the user has secret keys for all requested attributes after this method is invoked.
+        :param authority_name:
+        :param attributes:
+        :param time_period:
+        :return:
+        """
+        connection = self.authority_connections[authority_name]
+        self.user.issue_secret_keys(
+            connection.keygen_valid_attributes(self.user.gid, self.user.registration_data, attributes, time_period))
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """

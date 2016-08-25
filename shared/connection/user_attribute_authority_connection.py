@@ -21,5 +21,18 @@ class UserAttributeAuthorityConnection(BaseConnection):
     def public_keys_for_time_period(self, time_period: int) -> Any:
         response = self.attribute_authority.public_keys_for_time_period(time_period)
         if self.benchmark:
-            self.add_benchmark('< public_keys_for_time_period', len(self.serializer.global_parameters(response)))
+            self.add_benchmark('< public_keys_for_time_period', len(self.serializer.public_keys(response)))
+        return response
+
+    def keygen_valid_attributes(self, gid: str, registration_data: Any, attributes: list, time_period: int):
+        request = {
+            'gid': gid,
+            'registration_data': registration_data,
+            'attributes': attributes,
+            'time_period': time_period
+        }
+        response = self.attribute_authority.keygen_valid_attributes(gid, registration_data, attributes, time_period)
+        if self.benchmark:
+            self.add_benchmark('> keygen_valid_attributes', len(self.serializer.keygen_request(response)))
+            self.add_benchmark('< keygen_valid_attributes', len(self.serializer.keygen_response(response)))
         return response
