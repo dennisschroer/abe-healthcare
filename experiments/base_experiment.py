@@ -235,7 +235,6 @@ class BaseExperiment(object):
         for user_client in self.user_clients:
             result += [user_client.insurance_connection]
             result += user_client.authority_connections.values()
-        print(result)
         return result
 
     def get_name(self):
