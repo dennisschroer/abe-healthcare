@@ -1,5 +1,7 @@
 from typing import Dict, Any
 
+import sys
+
 from authority.attribute_authority import AttributeAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
@@ -21,6 +23,7 @@ class UserAttributeAuthorityConnection(BaseConnection):
     def public_keys_for_time_period(self, time_period: int) -> Any:
         response = self.attribute_authority.public_keys_for_time_period(time_period)
         if self.benchmark:
+            self.add_benchmark('> public_keys_for_time_period', (time_period.bit_length() + 7) // 8)
             self.add_benchmark('< public_keys_for_time_period', len(self.serializer.public_keys(response)))
         return response
 
@@ -33,6 +36,6 @@ class UserAttributeAuthorityConnection(BaseConnection):
         }
         response = self.attribute_authority.keygen_valid_attributes(gid, registration_data, attributes, time_period)
         if self.benchmark:
-            self.add_benchmark('> keygen_valid_attributes', len(self.serializer.keygen(response)))
+            self.add_benchmark('> keygen_valid_attributes', len(self.serializer.keygen(request)))
             self.add_benchmark('< keygen_valid_attributes', len(self.serializer.secret_keys(response)))
         return response
