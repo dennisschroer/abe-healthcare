@@ -41,7 +41,7 @@ class ExperimentsRunner(object):
         self.current_run = None  # type: ExperimentsRun
 
     def run_base_experiments(self) -> None:
-        self.run_experiments_run(ExperimentsRun(BaseExperiment(), 20))
+        self.run_experiments_run(ExperimentsRun(BaseExperiment(), 2))
 
     def run_file_size_experiments(self) -> None:
         self.run_experiments_run(ExperimentsRun(FileSizeExperiment(), 1))

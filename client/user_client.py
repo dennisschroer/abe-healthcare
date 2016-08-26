@@ -1,11 +1,12 @@
 import os
 import pickle
+from os import path
 from os.path import join
-from typing import Tuple, Any
+from typing import Tuple, Any, List, Dict
 
 from Crypto.PublicKey import RSA
-from os import path
 
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.global_parameters import GlobalParameters
@@ -29,14 +30,16 @@ OUTPUT_DATA_DIRECTORY = 'data/output'
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
-                 implementation: BaseImplementation, verbose=False, storage_path=None) -> None:
+                 implementation: BaseImplementation, verbose=False, storage_path=None, benchmark=False) -> None:
         self.storage_path = OUTPUT_DATA_DIRECTORY if storage_path is None else storage_path
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
         self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
+        self.benchmark = benchmark
         self._global_parameters = None  # type: GlobalParameters
+        self._authority_connections = None  # type: Dict[str, UserAttributeAuthorityConnection]
         if not path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
@@ -54,9 +57,24 @@ class UserClient(object):
     def authorities(self):
         return self.insurance_connection.request_authorities()
 
+    @property
+    def authority_connections(self) -> Dict[str, UserAttributeAuthorityConnection]:
+        if self._authority_connections is None:
+            self._authority_connections = {
+                name: UserAttributeAuthorityConnection(authority, self.serializer, benchmark=self.benchmark)
+                for name, authority
+                in self.authorities.items()
+                }
+        return self._authority_connections
+
     def authorities_public_keys(self, time_period):
         # Retrieve authority public keys
-        return self.implementation.merge_public_keys(self.authorities, time_period)
+        return self.implementation.merge_public_keys(
+            {
+                name: authority.public_keys(time_period)
+                for name, authority
+                in self.authority_connections.items()
+            })
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
                      time_period: int = 1) -> str:
@@ -264,7 +282,7 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
 
         # Retrieve authority public keys
-        authority_public_keys = self.implementation.merge_public_keys(self.authorities, time_period)
+        authority_public_keys = self.authorities_public_keys(time_period)
 
         return PolicyUpdateRecord(
             read_policy=read_policy,
@@ -292,6 +310,20 @@ class UserClient(object):
         :return: records.data_record.DataRecord the DataRecord, or None.
         """
         return self.insurance_connection.request_record(location)
+
+    def request_secret_keys(self, authority_name: str, attributes: List[str], time_period: int):
+        """
+        Request secret keys form the authority with the given name for the given attributes, valid in the given
+        time_period. The secret keys are stored on the user model. The authority only issues non-revoked attributes,
+        so it is not guaranteed that the user has secret keys for all requested attributes after this method is invoked.
+        :param authority_name:
+        :param attributes:
+        :param time_period:
+        :return:
+        """
+        connection = self.authority_connections[authority_name]
+        self.user.issue_secret_keys(
+            connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period))
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """

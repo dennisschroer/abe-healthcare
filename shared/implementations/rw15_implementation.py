@@ -80,7 +80,7 @@ class RW15AttributeAuthority(AttributeAuthority):
         maabe = MaabeRW15(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters,
-                                                self.secret_keys_for_time_period(time_period), gid,
+                                                self.secret_keys(time_period), gid,
                                                 attributes)
 
 
