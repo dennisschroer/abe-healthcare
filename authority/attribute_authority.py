@@ -30,7 +30,7 @@ class AttributeAuthority(object):
         """
         raise NotImplementedError
 
-    def public_keys_for_time_period(self, time_period: int) -> Any:
+    def public_keys(self, time_period: int) -> Any:
         """
         Gets the public keys to be used in the given time period.
         :param time_period: The time period
@@ -38,7 +38,7 @@ class AttributeAuthority(object):
         """
         return self._public_keys
 
-    def secret_keys_for_time_period(self, time_period: int) -> Any:
+    def secret_keys(self, time_period: int) -> Any:
         """
         Gets the secret/master keys to be used in the given time period.
         :param time_period: The time period
@@ -84,11 +84,11 @@ class AttributeAuthority(object):
     def remove_revoked_attributes(self, gid: str, attributes: List[str], time_period: int) -> List[str]:
         return [attribute for attribute in attributes if not self.is_revoked(gid, attribute, time_period)]
 
-    def keygen_valid_attributes(self, gid: str, registration_data: Any, attributes: list, time_period: int):
-        valid_attributes = self.remove_revoked_attributes(gid, attributes, time_period)
-        return self.keygen(gid, registration_data, valid_attributes, time_period)
-
     def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
+        valid_attributes = self.remove_revoked_attributes(gid, attributes, time_period)
+        return self._keygen(gid, registration_data, valid_attributes, time_period)
+
+    def _keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         """
         Generate secret keys for a user.
 
