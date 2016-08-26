@@ -1,9 +1,17 @@
 import pickle
+import sys
+
+PY3 = (sys.hexversion >= 0x30000f0)
+if PY3:
+    from io import BytesIO as StringIO
+else:
+    from StringIO import StringIO
+from pickle import Pickler
 from typing import Dict
 
+import charm
 from authority.attribute_authority import AttributeAuthority
 from shared.implementations.base_implementation import BaseImplementation
-from shared.implementations.public_key.base_public_key import BasePublicKey
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
@@ -124,18 +132,47 @@ class PickleSerializer(object):
                 d[DATA_RECORD_ENCRYPTION_KEY_READ]),
             encryption_key_owner=d[DATA_RECORD_ENCRYPTION_KEY_OWNER],
             write_private_key=(
-            self.implementation.create_serializer().deserialize_abe_ciphertext(d[DATA_RECORD_WRITE_SECRET_KEY][0]),
-            d[DATA_RECORD_WRITE_SECRET_KEY][1]),
+                self.implementation.create_serializer().deserialize_abe_ciphertext(d[DATA_RECORD_WRITE_SECRET_KEY][0]),
+                d[DATA_RECORD_WRITE_SECRET_KEY][1]),
             time_period=d[DATA_RECORD_TIME_PERIOD],
             info=d[DATA_RECORD_INFO],
             data=None
         )
 
     def public_keys(self, public_keys) -> bytes:
-        return pickle.dumps(public_keys)
+        return self.dumps(public_keys)
 
     def keygen(self, request) -> bytes:
-        return pickle.dumps(request)
+        return self.dumps(request)
 
     def secret_keys(self, secret_keys) -> bytes:
-        return pickle.dumps(secret_keys)
+        return self.dumps(secret_keys)
+
+    def dumps(self, obj):
+        io = StringIO()
+        pickler = ABEPickler(io, self.implementation)
+        pickler.dump(obj)
+        io.flush()
+        return io.getvalue()
+
+
+class ABEPickler(Pickler):
+    def __init__(self, file, implementation: BaseImplementation) -> None:
+        super().__init__(file)
+        self.implementation = implementation
+
+    def persistent_id(self, obj):
+        if isinstance(obj, charm.core.math.pairing.pc_element):
+            return "pairing.Element", self.implementation.group.serialize(obj)
+        # pickle as usual
+        return None
+
+    def persistent_load(self, pid):
+        type, id = pid
+        if type == "pairing.Element":
+            return self.implementation.group.deserialize(id)
+        else:
+            # Always raises an error if you cannot return the correct object.
+            # Otherwise, the unpickler will think None is the object referenced
+            # by the persistent ID.
+            raise pickle.UnpicklingError("unsupported persistent object")
