@@ -59,10 +59,7 @@ class PickleSerializer(object):
         })
 
     def update_record(self, update_record: UpdateRecord) -> bytes:
-        return pickle.dumps({
-            'signature': update_record.signature,
-            'data': update_record.data
-        })
+        return self.dumps(update_record)
 
     def policy_update_record(self, policy_update_record: PolicyUpdateRecord) -> bytes:
         return pickle.dumps({
