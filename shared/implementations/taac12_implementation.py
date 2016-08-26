@@ -110,7 +110,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
 
     def keygen(self, gid, registration_data, attributes, time_period):
         taac = Taac(self.global_parameters.group)
-        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period),
+        return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys(time_period),
                            self.states, gid,
                            attributes)
 
@@ -119,8 +119,8 @@ class TAAC12AttributeAuthority(AttributeAuthority):
             taac = Taac(self.global_parameters.group)
             revocation_list = self.revocation_list_for_time_period(time_period)
             self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
-                                                                      self.public_keys_for_time_period(time_period),
-                                                                      self.secret_keys_for_time_period(time_period),
+                                                                      self.public_keys(time_period),
+                                                                      self.secret_keys(time_period),
                                                                       self.states, revocation_list,
                                                                       time_period, self.attributes)
         return self.update_keys[time_period]

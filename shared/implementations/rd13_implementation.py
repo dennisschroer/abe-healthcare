@@ -87,12 +87,12 @@ class RD13AttributeAuthority(AttributeAuthority):
         self._public_keys = {}
         self._secret_keys = {}
 
-    def public_keys_for_time_period(self, time_period: int) -> Any:
+    def public_keys(self, time_period: int) -> Any:
         if time_period not in self._public_keys:
             self.generate_keys_for_time_period(time_period)
         return self._public_keys[time_period]
 
-    def secret_keys_for_time_period(self, time_period: int) -> Any:
+    def secret_keys(self, time_period: int) -> Any:
         if time_period not in self._secret_keys:
             self.generate_keys_for_time_period(time_period)
         return self._secret_keys[time_period]
@@ -113,7 +113,7 @@ class RD13AttributeAuthority(AttributeAuthority):
     def keygen(self, gid, registration_info, attributes, time_period):
         attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), attributes))
         dabe = DabeRD13(self.global_parameters.group)
-        return dabe.keygen(self.global_parameters.scheme_parameters, self.secret_keys_for_time_period(time_period),
+        return dabe.keygen(self.global_parameters.scheme_parameters, self.secret_keys(time_period),
                            gid, attributes)
 
 

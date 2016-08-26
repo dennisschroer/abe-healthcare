@@ -71,7 +71,7 @@ class UserClient(object):
         # Retrieve authority public keys
         return self.implementation.merge_public_keys(
             {
-                name: authority.public_keys_for_time_period(time_period)
+                name: authority.public_keys(time_period)
                 for name, authority
                 in self.authority_connections.items()
             })
@@ -323,7 +323,7 @@ class UserClient(object):
         """
         connection = self.authority_connections[authority_name]
         self.user.issue_secret_keys(
-            connection.keygen_valid_attributes(self.user.gid, self.user.registration_data, attributes, time_period))
+            connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period))
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """

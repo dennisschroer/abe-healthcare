@@ -102,7 +102,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
         del self._public_keys['main']['attr']
         del self._secret_keys['main']['attr']
 
-    def public_keys_for_time_period(self, time_period: int) -> Any:
+    def public_keys(self, time_period: int) -> Any:
         if time_period not in self._public_keys:
             self.generate_keys_for_time_period(time_period)
         return {
@@ -112,7 +112,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
             'attr': self._public_keys[time_period]
         }
 
-    def secret_keys_for_time_period(self, time_period: int) -> Any:
+    def secret_keys(self, time_period: int) -> Any:
         if time_period not in self._secret_keys:
             self.generate_keys_for_time_period(time_period)
         return {
@@ -144,8 +144,8 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
         dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return {self.name: dacmacs.keygen(self.global_parameters.scheme_parameters,
-                                          self.secret_keys_for_time_period(time_period),
-                                          self.public_keys_for_time_period(time_period), attributes,
+                                          self.secret_keys(time_period),
+                                          self.public_keys(time_period), attributes,
                                           registration_data['cert'])}
 
 
