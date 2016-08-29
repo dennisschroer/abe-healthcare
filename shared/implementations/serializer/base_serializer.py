@@ -220,9 +220,6 @@ class BaseSerializer(object):
         )
 
     def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
-        # TODO UGLY FIX
-        # if 'H' in public_keys:
-        #     del public_keys['H']
         return self.dumps(public_keys)
 
     def serialize_keygen_request(self, request) -> bytes:
