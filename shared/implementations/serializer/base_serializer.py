@@ -155,7 +155,7 @@ class BaseSerializer(object):
         return pickle.dumps({
             DATA_RECORD_READ_POLICY: policy_update_record.read_policy,
             DATA_RECORD_WRITE_POLICY: policy_update_record.write_policy,
-            DATA_RECORD_WRITE_PUBLIC_KEY: self.export_public_key(
+            DATA_RECORD_WRITE_PUBLIC_KEY: self.serialize_public_key(
                 policy_update_record.write_public_key),
             DATA_RECORD_ENCRYPTION_KEY_READ: self.serialize_abe_ciphertext(
                 policy_update_record.encryption_key_read),
@@ -169,8 +169,11 @@ class BaseSerializer(object):
             DATA_RECORD_SIGNATURE: policy_update_record.signature,
         })
 
-    def export_public_key(self, public_key):
+    def serialize_public_key(self, public_key) -> bytes:
         return self.public_key_scheme.export_key(public_key)
+
+    def deserialize_public_key(self, data: bytes):
+        return self.public_key_scheme.import_key(data)
 
     def serialize_data_record_meta(self, data_record: DataRecord) -> bytes:
         """
@@ -181,8 +184,8 @@ class BaseSerializer(object):
         return pickle.dumps({
             DATA_RECORD_READ_POLICY: data_record.read_policy,
             DATA_RECORD_WRITE_POLICY: data_record.write_policy,
-            DATA_RECORD_OWNER_PUBLIC_KEY: self.export_public_key(data_record.owner_public_key),
-            DATA_RECORD_WRITE_PUBLIC_KEY: self.export_public_key(data_record.write_public_key),
+            DATA_RECORD_OWNER_PUBLIC_KEY: self.serialize_public_key(data_record.owner_public_key),
+            DATA_RECORD_WRITE_PUBLIC_KEY: self.serialize_public_key(data_record.write_public_key),
             DATA_RECORD_ENCRYPTION_KEY_READ: self.serialize_abe_ciphertext(
                 data_record.encryption_key_read),
             DATA_RECORD_ENCRYPTION_KEY_OWNER: data_record.encryption_key_owner,
@@ -203,8 +206,8 @@ class BaseSerializer(object):
         return DataRecord(
             read_policy=d[DATA_RECORD_READ_POLICY],
             write_policy=d[DATA_RECORD_WRITE_POLICY],
-            owner_public_key=self.public_key_scheme.import_key(d[DATA_RECORD_OWNER_PUBLIC_KEY]),
-            write_public_key=self.public_key_scheme.import_key(d[DATA_RECORD_WRITE_PUBLIC_KEY]),
+            owner_public_key=self.deserialize_public_key(d[DATA_RECORD_OWNER_PUBLIC_KEY]),
+            write_public_key=self.deserialize_public_key(d[DATA_RECORD_WRITE_PUBLIC_KEY]),
             encryption_key_read=self.deserialize_abe_ciphertext(
                 d[DATA_RECORD_ENCRYPTION_KEY_READ]),
             encryption_key_owner=d[DATA_RECORD_ENCRYPTION_KEY_OWNER],
