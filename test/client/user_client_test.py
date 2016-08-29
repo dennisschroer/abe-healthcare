@@ -87,7 +87,7 @@ class UserClientTestCase(unittest.TestCase):
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.write_public_key, update_record.signature,
                                    update_record.data))
 
@@ -127,7 +127,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.time_period)
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.owner_public_key, update_record.signature,
                                    pickle.dumps((update_record.read_policy,
                                                  update_record.write_policy,
