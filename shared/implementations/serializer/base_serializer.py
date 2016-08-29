@@ -170,7 +170,7 @@ class BaseSerializer(object):
         })
 
     def export_public_key(self, public_key):
-        self.public_key_scheme.export_key(public_key)
+        return self.public_key_scheme.export_key(public_key)
 
     def serialize_data_record_meta(self, data_record: DataRecord) -> bytes:
         """
