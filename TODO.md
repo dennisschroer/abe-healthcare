@@ -14,7 +14,8 @@
 - Export all measurement in a helpful format
 - ~~Run each experiment in a subprocess to enable CPU usage determination~~
 - <> Store all keys in order to measure storage costs
-    - Client: owner keys
+    - ~~Client: owner keys~~
+    - Client: registration data
     - Client: secret keys
     - Attribute authority: attribute public/private
     - Central authority: Global parameters

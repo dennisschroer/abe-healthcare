@@ -20,17 +20,17 @@ from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-USER_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'users')
+
+USER_OWNER_KEY_DIRECTORY = 'users'
 USER_OWNER_KEY_FILENAME = '%s.der'
 
-OUTPUT_DATA_DIRECTORY = 'data/output'
+DEFAULT_STORAGE_PATH = 'data/output'
 
 
 class UserClient(object):
     def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
                  implementation: BaseImplementation, verbose=False, storage_path=None, benchmark=False) -> None:
-        self.storage_path = OUTPUT_DATA_DIRECTORY if storage_path is None else storage_path
+        self.storage_path = DEFAULT_STORAGE_PATH if storage_path is None else storage_path
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
@@ -384,13 +384,14 @@ class UserClient(object):
         >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
-        >>> os.path.exists(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % user_client.user.gid))
+        >>> os.path.exists(os.path.join(user_client.storage_path, USER_OWNER_KEY_DIRECTORY, USER_OWNER_KEY_FILENAME % user_client.user.gid))
         True
         """
         pke = self.implementation.public_key_scheme
-        if not os.path.exists(USER_PATH):
-            os.makedirs(USER_PATH)
-        with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
+        user_path = path.join(self.storage_path, USER_OWNER_KEY_DIRECTORY)
+        if not os.path.exists(user_path):
+            os.makedirs(user_path)
+        with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
             f.write(pke.export_key(key_pair))
 
     def load_owner_keys(self) -> Any:
@@ -409,9 +410,10 @@ class UserClient(object):
         True
         """
         pke = self.implementation.public_key_scheme
-        if not os.path.exists(USER_PATH):
-            os.makedirs(USER_PATH)
-        with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
+        user_path = path.join(self.storage_path, USER_OWNER_KEY_DIRECTORY)
+        if not os.path.exists(user_path):
+            os.makedirs(user_path)
+        with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
             key_pair = pke.import_key(f.read())
         return key_pair
 
