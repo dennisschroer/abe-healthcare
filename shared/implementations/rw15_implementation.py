@@ -32,9 +32,10 @@ class RW15Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return RW15CentralAuthority(self.group)
 
-    def create_serializer(self) -> BaseSerializer:
+    @property
+    def serializer(self) -> BaseSerializer:
         if self._serializer is None:
-            self._serializer = RW15Serializer(self.group)
+            self._serializer = RW15Serializer(self.group, self.public_key_scheme)
         return self._serializer
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
@@ -104,13 +105,13 @@ class RW15Serializer(BaseSerializer):
         return {
             'p': ciphertext['policy'],
             '0': self.group.serialize(ciphertext['C0']),
-            '1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '1': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C1'].items()},
-            '2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '2': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C2'].items()},
-            '3': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '3': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C3'].items()},
-            '4': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '4': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C4'].items()},
             'd': dictionary
         }

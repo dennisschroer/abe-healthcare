@@ -12,7 +12,6 @@ from service.insurance_service import InsuranceService
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.model.user import User
-from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class UserClientTestCase(unittest.TestCase):
@@ -25,8 +24,8 @@ class UserClientTestCase(unittest.TestCase):
         attribute_authority.setup(central_authority, attributes)
         for attribute in user_attributes:
             attribute_authority.revoke_attribute_indirect('bob', attribute, 2)
-        insurance_service = InsuranceService(PickleSerializer(implementation), central_authority.global_parameters,
-                                             implementation.create_public_key_scheme())
+        insurance_service = InsuranceService(implementation.serializer, central_authority.global_parameters,
+                                             implementation.public_key_scheme)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
         user.registration_data = central_authority.register_user(user.gid)
@@ -88,7 +87,7 @@ class UserClientTestCase(unittest.TestCase):
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.write_public_key, update_record.signature,
                                    update_record.data))
 
@@ -128,7 +127,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.time_period)
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.owner_public_key, update_record.signature,
                                    pickle.dumps((update_record.read_policy,
                                                  update_record.write_policy,
