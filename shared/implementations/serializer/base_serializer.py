@@ -235,6 +235,8 @@ class BaseSerializer(object):
         io.flush()
         return io.getvalue()
 
+    def registration_data(self, registration_data):
+        raise NotImplementedError()
 
 class ABEPickler(Pickler):
     def __init__(self, file, serializer: BaseSerializer) -> None:

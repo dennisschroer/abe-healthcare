@@ -100,7 +100,7 @@ class BaseExperiment(object):
         :return:
         """
         for user_client in self.user_clients:
-            user_client.user.registration_data = self.central_authority.register_user(user_client.user.gid)
+            user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
 
     def get_user_client(self, gid: str) -> UserClient:
         """

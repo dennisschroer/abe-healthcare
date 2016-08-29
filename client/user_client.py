@@ -21,8 +21,9 @@ from shared.utils.key_utils import extract_key_from_group_element
 RSA_KEY_SIZE = 2048
 
 
-USER_OWNER_KEY_DIRECTORY = 'users'
+USER_PRIVATE_DATA_DIRECTORY = 'users'
 USER_OWNER_KEY_FILENAME = '%s.der'
+USER_REGISTRATION_DATA_FILENAME = '%s.reg'
 
 DEFAULT_STORAGE_PATH = 'data/output'
 
@@ -346,6 +347,19 @@ class UserClient(object):
         """
         self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
+    def set_registration_data(self, registration_data):
+        self.user.registration_data = registration_data
+        self.save_registration_data()
+
+    def save_registration_data(self):
+        if self.user.registration_data is None:
+            return
+        # user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
+        # if not os.path.exists(user_path):
+        #     os.makedirs(user_path)
+        # with open(os.path.join(user_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid), 'wb') as f:
+        #     f.write(self.implementation.serializer.registration_data(self.user.registration_data))
+
     def get_owner_key(self) -> Any:
         """
         Loads the keys from storage, or creates them if they do not exist
@@ -384,11 +398,11 @@ class UserClient(object):
         >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
-        >>> os.path.exists(os.path.join(user_client.storage_path, USER_OWNER_KEY_DIRECTORY, USER_OWNER_KEY_FILENAME % user_client.user.gid))
+        >>> os.path.exists(os.path.join(user_client.storage_path, USER_PRIVATE_DATA_DIRECTORY, USER_OWNER_KEY_FILENAME % user_client.user.gid))
         True
         """
         pke = self.implementation.public_key_scheme
-        user_path = path.join(self.storage_path, USER_OWNER_KEY_DIRECTORY)
+        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
         if not os.path.exists(user_path):
             os.makedirs(user_path)
         with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
@@ -410,7 +424,7 @@ class UserClient(object):
         True
         """
         pke = self.implementation.public_key_scheme
-        user_path = path.join(self.storage_path, USER_OWNER_KEY_DIRECTORY)
+        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
         if not os.path.exists(user_path):
             os.makedirs(user_path)
         with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
