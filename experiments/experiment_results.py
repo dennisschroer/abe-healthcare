@@ -5,6 +5,8 @@ from cProfile import Profile
 from os import path, listdir
 from typing import List, Any
 
+import sys
+
 from experiments.experiment_run import ExperimentsRun
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings, algorithm_steps
@@ -59,6 +61,7 @@ class ExperimentResults(object):
         """
         directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
         logging.error(traceback.format_exc())
+        traceback.print_exc(file=sys.stderr)
         with open(path.join(directory, 'ERROR.txt'), 'w') as file:
             traceback.print_exc(file=file)
 
