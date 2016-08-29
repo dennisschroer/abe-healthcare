@@ -13,7 +13,7 @@
 ## Other
 - Export all measurement in a helpful format
 - ~~Run each experiment in a subprocess to enable CPU usage determination~~
-- Store all keys in order to measure storage costs
+- <> Store all keys in order to measure storage costs
 - Encrypt as a stream, instead of all in memory.
 - Test experiments
-- Fix pickle_serializer.public_keys for TAAC12
+- <> Fix pickle_serializer.public_keys for TAAC12
