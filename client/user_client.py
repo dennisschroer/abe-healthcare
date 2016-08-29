@@ -16,7 +16,6 @@ from shared.model.records.policy_update_record import PolicyUpdateRecord
 from shared.model.records.update_record import UpdateRecord
 from shared.model.types import AbeEncryption
 from shared.model.user import User
-from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
@@ -35,7 +34,6 @@ class UserClient(object):
         self.user = user
         self.insurance_connection = insurance_connection
         self.implementation = implementation
-        self.serializer = PickleSerializer(implementation)
         self.verbose = verbose
         self.benchmark = benchmark
         self._global_parameters = None  # type: GlobalParameters
@@ -61,7 +59,7 @@ class UserClient(object):
     def authority_connections(self) -> Dict[str, UserAttributeAuthorityConnection]:
         if self._authority_connections is None:
             self._authority_connections = {
-                name: UserAttributeAuthorityConnection(authority, self.serializer, benchmark=self.benchmark)
+                name: UserAttributeAuthorityConnection(authority, self.implementation.serializer, benchmark=self.benchmark)
                 for name, authority
                 in self.authorities.items()
                 }
@@ -81,7 +79,6 @@ class UserClient(object):
         """
         Encrypt a file with the policies in the file with '.policy' appended. The policy file contains two lines.
         The first line is the read policy, the second line the write policy.
-        :param user: The user to encrypt with
         :param filename: The filename (relative to /data/input) to encrypt
         :param read_policy: The read policy to use
         :param write_policy: The write policy to use
@@ -123,8 +120,8 @@ class UserClient(object):
         key, symmetric_key = self.implementation.generate_abe_key(self.global_parameters)
 
         # Generate key pairs for writers and data owner
-        pke = self.implementation.create_public_key_scheme()
-        ske = self.implementation.create_symmetric_key_scheme()
+        pke = self.implementation.public_key_scheme
+        ske = self.implementation.symmetric_key_scheme
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.get_owner_key()
 
@@ -192,7 +189,7 @@ class UserClient(object):
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: info, data
         """
-        ske = self.implementation.create_symmetric_key_scheme()
+        ske = self.implementation.symmetric_key_scheme
         # Check if we need to fetch update keys first
         key = self._decrypt_abe(record.encryption_key_read, record.time_period)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
@@ -205,7 +202,6 @@ class UserClient(object):
     def update_file(self, location: str, message: bytes = b'updated content'):
         """
         Decrypt the file with the given name (in /data/storage) and output it to /data/output
-        :param user: The user to decrypt with
         :param location: The location of the file to decrypt (in /data/storage)
         :param message: The new message
         :return: The name of the output file (in /data/output)
@@ -226,8 +222,8 @@ class UserClient(object):
         :param message: The new message
         :return: records.update_record.UpdateRecord An record containing the updated data
         """
-        pke = self.implementation.create_public_key_scheme()
-        ske = self.implementation.create_symmetric_key_scheme()
+        pke = self.implementation.public_key_scheme
+        ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
         key = self._decrypt_abe(record.encryption_key_read, record.time_period)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
@@ -268,8 +264,8 @@ class UserClient(object):
         :param time_period: The new time period
         :return: A PolicyUpdateRecord containing the updated policies
         """
-        pke = self.implementation.create_public_key_scheme()
-        ske = self.implementation.create_symmetric_key_scheme()
+        pke = self.implementation.public_key_scheme
+        ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
         key = self._decrypt_abe(record.encryption_key_read, record.time_period)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
@@ -374,7 +370,7 @@ class UserClient(object):
         >>> key_pair is not None
         True
         """
-        pke = self.implementation.create_public_key_scheme()
+        pke = self.implementation.public_key_scheme
         return pke.generate_key_pair(RSA_KEY_SIZE)
 
     def save_owner_keys(self, key_pair: Any) -> Any:
@@ -391,7 +387,7 @@ class UserClient(object):
         >>> os.path.exists(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % user_client.user.gid))
         True
         """
-        pke = self.implementation.create_public_key_scheme()
+        pke = self.implementation.public_key_scheme
         if not os.path.exists(USER_PATH):
             os.makedirs(USER_PATH)
         with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
@@ -412,7 +408,7 @@ class UserClient(object):
         >>> loaded == key_pair
         True
         """
-        pke = self.implementation.create_public_key_scheme()
+        pke = self.implementation.public_key_scheme
         if not os.path.exists(USER_PATH):
             os.makedirs(USER_PATH)
         with open(os.path.join(USER_PATH, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:

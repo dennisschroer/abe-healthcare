@@ -37,9 +37,10 @@ class TAAC12Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return TAAC12CentralAuthority(self.group)
 
-    def create_serializer(self) -> BaseSerializer:
+    @property
+    def serializer(self) -> BaseSerializer:
         if self._serializer is None:
-            self._serializer = TAAC12Serializer(self.group)
+            self._serializer = TAAC12Serializer(self.group, self.public_key_scheme)
         return self._serializer
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,

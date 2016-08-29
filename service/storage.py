@@ -2,14 +2,14 @@ import os
 
 from os import path
 
+from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.records.data_record import DataRecord
-from shared.serializer.pickle_serializer import PickleSerializer
 
 STORAGE_DATA_DIRECTORY = 'data/storage'
 
 
 class Storage(object):
-    def __init__(self, serializer: PickleSerializer, storage_path: str = None) -> None:
+    def __init__(self, serializer: BaseSerializer, storage_path: str = None) -> None:
         self.storage_path = STORAGE_DATA_DIRECTORY if storage_path is None else storage_path
         self.serializer = serializer
         if not os.path.exists(self.storage_path):

@@ -35,9 +35,10 @@ class RD13Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return RD13CentralAuthority(self.group)
 
-    def create_serializer(self) -> BaseSerializer:
+    @property
+    def serializer(self) -> BaseSerializer:
         if self._serializer is None:
-            self._serializer = RD13Serializer(self.group)
+            self._serializer = RD13Serializer(self.group, self.public_key_scheme)
         return self._serializer
 
     def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:

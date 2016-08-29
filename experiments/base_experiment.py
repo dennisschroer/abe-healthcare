@@ -12,7 +12,6 @@ from shared.connection.base_connection import BaseConnection
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.user import User
-from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.random_file_generator import RandomFileGenerator
 
 
@@ -73,7 +72,6 @@ class BaseExperiment(object):
         self.cases = cases  # type: List[ExperimentCase]
         self.current_case = None  # type: ExperimentCase
         self.current_implementation = None  # type:BaseImplementation
-        self.serializer = None  # type: PickleSerializer
 
     def global_setup(self) -> None:
         """
@@ -93,7 +91,6 @@ class BaseExperiment(object):
         self.current_implementation = implementation
 
         input_path = self.get_experiment_input_path()
-        self.serializer = PickleSerializer(implementation)
 
         self.file_name = join(input_path, '%i-0' % self.file_size)
 
@@ -132,7 +129,6 @@ class BaseExperiment(object):
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             for authority_name, attributes in user_description['attributes'].items():  # type: ignore
                 user_client.request_secret_keys(authority_name, attributes, 1)
-
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
@@ -183,9 +179,9 @@ class BaseExperiment(object):
         :return: A list of user clients.
         """
         user = User(user_description['gid'], implementation)
-        serializer = PickleSerializer(implementation)
-        connection = UserInsuranceConnection(insurance, serializer, benchmark=True)
-        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path(), benchmark=True)
+        connection = UserInsuranceConnection(insurance, implementation.serializer, benchmark=True)
+        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path(),
+                            benchmark=True)
         return client
 
     def start_measurements(self) -> None:
@@ -208,8 +204,9 @@ class BaseExperiment(object):
         self.central_authority.central_setup()
 
         # Create insurance service
-        insurance = InsuranceService(self.serializer, self.central_authority.global_parameters,
-                                     self.current_implementation.create_public_key_scheme(),
+        insurance = InsuranceService(self.current_implementation.serializer,
+                                     self.central_authority.global_parameters,
+                                     self.current_implementation.public_key_scheme,
                                      storage_path=self.get_insurance_storage_path())
 
         # Create attribute authorities

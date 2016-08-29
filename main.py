@@ -18,7 +18,6 @@ from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
-from shared.serializer.pickle_serializer import PickleSerializer
 from shared.utils.measure_util import connections_to_csv, pstats_to_csv
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
@@ -91,9 +90,9 @@ class ABEHealthCare(object):
         """
         Setup service
         """
-        self.insurance_service = InsuranceService(PickleSerializer(self.implementation),
+        self.insurance_service = InsuranceService(self.implementation.serializer,
                                                   self.central_authority.global_parameters,
-                                                  self.implementation.create_public_key_scheme())
+                                                  self.implementation.public_key_scheme)
         self.insurance_service.add_authority(self.insurance_company)
         self.insurance_service.add_authority(self.national_database)
 
@@ -101,8 +100,7 @@ class ABEHealthCare(object):
         user = User(name, self.implementation)
         user.registration_data = self.central_authority.register_user(user.gid)
 
-        serializer = PickleSerializer(self.implementation)
-        connection = UserInsuranceConnection(self.insurance_service, serializer, benchmark=True)
+        connection = UserInsuranceConnection(self.insurance_service, self.implementation.serializer, benchmark=True)
         self.connections.append(connection)
 
         user_client = UserClient(user, connection, self.implementation, verbose=True)

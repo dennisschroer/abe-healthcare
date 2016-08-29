@@ -45,14 +45,16 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def create_serializer(self) -> BaseSerializer:
+    @property
+    def serializer(self) -> BaseSerializer:
         """
         Create a new serializer.
         :return:  A new BaseSerializer
         """
         raise NotImplementedError()
 
-    def create_public_key_scheme(self) -> BasePublicKey:
+    @property
+    def public_key_scheme(self) -> BasePublicKey:
         """
         Create a new public key scheme
         :return: A BasePublicKey
@@ -61,7 +63,8 @@ class BaseImplementation(object):
             self._public_key_scheme = RSAPublicKey()
         return self._public_key_scheme
 
-    def create_symmetric_key_scheme(self) -> BaseSymmetricKey:
+    @property
+    def symmetric_key_scheme(self) -> BaseSymmetricKey:
         """
         Create a new public key scheme
         :return: A BasePublicKey
@@ -113,7 +116,7 @@ class BaseImplementation(object):
         :return: The key (element of group) and the extracted symmetric key
         """
         key = global_parameters.group.random(GT)
-        ske = self.create_symmetric_key_scheme()
+        ske = self.symmetric_key_scheme
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,
                                                        ske.ske_key_size())
         return key, symmetric_key
@@ -144,7 +147,7 @@ class BaseImplementation(object):
         :param policy: The policy to encrypt under.
         :return: The encrypted key and the encrypted message.
         """
-        ske = self.create_symmetric_key_scheme()
+        ske = self.symmetric_key_scheme
         key, symmetric_key = self.generate_abe_key(global_parameters)
         ciphertext = ske.ske_encrypt(message, symmetric_key)
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
@@ -195,7 +198,7 @@ class BaseImplementation(object):
         :raise Exception: raised when the secret keys do not satisfy the access policy
         :return: The plaintext
         """
-        ske = self.create_symmetric_key_scheme()
+        ske = self.symmetric_key_scheme
         encrypted_key, ciphertext = ciphertext_tuple
         key = self.abe_decrypt(global_parameters, decryption_keys, gid, encrypted_key, registration_data)
         symmetric_key = extract_key_from_group_element(global_parameters.group, key,

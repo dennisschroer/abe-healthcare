@@ -34,9 +34,10 @@ class DACMACS13Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return DACMACS13CentralAuthority(self.group)
 
-    def create_serializer(self) -> BaseSerializer:
+    @property
+    def serializer(self) -> BaseSerializer:
         if self._serializer is None:
-            self._serializer = DACMACS13Serializer(self.group)
+            self._serializer = DACMACS13Serializer(self.group, self.public_key_scheme)
         return self._serializer
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
@@ -169,13 +170,13 @@ class DACMACS13Serializer(BaseSerializer):
             'p': ciphertext['policy'],
             'C': self.group.serialize(ciphertext['C']),
             'C1': self.group.serialize(ciphertext['C1']),
-            'C2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            'C2': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                    ciphertext['C2'].items()},
-            'Ci': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            'Ci': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                    ciphertext['Ci'].items()},
-            'D1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            'D1': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                    ciphertext['D1'].items()},
-            'D2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            'D2': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                    ciphertext['D2'].items()},
             'd': dictionary
         }
