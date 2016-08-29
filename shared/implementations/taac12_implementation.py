@@ -128,6 +128,10 @@ class TAAC12AttributeAuthority(AttributeAuthority):
 
 
 class TAAC12Serializer(BaseSerializer):
+    # Overwrite because public keys contains a lambda function
+    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
+        return self.dumps({key: value for key, value in public_keys.items() if key != 'H'})
+
     def serialize_global_scheme_parameters(self, scheme_parameters):
         # gp = {'g': g, 'H': h}
         return {
