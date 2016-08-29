@@ -3,16 +3,16 @@ from typing import Dict
 from authority.attribute_authority import AttributeAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
+from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
 from shared.model.records.update_record import UpdateRecord
-from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class UserInsuranceConnection(BaseConnection):
-    def __init__(self, insurance_service: InsuranceService, serializer: PickleSerializer = None,
+    def __init__(self, insurance_service: InsuranceService, serializer: BaseSerializer = None,
                  benchmark: bool = False) -> None:
         super().__init__(benchmark)
         self.insurance_service = insurance_service

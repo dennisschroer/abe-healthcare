@@ -6,12 +6,12 @@ from Crypto.Hash import SHA
 from authority.attribute_authority import AttributeAuthority
 from service.storage import Storage
 from shared.implementations.public_key.base_public_key import BasePublicKey
+from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
 from shared.model.records.update_record import UpdateRecord
-from shared.serializer.pickle_serializer import PickleSerializer
 
 
 class InsuranceService(object):
@@ -20,7 +20,7 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, serializer: PickleSerializer, global_parameters: GlobalParameters,
+    def __init__(self, serializer: BaseSerializer, global_parameters: GlobalParameters,
                  public_key_scheme: BasePublicKey, storage_path: str = None) -> None:
         self.global_parameters = global_parameters
         self.storage = Storage(serializer, storage_path)

@@ -166,7 +166,7 @@ class ImplementationBaseTestCase(unittest.TestCase):
         # Encrypt message
         ciphertext = self.subject.abe_encrypt(self.global_parameters, self.public_keys, m, self.policy, 1)
 
-        serializer = self.subject.create_serializer()
+        serializer = self.subject.serializer()
 
         serialized = serializer.serialize_abe_ciphertext(ciphertext)
         self.assertIsNotNone(serialized)

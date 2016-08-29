@@ -1,20 +1,12 @@
-from typing import Dict, Any
-
-import sys
+from typing import Any
 
 from authority.attribute_authority import AttributeAuthority
-from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
-from shared.model.global_parameters import GlobalParameters
-from shared.model.records.create_record import CreateRecord
-from shared.model.records.data_record import DataRecord
-from shared.model.records.policy_update_record import PolicyUpdateRecord
-from shared.model.records.update_record import UpdateRecord
-from shared.serializer.pickle_serializer import PickleSerializer
+from shared.implementations.serializer.base_serializer import BaseSerializer
 
 
 class UserAttributeAuthorityConnection(BaseConnection):
-    def __init__(self, attribute_authority: AttributeAuthority, serializer: PickleSerializer = None,
+    def __init__(self, attribute_authority: AttributeAuthority, serializer: BaseSerializer = None,
                  benchmark: bool = False) -> None:
         super().__init__(benchmark)
         self.attribute_authority = attribute_authority
