@@ -34,6 +34,7 @@ class DACMACS13Implementation(BaseImplementation):
     def create_central_authority(self) -> CentralAuthority:
         return DACMACS13CentralAuthority(self.group)
 
+    @property
     def serializer(self) -> BaseSerializer:
         if self._serializer is None:
             self._serializer = DACMACS13Serializer(self.group, self.public_key_scheme)
