@@ -3,7 +3,7 @@ import sys
 from typing import Any
 
 from charm.toolbox.pairinggroup import PairingGroup
-from shared.model.types import AbeEncryption
+from shared.model.types import AbeEncryption, SecretKeyStore, PublicKeyStore
 
 PY3 = (sys.hexversion >= 0x30000f0)
 if PY3:
@@ -58,7 +58,7 @@ class BaseSerializer(object):
     def serialize_global_scheme_parameters(self, scheme_parameters):
         raise NotImplementedError()
 
-    def attribute_replacement(self, dict: dict, keyword: str) -> int:
+    def replace_attributes(self, dict: dict, keyword: str) -> int:
         """
         Determine a shorter identifier for the given keyword, and store it in the dict. If a keyword is already
         in the dictionary, the existing replacement identifier is used.
@@ -68,9 +68,9 @@ class BaseSerializer(object):
 
         >>> i = BaseSerializer(None, None)
         >>> d = dict()
-        >>> a = i.attribute_replacement(d, 'TEST123')
-        >>> b = i.attribute_replacement(d, 'TEST123')
-        >>> c = i.attribute_replacement(d, 'TEST')
+        >>> a = i.replace_attributes(d, 'TEST123')
+        >>> b = i.replace_attributes(d, 'TEST123')
+        >>> c = i.replace_attributes(d, 'TEST')
         >>> a == b
         True
         >>> b == c
@@ -100,8 +100,8 @@ class BaseSerializer(object):
 
         >>> i = BaseSerializer(None, None)
         >>> d = dict()
-        >>> a = i.attribute_replacement(d, 'TEST123')
-        >>> b = i.attribute_replacement(d, 'TEST')
+        >>> a = i.replace_attributes(d, 'TEST123')
+        >>> b = i.replace_attributes(d, 'TEST')
         >>> i.undo_attribute_replacement(d, a) == 'TEST123'
         True
         >>> i.undo_attribute_replacement(d, b) == 'TEST'
@@ -113,40 +113,40 @@ class BaseSerializer(object):
         """
         return dict[replacement]
 
-    def global_parameters(self, global_parameters: GlobalParameters) -> bytes:
+    def serialize_global_parameters(self, global_parameters: GlobalParameters) -> bytes:
         return pickle.dumps({
             'group': global_parameters.group.param,
             'scheme': self.serialize_global_scheme_parameters(
                 global_parameters.scheme_parameters)
         })
 
-    def data_record(self, data_record: DataRecord) -> bytes:
+    def serialize_data_record(self, data_record: DataRecord) -> bytes:
         return pickle.dumps({
             'meta': self.serialize_data_record_meta(data_record),
             'data': data_record.data
         })
 
-    def authorities(self, response: Dict[str, AttributeAuthority]) -> bytes:
+    def serialize_authorities(self, response: Dict[str, AttributeAuthority]) -> bytes:
         return pickle.dumps({
                                 n: {'name': a.name, 'attributes': a.attributes} for n, a in response.items()
                                 })
 
-    def create_record(self, create_record: CreateRecord) -> bytes:
+    def serialize_create_record(self, create_record: CreateRecord) -> bytes:
         return pickle.dumps({
             'meta': self.serialize_data_record_meta(create_record),
             'data': create_record.data
         })
 
-    def update_record(self, update_record: UpdateRecord) -> bytes:
+    def serialize_update_record(self, update_record: UpdateRecord) -> bytes:
         return self.dumps(update_record)
 
-    def policy_update_record(self, policy_update_record: PolicyUpdateRecord) -> bytes:
+    def serialize_policy_update_record(self, policy_update_record: PolicyUpdateRecord) -> bytes:
         return pickle.dumps({
-            'meta': self.policy_update_record_meta(policy_update_record),
+            'meta': self.serialize_policy_update_record_meta(policy_update_record),
             'data': policy_update_record.data
         })
 
-    def policy_update_record_meta(self, policy_update_record: PolicyUpdateRecord) -> bytes:
+    def serialize_policy_update_record_meta(self, policy_update_record: PolicyUpdateRecord) -> bytes:
         """
         Serialize the meta of a PolicyUpdateRecord
         :param policy_update_record:
@@ -219,19 +219,19 @@ class BaseSerializer(object):
             data=None
         )
 
-    def public_keys(self, public_keys) -> bytes:
+    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
         # TODO UGLY FIX
         # if 'H' in public_keys:
         #     del public_keys['H']
         return self.dumps(public_keys)
 
-    def keygen(self, request) -> bytes:
+    def serialize_keygen_request(self, request) -> bytes:
         return self.dumps(request)
 
-    def secret_keys(self, secret_keys) -> bytes:
+    def serialize_secret_keys(self, secret_keys: SecretKeyStore) -> bytes:
         return self.dumps(secret_keys)
 
-    def dumps(self, obj):
+    def dumps(self, obj) -> bytes:
         io = StringIO()
         pickler = ABEPickler(io, self)
         pickler.dump(obj)

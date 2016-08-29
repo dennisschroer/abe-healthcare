@@ -105,13 +105,13 @@ class RW15Serializer(BaseSerializer):
         return {
             'p': ciphertext['policy'],
             '0': self.group.serialize(ciphertext['C0']),
-            '1': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '1': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C1'].items()},
-            '2': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '2': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C2'].items()},
-            '3': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '3': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C3'].items()},
-            '4': {self.attribute_replacement(dictionary, k): self.group.serialize(v) for k, v in
+            '4': {self.replace_attributes(dictionary, k): self.group.serialize(v) for k, v in
                   ciphertext['C4'].items()},
             'd': dictionary
         }
