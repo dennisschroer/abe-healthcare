@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from multiprocessing import Value
@@ -19,6 +20,14 @@ from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 
 debug = False
+
+
+class MeasurementType(Enum):
+    timings = 1
+    storage = 2
+    network = 3
+    memory = 4
+    cpu = 5
 
 
 class ExperimentsRunner(object):
