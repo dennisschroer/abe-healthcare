@@ -14,7 +14,6 @@ from pickle import Pickler
 from typing import Dict
 
 import charm
-from authority.attribute_authority import AttributeAuthority
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
@@ -126,7 +125,7 @@ class BaseSerializer(object):
             'data': data_record.data
         })
 
-    def serialize_authorities(self, response: Dict[str, AttributeAuthority]) -> bytes:
+    def serialize_authorities(self, response: Dict[str, Any]) -> bytes:
         return pickle.dumps({
                                 n: {'name': a.name, 'attributes': a.attributes} for n, a in response.items()
                                 })
