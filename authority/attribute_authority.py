@@ -5,10 +5,10 @@ from service.central_authority import CentralAuthority
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 
-
-DEFAULT_STORAGE_PATH = 'data/autorities'
+DEFAULT_STORAGE_PATH = 'data/authorities'
 ATTRIBUTE_PUBLIC_KEYS_FILENAME = '%s_public_attributes.dat'
 ATTRIBUTE_SECRET_KEYS_FILENAME = '%s_secret_attributes.dat'
+
 
 class AttributeAuthority(object):
     """
@@ -29,6 +29,8 @@ class AttributeAuthority(object):
         self._secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters
         self.revocation_list = dict()  # type: Dict[int, Dict[str, List[str]]]
+        if not os.path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
 
     def setup(self, central_authority: CentralAuthority, attributes: list):
         """
@@ -109,7 +111,7 @@ class AttributeAuthority(object):
 
         Note: this method does not check whether the user owns the attribute.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def save_attribute_keys(self):
         save_file_path = os.path.join(self.storage_path, ATTRIBUTE_PUBLIC_KEYS_FILENAME % self.name)
@@ -119,4 +121,3 @@ class AttributeAuthority(object):
         save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
         with open(save_file_path, 'wb') as f:
             f.write(self.serializer.serialize_authority_secret_keys(self._secret_keys))
-
