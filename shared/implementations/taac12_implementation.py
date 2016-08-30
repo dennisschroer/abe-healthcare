@@ -31,8 +31,8 @@ class TAAC12Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
-    def create_attribute_authority(self, name: str) -> AttributeAuthority:
-        return TAAC12AttributeAuthority(name)
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
+        return TAAC12AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
     def create_central_authority(self) -> CentralAuthority:
         return TAAC12CentralAuthority(self.group)
@@ -74,8 +74,8 @@ class TAAC12Implementation(BaseImplementation):
         :return: A dict containing the public keys of the authorities.
 
         >>> from authority.attribute_authority import AttributeAuthority
-        >>> a1 = AttributeAuthority('A1')
-        >>> a2 = AttributeAuthority('A2')
+        >>> a1 = AttributeAuthority('A1', None)
+        >>> a2 = AttributeAuthority('A2', None)
         >>> a1._public_keys = {'foo': 'bar'}
         >>> a2._public_keys = {'a': 'b'}
         >>> taac_implementation = TAAC12Implementation()
@@ -97,8 +97,8 @@ class TAAC12CentralAuthority(CentralAuthority):
 
 
 class TAAC12AttributeAuthority(AttributeAuthority):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
+        super().__init__(name, serializer, storage_path=storage_path)
         self.states = None  # type: dict
         self.update_keys = {}  # type: dict
 

@@ -37,7 +37,7 @@ class BaseImplementation(object):
         """
         raise NotImplementedError()
 
-    def create_attribute_authority(self, name: str) -> AttributeAuthority:
+    def create_attribute_authority(self, name: str, storage_path=None) -> AttributeAuthority:
         """
         Create a new attribute authority.
         :param name: The name of the authority.
@@ -97,8 +97,8 @@ class BaseImplementation(object):
         :return: A dict containing the public keys of the authorities.
 
         >>> from authority.attribute_authority import AttributeAuthority
-        >>> a1 = AttributeAuthority('A1')
-        >>> a2 = AttributeAuthority('A2')
+        >>> a1 = AttributeAuthority('A1', None)
+        >>> a2 = AttributeAuthority('A2', None)
         >>> a1._public_keys = {'foo': 'bar'}
         >>> a2._public_keys = {'a': 'b'}
         >>> base_implementation = BaseImplementation()

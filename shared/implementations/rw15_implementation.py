@@ -1,12 +1,11 @@
 from typing import Any, Dict
 
-from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
 from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
@@ -26,8 +25,8 @@ class RW15Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
-    def create_attribute_authority(self, name: str) -> AttributeAuthority:
-        return RW15AttributeAuthority(name)
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
+        return RW15AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
     def create_central_authority(self) -> CentralAuthority:
         return RW15CentralAuthority(self.group)
