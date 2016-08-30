@@ -18,7 +18,7 @@
     - ~~Client: registration data~~
     - ~~Client: secret keys~~
     - ~~Attribute authority: attribute public/private~~
-    - Central authority: Global parameters
+    - ~~Central authority: Global parameters~~
 - Encrypt as a stream, instead of all in memory.
 - Test experiments
 - Measure one factor at a time
