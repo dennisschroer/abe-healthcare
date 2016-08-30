@@ -200,8 +200,9 @@ class BaseExperiment(object):
 
     def run(self):
         # Create central authority
-        self.central_authority = self.current_implementation.create_central_authority()
+        self.central_authority = self.current_implementation.create_central_authority(storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
+        self.central_authority.save_global_parameters()
 
         # Create insurance service
         insurance = InsuranceService(self.current_implementation.serializer,
@@ -214,6 +215,7 @@ class BaseExperiment(object):
                                                                        self.current_implementation)
         for authority in self.attribute_authorities:
             insurance.add_authority(authority)
+            authority.save_attribute_keys()
 
         # Create user clients
         self.user_clients = self.create_user_clients(self.current_implementation, insurance)  # type: List[UserClient]
@@ -222,10 +224,6 @@ class BaseExperiment(object):
 
         location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
         self.user_clients[1].decrypt_file(location)
-
-        # Maybe ugly, but only way to not make this mess up with the timing results
-        for authority in self.attribute_authorities:
-            authority.save_attribute_keys()
 
     def get_connections(self) -> List[BaseConnection]:
         """
@@ -287,3 +285,9 @@ class BaseExperiment(object):
         Gets the path of the location to be used for the storage of the attribute authorities.
         """
         return os.path.join(self.get_experiment_storage_base_path(), 'authorities')
+
+    def get_central_authority_storage_path(self) -> str:
+        """
+        Gets the path of the location to be used for the storage of the central authorities.
+        """
+        return os.path.join(self.get_experiment_storage_base_path(), 'central_authority')

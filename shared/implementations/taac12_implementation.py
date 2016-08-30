@@ -34,8 +34,8 @@ class TAAC12Implementation(BaseImplementation):
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return TAAC12AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return TAAC12CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return TAAC12CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:

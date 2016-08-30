@@ -28,8 +28,8 @@ class RW15Implementation(BaseImplementation):
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return RW15AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return RW15CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return RW15CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:

@@ -1,14 +1,13 @@
 from typing import Any, Dict, Tuple
 
-from shared.implementations.public_key.base_public_key import BasePublicKey
-from shared.implementations.public_key.rsa_public_key import RSAPublicKey
-from shared.implementations.serializer.base_serializer import BaseSerializer
-from shared.implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
-
 from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from service.central_authority import CentralAuthority
+from shared.implementations.public_key.base_public_key import BasePublicKey
+from shared.implementations.public_key.rsa_public_key import RSAPublicKey
+from shared.implementations.serializer.base_serializer import BaseSerializer
+from shared.implementations.symmetric_key.aes_symmetric_key import AESSymmetricKey
 from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from shared.model.global_parameters import GlobalParameters
 from shared.model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys, \
@@ -30,14 +29,14 @@ class BaseImplementation(object):
     def get_name(self):
         return self.__class__.__name__
 
-    def create_central_authority(self) -> CentralAuthority:
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
         """
         Create a new central authority.
         :return: The central authority of this implementation.
         """
         raise NotImplementedError()
 
-    def create_attribute_authority(self, name: str, storage_path=None) -> AttributeAuthority:
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         """
         Create a new attribute authority.
         :param name: The name of the authority.

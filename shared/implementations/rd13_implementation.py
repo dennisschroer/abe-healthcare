@@ -1,18 +1,17 @@
 from typing import Any, Dict
 
-from shared.implementations.base_implementation import BaseImplementation
-from shared.model.types import SecretKeyStore, AbeEncryption, AuthorityPublicKeysStore
-from shared.utils.dict_utils import merge_dicts
-
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.dabe_rd13 import DabeRD13
 from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.base_implementation import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
+from shared.model.types import SecretKeyStore, AbeEncryption, AuthorityPublicKeysStore
 from shared.utils.attribute_util import add_time_period_to_attribute, translate_policy_to_access_structure
+from shared.utils.dict_utils import merge_dicts
 
 
 class RD13Implementation(BaseImplementation):
@@ -32,8 +31,8 @@ class RD13Implementation(BaseImplementation):
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return RD13AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return RD13CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return RD13CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:

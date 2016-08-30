@@ -30,8 +30,8 @@ class DACMACS13Implementation(BaseImplementation):
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return DACMACS13AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return DACMACS13CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return DACMACS13CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:
@@ -66,8 +66,8 @@ class DACMACS13Implementation(BaseImplementation):
 
 
 class DACMACS13CentralAuthority(CentralAuthority):
-    def __init__(self, group=None):
-        super().__init__(group)
+    def __init__(self, group, serializer: BaseSerializer, storage_path: str = None) -> None:
+        super().__init__(group, serializer, storage_path=storage_path)
         self.master_key = None  # type: Any
 
     def register_user(self, gid: str) -> dict:
