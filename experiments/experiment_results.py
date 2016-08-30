@@ -1,11 +1,10 @@
 import csv
 import logging
+import sys
 import traceback
 from cProfile import Profile
 from os import path, listdir
 from typing import List, Any
-
-import sys
 
 from experiments.experiment_run import ExperimentsRun
 from shared.connection.base_connection import BaseConnection
@@ -76,22 +75,25 @@ class ExperimentResults(object):
         connections_to_csv(connections, path.join(directory, 'network.csv'))
 
         output_file_path = path.join(ExperimentResults.experiment_results_directory(experiments_run), 'network.csv')
-        write_header = not path.exists(output_file_path)
-        with open(output_file_path, 'a') as file:
-            writer = csv.writer(file)
-            if write_header:
-                writer.writerow(('implementation', 'case', 'iteration', 'connection', 'name', 'size'))
-            for connection in connections:
-                for (name, sizes) in connection.benchmarks.items():
-                    for size in sizes:
-                        writer.writerow((
-                            experiments_run.current_implementation.get_name(),
-                            experiments_run.current_case.name,
-                            experiments_run.iteration,
-                            connection.__class__.__name__,
-                            name,
-                            size
-                        ))
+
+        rows = []
+        for connection in connections:
+            for (name, sizes) in connection.benchmarks.items():
+                for size in sizes:
+                    rows.append((
+                        experiments_run.current_implementation.get_name(),
+                        experiments_run.current_case.name,
+                        experiments_run.iteration,
+                        connection.__class__.__name__,
+                        name,
+                        size
+                    ))
+
+        ExperimentResults.append_rows_to_file(
+            output_file_path,
+            ('implementation', 'case', 'iteration', 'connection', 'name', 'size'),
+            rows
+        )
 
     @staticmethod
     def output_memory_usages(experiments_run: ExperimentsRun, memory_usages: List[Any]) -> None:
@@ -118,8 +120,7 @@ class ExperimentResults(object):
         """
         directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
         insurance_storage = experiments_run.experiment.get_insurance_storage_path()
-        with open(path.join(directory, 'storage_insurance.csv'),
-                  'w') as output:
+        with open(path.join(directory, 'storage.csv'), 'w') as output:
             writer = csv.writer(output)
             writer.writerow(('filename', 'size'))
             for file in listdir(insurance_storage):
@@ -148,18 +149,36 @@ class ExperimentResults(object):
         # Convert to step names and append to file
         step_timings = pstats_to_step_timings(stats_file_path, path.join(directory, 'step_timings.csv'))
 
-        write_header = not path.exists(
-            path.join(ExperimentResults.experiment_results_directory(experiments_run), 'timings.csv'))
+        output_file_path = path.join(ExperimentResults.experiment_results_directory(experiments_run), 'timings.csv')
         headers = ['implementation', 'case', 'iteration'] + list(algorithm_steps)
-        with open(path.join(ExperimentResults.experiment_results_directory(experiments_run), 'timings.csv'),
-                  'a') as file:
-            writer = csv.DictWriter(file, fieldnames=headers)
+        row = {
+            'implementation': experiments_run.current_implementation.get_name(),
+            'case': experiments_run.current_case.name,
+            'iteration': experiments_run.iteration
+        }
+        row.update(step_timings)
+
+        ExperimentResults.append_row_to_file(
+            output_file_path,
+            ('implementation', 'case', 'iteration', 'connection', 'name', 'size'),
+            row
+        )
+
+    @staticmethod
+    def append_rows_to_file(file_path, headers, rows):
+        write_header = not path.exists(file_path)
+        with open(file_path, 'a') as file:
+            writer = csv.writer(file)
             if write_header:
-                writer.writeheader()
-            values = {
-                'implementation': experiments_run.current_implementation.get_name(),
-                'case': experiments_run.current_case.name,
-                'iteration': experiments_run.iteration
-            }
-            values.update(step_timings)
-            writer.writerow(values)
+                writer.writerow(headers)
+            for row in rows:
+                writer.writerow(row)
+
+    @staticmethod
+    def append_row_to_file(file_path, headers, row):
+        write_header = not path.exists(file_path)
+        with open(file_path, 'a') as file:
+            writer = csv.writer(file)
+            if write_header:
+                writer.writerow(headers)
+            writer.writerow(row)
