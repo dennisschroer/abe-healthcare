@@ -20,8 +20,6 @@ from shared.utils.key_utils import extract_key_from_group_element
 
 RSA_KEY_SIZE = 2048
 
-
-USER_PRIVATE_DATA_DIRECTORY = 'users'
 USER_OWNER_KEY_FILENAME = '%s.der'
 USER_REGISTRATION_DATA_FILENAME = '%s_registration.dat'
 USER_SECRET_KEYS_FILENAME = '%s_secret_keys.dat'
@@ -424,7 +422,7 @@ class UserClient(object):
         >>> user_client = UserClient(user, None, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
-        >>> os.path.exists(os.path.join(user_client.storage_path, USER_PRIVATE_DATA_DIRECTORY, USER_OWNER_KEY_FILENAME % user_client.user.gid))
+        >>> os.path.exists(os.path.join(user_client.storage_path, USER_OWNER_KEY_FILENAME % user_client.user.gid))
         True
         """
         pke = self.implementation.public_key_scheme
