@@ -100,7 +100,7 @@ class BaseExperiment(object):
         :return:
         """
         for user_client in self.user_clients:
-            user_client.user.registration_data = self.central_authority.register_user(user_client.user.gid)
+            user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
 
     def get_user_client(self, gid: str) -> UserClient:
         """
@@ -127,8 +127,7 @@ class BaseExperiment(object):
         """
         for user_description in self.user_descriptions:
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            for authority_name, attributes in user_description['attributes'].items():  # type: ignore
-                user_client.request_secret_keys(authority_name, attributes, 1)
+            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
@@ -153,7 +152,8 @@ class BaseExperiment(object):
         :param implementation: The implementation to use.
         :return: The attribute authority.
         """
-        attribute_authority = implementation.create_attribute_authority(authority_description['name'])
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
+                                                                        storage_path=self.get_attribute_authority_storage_path())
         attribute_authority.setup(central_authority, authority_description['attributes'])
         return attribute_authority
 
@@ -200,8 +200,9 @@ class BaseExperiment(object):
 
     def run(self):
         # Create central authority
-        self.central_authority = self.current_implementation.create_central_authority()
+        self.central_authority = self.current_implementation.create_central_authority(storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
+        self.central_authority.save_global_parameters()
 
         # Create insurance service
         insurance = InsuranceService(self.current_implementation.serializer,
@@ -214,6 +215,7 @@ class BaseExperiment(object):
                                                                        self.current_implementation)
         for authority in self.attribute_authorities:
             insurance.add_authority(authority)
+            authority.save_attribute_keys()
 
         # Create user clients
         self.user_clients = self.create_user_clients(self.current_implementation, insurance)  # type: List[UserClient]
@@ -277,3 +279,15 @@ class BaseExperiment(object):
         Gets the path of the location to be used for the storage of the insurance service.
         """
         return os.path.join(self.get_experiment_storage_base_path(), 'insurance')
+
+    def get_attribute_authority_storage_path(self) -> str:
+        """
+        Gets the path of the location to be used for the storage of the attribute authorities.
+        """
+        return os.path.join(self.get_experiment_storage_base_path(), 'authorities')
+
+    def get_central_authority_storage_path(self) -> str:
+        """
+        Gets the path of the location to be used for the storage of the central authorities.
+        """
+        return os.path.join(self.get_experiment_storage_base_path(), 'central_authority')

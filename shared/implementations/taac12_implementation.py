@@ -10,7 +10,7 @@ from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
-from shared.model.types import PublicKeyStore
+from shared.model.types import AuthorityPublicKeysStore
 from shared.utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 5
@@ -31,11 +31,11 @@ class TAAC12Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
-    def create_attribute_authority(self, name: str) -> AttributeAuthority:
-        return TAAC12AttributeAuthority(name)
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
+        return TAAC12AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return TAAC12CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return TAAC12CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:
@@ -66,7 +66,7 @@ class TAAC12Implementation(BaseImplementation):
         except Exception:
             raise PolicyNotSatisfiedException()
 
-    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, AuthorityPublicKeysStore]) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
@@ -74,8 +74,8 @@ class TAAC12Implementation(BaseImplementation):
         :return: A dict containing the public keys of the authorities.
 
         >>> from authority.attribute_authority import AttributeAuthority
-        >>> a1 = AttributeAuthority('A1')
-        >>> a2 = AttributeAuthority('A2')
+        >>> a1 = AttributeAuthority('A1', None)
+        >>> a2 = AttributeAuthority('A2', None)
         >>> a1._public_keys = {'foo': 'bar'}
         >>> a2._public_keys = {'a': 'b'}
         >>> taac_implementation = TAAC12Implementation()
@@ -97,8 +97,8 @@ class TAAC12CentralAuthority(CentralAuthority):
 
 
 class TAAC12AttributeAuthority(AttributeAuthority):
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
+        super().__init__(name, serializer, storage_path=storage_path)
         self.states = None  # type: dict
         self.update_keys = {}  # type: dict
 
@@ -109,7 +109,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         self._public_keys, self._secret_keys, self.states = taac.authsetup(
             central_authority.global_parameters.scheme_parameters, attributes, BINARY_TREE_HEIGHT)
 
-    def keygen(self, gid, registration_data, attributes, time_period):
+    def _keygen(self, gid, registration_data, attributes, time_period):
         taac = Taac(self.global_parameters.group)
         return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys(time_period),
                            self.states, gid,
@@ -129,7 +129,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
 
 class TAAC12Serializer(BaseSerializer):
     # Overwrite because public keys contains a lambda function
-    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
+    def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps({key: value for key, value in public_keys.items() if key != 'H'})
 
     def serialize_global_scheme_parameters(self, scheme_parameters):

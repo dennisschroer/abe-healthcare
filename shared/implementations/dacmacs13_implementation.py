@@ -1,12 +1,11 @@
 from typing import Any, Dict
 
-from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.utils.attribute_util import add_time_period_to_attribute, add_time_periods_to_policy
@@ -28,11 +27,11 @@ class DACMACS13Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
-    def create_attribute_authority(self, name: str) -> AttributeAuthority:
-        return DACMACS13AttributeAuthority(name)
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
+        return DACMACS13AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
-    def create_central_authority(self) -> CentralAuthority:
-        return DACMACS13CentralAuthority(self.group)
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        return DACMACS13CentralAuthority(self.group, self.serializer, storage_path=storage_path)
 
     @property
     def serializer(self) -> BaseSerializer:
@@ -67,8 +66,8 @@ class DACMACS13Implementation(BaseImplementation):
 
 
 class DACMACS13CentralAuthority(CentralAuthority):
-    def __init__(self, group=None):
-        super().__init__(group)
+    def __init__(self, group, serializer: BaseSerializer, storage_path: str = None) -> None:
+        super().__init__(group, serializer, storage_path=storage_path)
         self.master_key = None  # type: Any
 
     def register_user(self, gid: str) -> dict:
@@ -87,8 +86,8 @@ class DACMACS13CentralAuthority(CentralAuthority):
 
 
 class DACMACS13AttributeAuthority(AttributeAuthority):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
+        super().__init__(name, serializer, storage_path=storage_path)
         self._public_keys = dict()
         self._secret_keys = dict()
 
@@ -141,7 +140,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
         self._public_keys[time_period] = pk['attr']
         self._secret_keys[time_period] = sk['attr']
 
-    def keygen(self, gid, registration_data, attributes, time_period):
+    def _keygen(self, gid, registration_data, attributes, time_period):
         dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return {self.name: dacmacs.keygen(self.global_parameters.scheme_parameters,
