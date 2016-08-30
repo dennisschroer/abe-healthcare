@@ -352,14 +352,10 @@ class UserClient(object):
         self.save_registration_data()
 
     def save_registration_data(self):
+        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
         if self.user.registration_data is None:
-            return
-        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
-        if not os.path.exists(user_path):
-            os.makedirs(user_path)
-        save_file_path = os.path.join(user_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
-        if self.user.registration_data is None and os.path.exists(save_file_path):
-            os.remove(save_file_path)
+            if os.path.exists(save_file_path):
+                os.remove(save_file_path)
         else:
             with open(save_file_path, 'wb') as f:
                 f.write(self.implementation.serializer.registration_data(self.user.registration_data))
@@ -406,10 +402,7 @@ class UserClient(object):
         True
         """
         pke = self.implementation.public_key_scheme
-        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
-        if not os.path.exists(user_path):
-            os.makedirs(user_path)
-        with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
+        with open(os.path.join(self.storage_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'wb') as f:
             f.write(pke.export_key(key_pair))
 
     def load_owner_keys(self) -> Any:
@@ -428,10 +421,7 @@ class UserClient(object):
         True
         """
         pke = self.implementation.public_key_scheme
-        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
-        if not os.path.exists(user_path):
-            os.makedirs(user_path)
-        with open(os.path.join(user_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
+        with open(os.path.join(self.storage_path, USER_OWNER_KEY_FILENAME % self.user.gid), 'rb') as f:
             key_pair = pke.import_key(f.read())
         return key_pair
 

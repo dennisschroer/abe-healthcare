@@ -4,7 +4,7 @@ import sys
 import traceback
 from cProfile import Profile
 from os import path, listdir
-from typing import List, Any
+from typing import List, Any, Dict
 
 from experiments.experiment_run import ExperimentsRun
 from shared.connection.base_connection import BaseConnection
@@ -118,14 +118,47 @@ class ExperimentResults(object):
         Output the storage space used by the different parties.
         :param experiments_run: The current experiments run.
         """
-        directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
+        # directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
         insurance_storage = experiments_run.experiment.get_insurance_storage_path()
-        with open(path.join(directory, 'storage.csv'), 'w') as output:
-            writer = csv.writer(output)
-            writer.writerow(('filename', 'size'))
-            for file in listdir(insurance_storage):
-                size = path.getsize(path.join(insurance_storage, file))
-                writer.writerow((file, size))
+        client_storage = experiments_run.experiment.get_user_client_storage_path()
+
+        output_file_path = path.join(ExperimentResults.experiment_results_directory(experiments_run), 'storage.csv')
+        headers = ('implementation', 'case', 'iteration', 'entity', 'filename', 'size')
+        rows = list()
+
+        for file in listdir(insurance_storage):
+            size = path.getsize(path.join(insurance_storage, file))
+            rows.append((
+                experiments_run.current_implementation.get_name(),
+                experiments_run.current_case.name,
+                experiments_run.iteration,
+                'insurance',
+                file,
+                size
+            ))
+
+        for file in listdir(client_storage):
+            size = path.getsize(path.join(client_storage, file))
+            rows.append((
+                experiments_run.current_implementation.get_name(),
+                experiments_run.current_case.name,
+                experiments_run.iteration,
+                'client',
+                file,
+                size
+            ))
+
+        # with open(path.join(directory, 'storage.csv'), 'w') as output:
+        #     writer = csv.writer(output)
+        #     writer.writerow(headers)
+        #     for row in rows:
+        #         writer.writerow(row)
+
+        ExperimentResults.append_rows_to_file(
+            output_file_path,
+            headers,
+            rows
+        )
 
     @staticmethod
     def output_timings(experiments_run: ExperimentsRun, profile: Profile) -> None:
@@ -158,9 +191,9 @@ class ExperimentResults(object):
         }
         row.update(step_timings)
 
-        ExperimentResults.append_row_to_file(
+        ExperimentResults.append_dict_to_file(
             output_file_path,
-            ('implementation', 'case', 'iteration', 'connection', 'name', 'size'),
+            headers,
             row
         )
 
@@ -175,10 +208,10 @@ class ExperimentResults(object):
                 writer.writerow(row)
 
     @staticmethod
-    def append_row_to_file(file_path, headers, row):
+    def append_dict_to_file(file_path, headers, row: Dict[str, Any]):
         write_header = not path.exists(file_path)
         with open(file_path, 'a') as file:
-            writer = csv.writer(file)
+            writer = csv.DictWriter(file, headers)
             if write_header:
-                writer.writerow(headers)
+                writer.writeheader()
             writer.writerow(row)
