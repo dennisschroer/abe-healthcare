@@ -354,11 +354,15 @@ class UserClient(object):
     def save_registration_data(self):
         if self.user.registration_data is None:
             return
-        # user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
-        # if not os.path.exists(user_path):
-        #     os.makedirs(user_path)
-        # with open(os.path.join(user_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid), 'wb') as f:
-        #     f.write(self.implementation.serializer.registration_data(self.user.registration_data))
+        user_path = path.join(self.storage_path, USER_PRIVATE_DATA_DIRECTORY)
+        if not os.path.exists(user_path):
+            os.makedirs(user_path)
+        save_file_path = os.path.join(user_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
+        if self.user.registration_data is None and os.path.exists(save_file_path):
+            os.remove(save_file_path)
+        else:
+            with open(save_file_path, 'wb') as f:
+                f.write(self.implementation.serializer.registration_data(self.user.registration_data))
 
     def get_owner_key(self) -> Any:
         """
