@@ -127,8 +127,7 @@ class BaseExperiment(object):
         """
         for user_description in self.user_descriptions:
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            for authority_name, attributes in user_description['attributes'].items():  # type: ignore
-                user_client.request_secret_keys(authority_name, attributes, 1)
+            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:

@@ -23,7 +23,8 @@ RSA_KEY_SIZE = 2048
 
 USER_PRIVATE_DATA_DIRECTORY = 'users'
 USER_OWNER_KEY_FILENAME = '%s.der'
-USER_REGISTRATION_DATA_FILENAME = '%s.reg'
+USER_REGISTRATION_DATA_FILENAME = '%s_registration.dat'
+USER_SECRET_KEYS_FILENAME = '%s_secret_keys.dat'
 
 DEFAULT_STORAGE_PATH = 'data/output'
 
@@ -308,19 +309,44 @@ class UserClient(object):
         """
         return self.insurance_connection.request_record(location)
 
-    def request_secret_keys(self, authority_name: str, attributes: List[str], time_period: int):
+    def request_secret_keys(self, authority_name: str, attributes: List[str], time_period: int) -> None:
         """
-        Request secret keys form the authority with the given name for the given attributes, valid in the given
+        Request secret keys from the authority with the given name for the given attributes, valid in the given
         time_period. The secret keys are stored on the user model. The authority only issues non-revoked attributes,
         so it is not guaranteed that the user has secret keys for all requested attributes after this method is invoked.
-        :param authority_name:
-        :param attributes:
-        :param time_period:
-        :return:
+        After the request, the current secret keys are stored.
+        :param authority_name: The name of the authority to request the secret keys from
+        :param attributes: The attributes to request secret keys for
+        :param time_period: The time period to request secret keys for, if applicable
         """
         connection = self.authority_connections[authority_name]
-        self.user.issue_secret_keys(
-            connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period))
+        secret_keys = connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period)
+        self.user.issue_secret_keys(secret_keys)
+
+        self.save_user_secret_keys()
+
+    def request_secret_keys_multiple_authorities(self, authority_attributes: Dict[str, List[str]], time_period: int) -> None:
+        """
+        Request secret keys from multiple authorities for the given attributes, valid in the given
+        time_period. The secret keys are stored on the user model. The authority only issues non-revoked attributes,
+        so it is not guaranteed that the user has secret keys for all requested attributes after this method is invoked.
+        After the requests, the current secret keys are stored.
+        :param authority_attributes: A dictionary from the name of the authority to request the secret keys from to the
+        list of attributes to request secret keys for from this authority.
+        :param time_period: The time period to request secret keys for, if applicable
+        """
+        for authority_name, attributes in authority_attributes.items():  # type: ignore
+            connection = self.authority_connections[authority_name]
+            secret_keys = connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period)
+            self.user.issue_secret_keys(secret_keys)
+
+        self.save_user_secret_keys()
+
+    def save_user_secret_keys(self):
+        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.implementation.serializer.serialize_secret_keys(self.user.secret_keys))
+
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
