@@ -14,6 +14,12 @@
 - Export all measurement in a helpful format
 - ~~Run each experiment in a subprocess to enable CPU usage determination~~
 - <> Store all keys in order to measure storage costs
+    - ~~Client: owner keys~~
+    - ~~Client: registration data~~
+    - ~~Client: secret keys~~
+    - ~~Attribute authority: attribute public/private~~
+    - ~~Central authority: Global parameters~~
 - Encrypt as a stream, instead of all in memory.
 - Test experiments
+- Measure one factor at a time
 - ~~<> Fix pickle_serializer.public_keys for TAAC12~~

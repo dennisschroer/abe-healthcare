@@ -3,7 +3,7 @@ import sys
 from typing import Any
 
 from charm.toolbox.pairinggroup import PairingGroup
-from shared.model.types import AbeEncryption, SecretKeyStore, PublicKeyStore
+from shared.model.types import AbeEncryption, SecretKeyStore, AuthorityPublicKeysStore, AuthoritySecretKeysStore
 
 PY3 = (sys.hexversion >= 0x30000f0)
 if PY3:
@@ -14,7 +14,6 @@ from pickle import Pickler
 from typing import Dict
 
 import charm
-from authority.attribute_authority import AttributeAuthority
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
@@ -126,7 +125,7 @@ class BaseSerializer(object):
             'data': data_record.data
         })
 
-    def serialize_authorities(self, response: Dict[str, AttributeAuthority]) -> bytes:
+    def serialize_authorities(self, response: Dict[str, Any]) -> bytes:
         return pickle.dumps({
                                 n: {'name': a.name, 'attributes': a.attributes} for n, a in response.items()
                                 })
@@ -219,8 +218,11 @@ class BaseSerializer(object):
             data=None
         )
 
-    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
+    def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps(public_keys)
+
+    def serialize_authority_secret_keys(self, secret_keys: AuthoritySecretKeysStore) -> bytes:
+        return self.dumps(secret_keys)
 
     def serialize_keygen_request(self, request) -> bytes:
         return self.dumps(request)
@@ -234,6 +236,9 @@ class BaseSerializer(object):
         pickler.dump(obj)
         io.flush()
         return io.getvalue()
+
+    def registration_data(self, registration_data):
+        return self.dumps(registration_data)
 
 
 class ABEPickler(Pickler):

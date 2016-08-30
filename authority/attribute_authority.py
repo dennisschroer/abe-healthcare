@@ -1,7 +1,13 @@
+import os
 from typing import Any, List, Dict
 
 from service.central_authority import CentralAuthority
+from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
+
+DEFAULT_STORAGE_PATH = 'data/authorities'
+ATTRIBUTE_PUBLIC_KEYS_FILENAME = '%s_public_attributes.dat'
+ATTRIBUTE_SECRET_KEYS_FILENAME = '%s_secret_attributes.dat'
 
 
 class AttributeAuthority(object):
@@ -10,17 +16,21 @@ class AttributeAuthority(object):
     The authority is able to issue secret keys to users for these attributes.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, serializer: BaseSerializer, storage_path=None) -> None:
         """
         Create a new attribute authority.
         :param name: The name of the authority.
         """
+        self.storage_path = DEFAULT_STORAGE_PATH if storage_path is None else storage_path
         self.name = name
+        self.serializer = serializer
         self.attributes = []  # type: list
         self._public_keys = None  # type: Any
         self._secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters
         self.revocation_list = dict()  # type: Dict[int, Dict[str, List[str]]]
+        if not os.path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
 
     def setup(self, central_authority: CentralAuthority, attributes: list):
         """
@@ -101,4 +111,13 @@ class AttributeAuthority(object):
 
         Note: this method does not check whether the user owns the attribute.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    def save_attribute_keys(self):
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_PUBLIC_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.serializer.serialize_authority_public_keys(self._public_keys))
+
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.serializer.serialize_authority_secret_keys(self._secret_keys))
