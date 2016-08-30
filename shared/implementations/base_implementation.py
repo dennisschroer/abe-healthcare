@@ -12,7 +12,7 @@ from service.central_authority import CentralAuthority
 from shared.implementations.symmetric_key.base_symmetric_key import BaseSymmetricKey
 from shared.model.global_parameters import GlobalParameters
 from shared.model.types import SecretKeyStore, SecretKeys, AbeEncryption, RegistrationData, DecryptionKeys, \
-    PublicKeyStore
+    AuthorityPublicKeysStore
 from shared.utils.key_utils import extract_key_from_group_element
 
 
@@ -89,7 +89,7 @@ class BaseImplementation(object):
         """
         base_keys.update(secret_keys)
 
-    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, AuthorityPublicKeysStore]) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.

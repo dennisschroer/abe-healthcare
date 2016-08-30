@@ -3,7 +3,7 @@ import sys
 from typing import Any
 
 from charm.toolbox.pairinggroup import PairingGroup
-from shared.model.types import AbeEncryption, SecretKeyStore, PublicKeyStore
+from shared.model.types import AbeEncryption, SecretKeyStore, AuthorityPublicKeysStore, AuthoritySecretKeysStore
 
 PY3 = (sys.hexversion >= 0x30000f0)
 if PY3:
@@ -219,8 +219,11 @@ class BaseSerializer(object):
             data=None
         )
 
-    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
+    def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps(public_keys)
+
+    def serialize_authority_secret_keys(self, secret_keys: AuthoritySecretKeysStore) -> bytes:
+        return self.dumps(secret_keys)
 
     def serialize_keygen_request(self, request) -> bytes:
         return self.dumps(request)

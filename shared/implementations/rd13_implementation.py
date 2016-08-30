@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from shared.implementations.base_implementation import BaseImplementation
-from shared.model.types import SecretKeyStore, AbeEncryption, PublicKeyStore
+from shared.model.types import SecretKeyStore, AbeEncryption, AuthorityPublicKeysStore
 from shared.utils.dict_utils import merge_dicts
 
 from authority.attribute_authority import AttributeAuthority

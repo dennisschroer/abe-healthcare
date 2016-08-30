@@ -4,5 +4,6 @@ AbeEncryption = Any
 SecretKeyStore = Any
 DecryptionKeys = Any
 SecretKeys = Any
-PublicKeyStore = Any
+AuthorityPublicKeysStore = Any
+AuthoritySecretKeysStore = Any
 RegistrationData = Any

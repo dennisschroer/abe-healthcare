@@ -10,7 +10,7 @@ from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
-from shared.model.types import PublicKeyStore
+from shared.model.types import AuthorityPublicKeysStore
 from shared.utils.dict_utils import merge_dicts
 
 BINARY_TREE_HEIGHT = 5
@@ -66,7 +66,7 @@ class TAAC12Implementation(BaseImplementation):
         except Exception:
             raise PolicyNotSatisfiedException()
 
-    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, AuthorityPublicKeysStore]) -> Dict[str, Any]:
         """
         Merge the public keys of the attribute authorities to a single entity containing all
         public keys.
@@ -129,7 +129,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
 
 class TAAC12Serializer(BaseSerializer):
     # Overwrite because public keys contains a lambda function
-    def serialize_public_keys(self, public_keys: PublicKeyStore) -> bytes:
+    def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps({key: value for key, value in public_keys.items() if key != 'H'})
 
     def serialize_global_scheme_parameters(self, scheme_parameters):
