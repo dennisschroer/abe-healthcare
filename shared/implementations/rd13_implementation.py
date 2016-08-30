@@ -41,7 +41,7 @@ class RD13Implementation(BaseImplementation):
             self._serializer = RD13Serializer(self.group, self.public_key_scheme)
         return self._serializer
 
-    def merge_public_keys(self, public_keys: Dict[str, PublicKeyStore]) -> Dict[str, Any]:
+    def merge_public_keys(self, public_keys: Dict[str, AuthorityPublicKeysStore]) -> Dict[str, Any]:
         return merge_dicts(*public_keys.values())
 
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,

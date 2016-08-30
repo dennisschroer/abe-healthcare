@@ -141,7 +141,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
         self._public_keys[time_period] = pk['attr']
         self._secret_keys[time_period] = sk['attr']
 
-    def keygen(self, gid, registration_data, attributes, time_period):
+    def _keygen(self, gid, registration_data, attributes, time_period):
         dacmacs = DACMACS(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return {self.name: dacmacs.keygen(self.global_parameters.scheme_parameters,

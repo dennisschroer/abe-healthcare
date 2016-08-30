@@ -77,7 +77,7 @@ class RW15AttributeAuthority(AttributeAuthority):
         self._public_keys, self._secret_keys = maabe.authsetup(central_authority.global_parameters.scheme_parameters,
                                                                self.name)
 
-    def keygen(self, gid, registration_data, attributes, time_period):
+    def _keygen(self, gid, registration_data, attributes, time_period):
         maabe = MaabeRW15(self.global_parameters.group)
         attributes = map(lambda x: add_time_period_to_attribute(x, time_period), attributes)
         return maabe.multiple_attributes_keygen(self.global_parameters.scheme_parameters,

@@ -109,7 +109,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         self._public_keys, self._secret_keys, self.states = taac.authsetup(
             central_authority.global_parameters.scheme_parameters, attributes, BINARY_TREE_HEIGHT)
 
-    def keygen(self, gid, registration_data, attributes, time_period):
+    def _keygen(self, gid, registration_data, attributes, time_period):
         taac = Taac(self.global_parameters.group)
         return taac.keygen(self.global_parameters.scheme_parameters, self.secret_keys(time_period),
                            self.states, gid,
