@@ -152,7 +152,8 @@ class BaseExperiment(object):
         :param implementation: The implementation to use.
         :return: The attribute authority.
         """
-        attribute_authority = implementation.create_attribute_authority(authority_description['name'])
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
+                                                                        storage_path=self.get_attribute_authority_storage_path())
         attribute_authority.setup(central_authority, authority_description['attributes'])
         return attribute_authority
 
@@ -222,6 +223,10 @@ class BaseExperiment(object):
         location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
         self.user_clients[1].decrypt_file(location)
 
+        # Maybe ugly, but only way to not make this mess up with the timing results
+        for authority in self.attribute_authorities:
+            authority.save_attribute_keys()
+
     def get_connections(self) -> List[BaseConnection]:
         """
         Get all connections used in this experiment of which the usage should be outputted.
@@ -276,3 +281,9 @@ class BaseExperiment(object):
         Gets the path of the location to be used for the storage of the insurance service.
         """
         return os.path.join(self.get_experiment_storage_base_path(), 'insurance')
+
+    def get_attribute_authority_storage_path(self) -> str:
+        """
+        Gets the path of the location to be used for the storage of the attribute authorities.
+        """
+        return os.path.join(self.get_experiment_storage_base_path(), 'authorities')

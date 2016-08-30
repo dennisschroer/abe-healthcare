@@ -121,6 +121,7 @@ class ExperimentResults(object):
         # directory = ExperimentResults.experiment_case_iteration_results_directory(experiments_run)
         insurance_storage = experiments_run.experiment.get_insurance_storage_path()
         client_storage = experiments_run.experiment.get_user_client_storage_path()
+        authority_storage = experiments_run.experiment.get_attribute_authority_storage_path()
 
         output_file_path = path.join(ExperimentResults.experiment_results_directory(experiments_run), 'storage.csv')
         headers = ('implementation', 'case', 'iteration', 'entity', 'filename', 'size')
@@ -144,6 +145,17 @@ class ExperimentResults(object):
                 experiments_run.current_case.name,
                 experiments_run.iteration,
                 'client',
+                file,
+                size
+            ))
+
+        for file in listdir(authority_storage):
+            size = path.getsize(path.join(authority_storage, file))
+            rows.append((
+                experiments_run.current_implementation.get_name(),
+                experiments_run.current_case.name,
+                experiments_run.iteration,
+                'authority',
                 file,
                 size
             ))
