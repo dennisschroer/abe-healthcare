@@ -20,8 +20,6 @@ from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 
-debug = False
-
 
 class ExperimentsRunner(object):
     """
@@ -66,7 +64,8 @@ class ExperimentsRunner(object):
         self.setup_logging()
 
         logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(), experiments_sequence.timestamp,
+            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
+            experiments_sequence.timestamp,
             experiments_sequence.amount))
         experiments_sequence.experiment.global_setup()
         logging.info("Global setup finished")
@@ -76,7 +75,8 @@ class ExperimentsRunner(object):
             self.run_current_experiment()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(), experiments_sequence.timestamp,
+            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
+            experiments_sequence.timestamp,
             experiments_sequence.current_time_formatted()))
 
     def run_current_experiment(self) -> None:
@@ -168,7 +168,8 @@ class ExperimentsRunner(object):
         logging.debug("debug 9 -> process stopped")
 
     @staticmethod
-    def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition, is_running: Value) -> None:
+    def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,
+                                          is_running: Value) -> None:
         """
         Run the experiment in this process.
         :param experiments_sequence: The current running experiment
@@ -181,7 +182,8 @@ class ExperimentsRunner(object):
 
             # Empty the storage directories
             experiments_sequence.experiment.setup_directories()
-            experiments_sequence.experiment.setup(experiments_sequence.state.current_implementation, experiments_sequence.state.current_case)
+            experiments_sequence.experiment.setup(experiments_sequence.state.current_implementation,
+                                                  experiments_sequence.state.current_case)
 
             # Setup variables
             pr = cProfile.Profile()
@@ -207,7 +209,8 @@ class ExperimentsRunner(object):
             if experiments_sequence.state.measurement_type == MeasurementType.timings:
                 ExperimentOutput.output_timings(experiments_sequence, pr)
             if experiments_sequence.state.measurement_type == MeasurementType.network:
-                ExperimentOutput.output_connections(experiments_sequence, experiments_sequence.experiment.get_connections())
+                ExperimentOutput.output_connections(experiments_sequence,
+                                                    experiments_sequence.experiment.get_connections())
 
             # Cleanup
             logging.debug("debug 8 -> cleanup finished")

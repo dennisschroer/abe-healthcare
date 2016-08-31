@@ -11,14 +11,12 @@ from client.user_client import UserClient
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
-from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
 from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
-from shared.utils.measure_util import connections_to_csv, pstats_to_csv
 
 PROFILE_DATA_DIRECTORY = 'data/profile'
 INPUT_DATA_DIRECTORY = 'data/input'
