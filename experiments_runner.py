@@ -195,10 +195,10 @@ class ExperimentsRunner(object):
             logging.debug("debug 5 -> start experiment")
 
             # And off we go
-            if experiments_sequence.state.measurement_type == MeasurementType.memory:
+            if experiments_sequence.state.measurement_type == MeasurementType.timings:
                 pr.enable()
             experiments_sequence.experiment.run()
-            if experiments_sequence.state.measurement_type == MeasurementType.memory:
+            if experiments_sequence.state.measurement_type == MeasurementType.timings:
                 pr.disable()
 
             # We are done, notify the main process to stop monitoring
