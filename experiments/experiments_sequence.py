@@ -8,6 +8,13 @@ from shared.implementations.base_implementation import BaseImplementation
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
+class ExperimentsSequenceState(object):
+    def __init__(self):
+        self.current_implementation = None  # type:BaseImplementation
+        self.current_case = None  # type: ExperimentCase
+        self.iteration = None  # type: int
+
+
 class ExperimentsSequence(object):
     """
     An ExperimentsSequence defines a single experiment and the amount of times it should be repeated. Furthermore, it is used
@@ -16,9 +23,7 @@ class ExperimentsSequence(object):
     def __init__(self, experiment: BaseExperiment, amount: int) -> None:
         self.amount = amount
         self.experiment = experiment
-        self.current_implementation = None  # type:BaseImplementation
-        self.current_case = None  # type: ExperimentCase
-        self.iteration = None  # type: int
+        self.state = ExperimentsSequenceState()
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
