@@ -1,7 +1,9 @@
 from os.path import join
 from typing import List
 
-from experiments.base_experiment import BaseExperiment, ExperimentCase
+from experiments.base_experiment import BaseExperiment
+from experiments.experiment_case import ExperimentCase
+from experiments.experiments_sequence_state import ExperimentsSequenceState
 from shared.implementations.base_implementation import BaseImplementation
 from shared.utils.random_file_generator import RandomFileGenerator
 
@@ -24,7 +26,7 @@ class FileSizeExperiment(BaseExperiment):
         for file_size in self.file_sizes:
             file_generator.generate(file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
-    def setup(self, implementation: BaseImplementation, case: ExperimentCase):
-        super().setup(implementation, case)
+    def setup(self,  state: ExperimentsSequenceState):
+        super().setup(state)
         input_path = self.get_experiment_input_path()
-        self.file_name = join(input_path, '%i-0' % case.arguments['file_size'])
+        self.file_name = join(input_path, '%i-0' % state.current_case.arguments['file_size'])

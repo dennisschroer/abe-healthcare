@@ -87,7 +87,7 @@ class ExperimentsRunner(object):
             self.current_sequence.state.current_implementation = implementation
             for case in self.current_sequence.experiment.cases:
                 self.current_sequence.state.current_case = case
-                for measurement_type in MeasurementType:
+                for measurement_type in MeasurementType:  # type:ignore
                     self.current_sequence.state.measurement_type = measurement_type
                     self.run_current_experiment_case()
 
@@ -182,8 +182,7 @@ class ExperimentsRunner(object):
 
             # Empty the storage directories
             experiments_sequence.experiment.setup_directories()
-            experiments_sequence.experiment.setup(experiments_sequence.state.current_implementation,
-                                                  experiments_sequence.state.current_case)
+            experiments_sequence.experiment.setup(experiments_sequence.state)
 
             # Setup variables
             pr = cProfile.Profile()

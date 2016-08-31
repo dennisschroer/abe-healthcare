@@ -6,19 +6,14 @@ from typing import List, Dict, Any
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiments_sequence import ExperimentsSequenceState
+from experiments.experiment_case import ExperimentCase
+from experiments.experiments_sequence_state import ExperimentsSequenceState
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.user import User
 from shared.utils.random_file_generator import RandomFileGenerator
-
-
-class ExperimentCase(object):
-    def __init__(self, name: str, arguments: Dict[str, Any]) -> None:
-        self.name = name
-        self.arguments = arguments
 
 
 class BaseExperiment(object):
