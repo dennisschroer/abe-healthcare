@@ -40,7 +40,9 @@ def add_time_periods_to_policy(policy: str, time_period: int, group: PairingGrou
 
 def list_attributes(tree):
     return walk_tree(tree,
-              lambda node, value: value.append(node.getAttribute()) or value if node.type == OpType.ATTR and node.getAttribute() not in value else value, [])
+                     lambda node, value: value.append(
+                         node.getAttribute()) or value if node.type == OpType.ATTR and node.getAttribute() not in value else value,
+                     [])
 
 
 def walk_tree(tree: BinNode, function: Callable[[BinNode, Any], Any], value: Any):

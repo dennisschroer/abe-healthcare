@@ -201,7 +201,8 @@ class BaseExperiment(object):
             authority.save_attribute_keys()
 
         # Create user clients
-        self.user_clients = self.create_user_clients(self.current_state.current_implementation, insurance)  # type: List[UserClient]
+        self.user_clients = self.create_user_clients(self.current_state.current_implementation,
+                                                     insurance)  # type: List[UserClient]
         self.register_user_clients()
         self.generate_user_keys()
 

@@ -1,13 +1,12 @@
 from typing import Dict, Any
 
-from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
-
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
 from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.model.global_parameters import GlobalParameters
 from shared.model.types import AuthorityPublicKeysStore

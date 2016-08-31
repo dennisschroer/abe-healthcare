@@ -21,7 +21,8 @@ class UserInsuranceConnection(BaseConnection):
     def request_global_parameters(self) -> GlobalParameters:
         response = self.insurance_service.global_parameters
         if self.benchmark:
-            self.add_benchmark('< request_global_parameters', len(self.serializer.serialize_global_parameters(response)))
+            self.add_benchmark('< request_global_parameters',
+                               len(self.serializer.serialize_global_parameters(response)))
         return response
 
     def request_authorities(self) -> Dict[str, AttributeAuthority]:
@@ -53,4 +54,5 @@ class UserInsuranceConnection(BaseConnection):
         self.insurance_service.policy_update(location, policy_update_record)
         if self.benchmark:
             self.add_benchmark('> policy_update_record',
-                               len(location) + len(self.serializer.serialize_policy_update_record(policy_update_record)))
+                               len(location) + len(
+                                   self.serializer.serialize_policy_update_record(policy_update_record)))
