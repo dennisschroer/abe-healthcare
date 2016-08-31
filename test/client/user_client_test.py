@@ -1,16 +1,14 @@
 import pickle
 import unittest
 
-from shared.connection.user_insurance_connection import UserInsuranceConnection
-from shared.implementations.base_implementation import BaseImplementation
-from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
-from shared.implementations.rd13_implementation import RD13Implementation
-from shared.implementations.taac12_implementation import TAAC12Implementation
-
 from client.user_client import UserClient
 from service.insurance_service import InsuranceService
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.user import User
 
 
@@ -29,7 +27,7 @@ class UserClientTestCase(unittest.TestCase):
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
 
-        self.subject = UserClient(user, UserInsuranceConnection(insurance_service), implementation)
+        self.subject = UserClient(user, insurance_service, implementation)
         self.subject.set_registration_data(central_authority.register_user(user.gid))
         self.subject.request_secret_keys(attribute_authority.name, user_attributes, 1)
 

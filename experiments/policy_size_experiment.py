@@ -1,6 +1,7 @@
 from typing import List
 
-from experiments.base_experiment import BaseExperiment, ExperimentCase
+from experiments.base_experiment import BaseExperiment
+from experiments.experiment_case import ExperimentCase
 
 debug = False
 
@@ -21,6 +22,7 @@ class PolicySizeExperiment(BaseExperiment):
         super().__init__(cases)
 
     def run(self):
-        location = self.user_clients[0].encrypt_file(self.file_name, self.current_case.arguments['policy'],
+        location = self.user_clients[0].encrypt_file(self.file_name,
+                                                     self.current_state.current_case.arguments['policy'],
                                                      self.write_policy)
         self.user_clients[1].decrypt_file(location)

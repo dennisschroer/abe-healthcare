@@ -1,7 +1,6 @@
 from typing import Any, Tuple
 
 from shared.model.records.policy_update_record import PolicyUpdateRecord
-
 from shared.model.records.update_record import UpdateRecord
 
 

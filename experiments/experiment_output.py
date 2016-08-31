@@ -37,9 +37,9 @@ class ExperimentOutput(object):
         :param experiments_run: The current experiment run.
         """
         return path.join(ExperimentOutput.experiment_results_directory(experiments_run),
-                         experiments_run.current_implementation.get_name(),
-                         experiments_run.current_case.name,
-                         str(experiments_run.iteration))
+                         experiments_run.state.current_implementation.get_name(),
+                         experiments_run.state.current_case.name,
+                         str(experiments_run.state.iteration))
 
     @staticmethod
     def output_cpu_usage(experiments_run: ExperimentsSequence, cpu_usage: float) -> None:
@@ -94,9 +94,9 @@ class ExperimentOutput(object):
             for (name, sizes) in connection.benchmarks.items():
                 for size in sizes:
                     rows.append((
-                        experiments_run.current_implementation.get_name(),
-                        experiments_run.current_case.name,
-                        experiments_run.iteration,
+                        experiments_run.state.current_implementation.get_name(),
+                        experiments_run.state.current_case.name,
+                        experiments_run.state.iteration,
                         connection.__class__.__name__,
                         name,
                         size
@@ -144,9 +144,9 @@ class ExperimentOutput(object):
         for file in listdir(insurance_storage):
             size = path.getsize(path.join(insurance_storage, file))
             rows.append((
-                experiments_run.current_implementation.get_name(),
-                experiments_run.current_case.name,
-                experiments_run.iteration,
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
                 'insurance',
                 file,
                 size
@@ -155,9 +155,9 @@ class ExperimentOutput(object):
         for file in listdir(client_storage):
             size = path.getsize(path.join(client_storage, file))
             rows.append((
-                experiments_run.current_implementation.get_name(),
-                experiments_run.current_case.name,
-                experiments_run.iteration,
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
                 'client',
                 file,
                 size
@@ -166,9 +166,9 @@ class ExperimentOutput(object):
         for file in listdir(authority_storage):
             size = path.getsize(path.join(authority_storage, file))
             rows.append((
-                experiments_run.current_implementation.get_name(),
-                experiments_run.current_case.name,
-                experiments_run.iteration,
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
                 'authority',
                 file,
                 size
@@ -177,9 +177,9 @@ class ExperimentOutput(object):
         for file in listdir(central_authority_storage):
             size = path.getsize(path.join(central_authority_storage, file))
             rows.append((
-                experiments_run.current_implementation.get_name(),
-                experiments_run.current_case.name,
-                experiments_run.iteration,
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
                 'central_authority',
                 file,
                 size
@@ -222,9 +222,9 @@ class ExperimentOutput(object):
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'timings.csv')
         headers = ['implementation', 'case', 'iteration'] + list(algorithm_steps)
         row = {
-            'implementation': experiments_run.current_implementation.get_name(),
-            'case': experiments_run.current_case.name,
-            'iteration': experiments_run.iteration
+            'implementation': experiments_run.state.current_implementation.get_name(),
+            'case': experiments_run.state.current_case.name,
+            'iteration': experiments_run.state.iteration
         }
         row.update(step_timings)
 
