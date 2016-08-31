@@ -8,9 +8,9 @@ from shared.implementations.base_implementation import BaseImplementation
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
-class ExperimentsRun(object):
+class ExperimentsSequence(object):
     """
-    An ExperimentsRun defines a single experiment and the amount of times it should be repeated. Furthermore, it is used
+    An ExperimentsSequence defines a single experiment and the amount of times it should be repeated. Furthermore, it is used
     to keep track of the state of the experiment: which implementation is currently used and which iteration are we running?
     """
     def __init__(self, experiment: BaseExperiment, amount: int) -> None:
