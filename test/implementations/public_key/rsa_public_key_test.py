@@ -1,7 +1,6 @@
 import unittest
 
 from shared.implementations.public_key.base_public_key import BasePublicKey
-
 from shared.implementations.public_key.rsa_public_key import RSAPublicKey
 from test.data import lorem
 

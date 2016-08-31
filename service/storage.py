@@ -1,5 +1,4 @@
 import os
-
 from os import path
 
 from shared.implementations.serializer.base_serializer import BaseSerializer

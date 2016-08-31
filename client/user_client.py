@@ -6,6 +6,7 @@ from typing import Tuple, Any, List, Dict
 
 from Crypto.PublicKey import RSA
 
+from service.insurance_service import InsuranceService
 from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
@@ -28,14 +29,15 @@ DEFAULT_STORAGE_PATH = 'data/output'
 
 
 class UserClient(object):
-    def __init__(self, user: User, insurance_connection: UserInsuranceConnection,
-                 implementation: BaseImplementation, verbose=False, storage_path=None, benchmark=False) -> None:
+    def __init__(self, user: User, insurance: InsuranceService,
+                 implementation: BaseImplementation, verbose=False, storage_path=None, monitor_network=False) -> None:
         self.storage_path = DEFAULT_STORAGE_PATH if storage_path is None else storage_path
         self.user = user
-        self.insurance_connection = insurance_connection
+        self.insurance = insurance
         self.implementation = implementation
         self.verbose = verbose
-        self.benchmark = benchmark
+        self.monitor_network = monitor_network
+        self._insurance_connection = None  # type: UserInsuranceConnection
         self._global_parameters = None  # type: GlobalParameters
         self._authority_connections = None  # type: Dict[str, UserAttributeAuthorityConnection]
         if not path.exists(self.storage_path):
@@ -59,11 +61,19 @@ class UserClient(object):
     def authority_connections(self) -> Dict[str, UserAttributeAuthorityConnection]:
         if self._authority_connections is None:
             self._authority_connections = {
-                name: UserAttributeAuthorityConnection(authority, self.implementation.serializer, benchmark=self.benchmark)
+                name: UserAttributeAuthorityConnection(authority, self.implementation.serializer,
+                                                       benchmark=self.monitor_network)
                 for name, authority
                 in self.authorities.items()
                 }
         return self._authority_connections
+
+    @property
+    def insurance_connection(self) -> UserInsuranceConnection:
+        if self._insurance_connection is None:
+            self._insurance_connection = UserInsuranceConnection(self.insurance, self.implementation.serializer,
+                                                                 benchmark=self.monitor_network)
+        return self._insurance_connection
 
     def authorities_public_keys(self, time_period):
         # Retrieve authority public keys
@@ -72,7 +82,7 @@ class UserClient(object):
                 name: authority.public_keys(time_period)
                 for name, authority
                 in self.authority_connections.items()
-            })
+                })
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
                      time_period: int = 1) -> str:
@@ -323,7 +333,8 @@ class UserClient(object):
 
         self.save_user_secret_keys()
 
-    def request_secret_keys_multiple_authorities(self, authority_attributes: Dict[str, List[str]], time_period: int) -> None:
+    def request_secret_keys_multiple_authorities(self, authority_attributes: Dict[str, List[str]],
+                                                 time_period: int) -> None:
         """
         Request secret keys from multiple authorities for the given attributes, valid in the given
         time_period. The secret keys are stored on the user model. The authority only issues non-revoked attributes,
@@ -344,7 +355,6 @@ class UserClient(object):
         save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
         with open(save_file_path, 'wb') as f:
             f.write(self.implementation.serializer.serialize_secret_keys(self.user.secret_keys))
-
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """

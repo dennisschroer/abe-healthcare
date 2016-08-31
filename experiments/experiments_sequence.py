@@ -2,8 +2,7 @@ import datetime
 import socket
 
 from experiments.base_experiment import BaseExperiment
-from experiments.base_experiment import ExperimentCase
-from shared.implementations.base_implementation import BaseImplementation
+from experiments.experiments_sequence_state import ExperimentsSequenceState
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
@@ -13,12 +12,11 @@ class ExperimentsSequence(object):
     An ExperimentsSequence defines a single experiment and the amount of times it should be repeated. Furthermore, it is used
     to keep track of the state of the experiment: which implementation is currently used and which iteration are we running?
     """
+
     def __init__(self, experiment: BaseExperiment, amount: int) -> None:
         self.amount = amount
         self.experiment = experiment
-        self.current_implementation = None  # type:BaseImplementation
-        self.current_case = None  # type: ExperimentCase
-        self.iteration = None  # type: int
+        self.state = ExperimentsSequenceState()
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
