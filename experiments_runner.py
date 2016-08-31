@@ -159,7 +159,7 @@ class ExperimentsRunner(object):
             ExperimentOutput.output_cpu_usage(self.current_sequence, process.cpu_percent())
         if self.current_sequence.state.measurement_type is MeasurementType.memory:
             ExperimentOutput.output_memory_usages(self.current_sequence, memory_usages)
-        if self.current_sequence.state.measurement_type is MeasurementType.storage:
+        if self.current_sequence.state.measurement_type is MeasurementType.storage_and_network:
             ExperimentOutput.output_storage_space(self.current_sequence)
 
         # Wait for the cleanup to finish
@@ -207,7 +207,7 @@ class ExperimentsRunner(object):
 
             if experiments_sequence.state.measurement_type == MeasurementType.timings:
                 ExperimentOutput.output_timings(experiments_sequence, pr)
-            if experiments_sequence.state.measurement_type == MeasurementType.network:
+            if experiments_sequence.state.measurement_type == MeasurementType.storage_and_network:
                 ExperimentOutput.output_connections(experiments_sequence,
                                                     experiments_sequence.experiment.get_connections())
 

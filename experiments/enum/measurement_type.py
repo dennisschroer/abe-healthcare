@@ -3,7 +3,6 @@ from enum import Enum
 
 class MeasurementType(Enum):
     timings = 1
-    storage = 2
-    network = 3
-    memory = 4
-    cpu = 5
+    storage_and_network = 2
+    memory = 3
+    cpu = 4

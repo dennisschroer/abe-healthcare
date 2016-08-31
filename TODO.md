@@ -21,5 +21,5 @@
     - ~~Central authority: Global parameters~~
 - Encrypt as a stream, instead of all in memory.
 - Test experiments
-- Measure one factor at a time
+- ~~Measure one factor at a time~~ (Better testing required)
 - ~~<> Fix pickle_serializer.public_keys for TAAC12~~
