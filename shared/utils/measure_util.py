@@ -50,30 +50,21 @@ timing_functions = list(function_step_mapping.keys())
 algorithm_steps = set(list(function_step_mapping.values()))
 
 
-def pstats_to_step_timings(input_file_path: str, output_file_path: str) -> Dict[str, float]:
+def pstats_to_step_timings(input_file_path: str) -> Dict[str, float]:
     with open(input_file_path, 'rb') as input_file:
-        with open(output_file_path, 'w') as output_file:
-            stats = marshal.load(input_file)
-            timings = {}  # type: Dict[str, float]
+        stats = marshal.load(input_file)
+        timings = {}  # type: Dict[str, float]
 
-            for (function, statistics) in stats.items():
-                path = list(function)[0]
-                # Do not include lib functions
-                if 'abe-healthcare' in path:
-                    step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
-                    value = statistics[3]
-                    if step is not None:
-                        timings[step] = timings[step] + value if step in timings else value
+        for (function, statistics) in stats.items():
+            path = list(function)[0]
+            # Do not include lib functions
+            if 'abe-healthcare' in path:
+                step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
+                value = statistics[3]
+                if step is not None:
+                    timings[step] = timings[step] + value if step in timings else value
 
-            # Write to file
-            headers = ['step', 'time']
-            writer = csv.writer(output_file)
-            writer.writerow(headers)
-
-            for step, time in timings.items():
-                writer.writerow((step, time))
-
-            return timings
+        return timings
 
 
 def connections_to_csv(connections: List[BaseConnection], output_file_path: str) -> None:
