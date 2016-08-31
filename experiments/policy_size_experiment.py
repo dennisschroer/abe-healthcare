@@ -1,6 +1,7 @@
 from typing import List
 
-from experiments.base_experiment import BaseExperiment, ExperimentCase
+from experiments.base_experiment import BaseExperiment
+from experiments.experiment_case import ExperimentCase
 
 debug = False
 
