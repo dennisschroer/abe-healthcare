@@ -52,6 +52,19 @@ class ExperimentOutput(object):
         with open(path.join(directory, 'cpu.txt'), 'w') as file:
             file.write(str(cpu_usage))
 
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'cpu.csv')
+        headers = ('implementation', 'case', 'iteration', 'usage')
+        ExperimentOutput.append_row_to_file(
+            output_file_path,
+            headers,
+            (
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
+                cpu_usage
+            )
+        )
+
     @staticmethod
     def output_error(experiments_run: ExperimentsSequence) -> None:
         """
@@ -230,6 +243,15 @@ class ExperimentOutput(object):
                 writer.writerow(headers)
             for row in rows:
                 writer.writerow(row)
+
+    @staticmethod
+    def append_row_to_file(file_path, headers, row):
+        write_header = not path.exists(file_path)
+        with open(file_path, 'a') as file:
+            writer = csv.writer(file)
+            if write_header:
+                writer.writerow(headers)
+            writer.writerow(row)
 
     @staticmethod
     def append_dict_to_file(file_path, headers, row: Dict[str, Any]):
