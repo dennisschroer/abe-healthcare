@@ -79,7 +79,7 @@ class ExperimentsRunner(object):
         logging.info("Global setup finished")
 
         for i in range(0, experiments_run.amount):
-            self.current_run.iteration = i
+            self.current_run.state.iteration = i
             self.run_current_experiment()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
@@ -91,9 +91,9 @@ class ExperimentsRunner(object):
         Run the experiment of the current run a single time.
         """
         for implementation in self.implementations:
-            self.current_run.current_implementation = implementation
+            self.current_run.state.current_implementation = implementation
             for case in self.current_run.experiment.cases:
-                self.current_run.current_case = case
+                self.current_run.state.current_case = case
                 self.run_current_experiment_case()
 
     def run_current_experiment_case(self) -> None:
@@ -103,14 +103,14 @@ class ExperimentsRunner(object):
         This is done by starting the experiment in a seperate process.
         """
         logging.info("=> Run %d/%d of %s, implementation=%s (%d/%d), case=%s (%d/%d)" % (
-            self.current_run.iteration + 1,
+            self.current_run.state.iteration + 1,
             self.current_run.amount,
             self.current_run.experiment.get_name(),
-            self.current_run.current_implementation.get_name(),
-            self.implementations.index(self.current_run.current_implementation) + 1,
+            self.current_run.state.current_implementation.get_name(),
+            self.implementations.index(self.current_run.state.current_implementation) + 1,
             len(self.implementations),
-            self.current_run.current_case.name,
-            self.current_run.experiment.cases.index(self.current_run.current_case) + 1,
+            self.current_run.state.current_case.name,
+            self.current_run.experiment.cases.index(self.current_run.state.current_case) + 1,
             len(self.current_run.experiment.cases)
         ))
 
@@ -177,7 +177,7 @@ class ExperimentsRunner(object):
 
             # Empty the storage directories
             experiments_run.experiment.setup_directories()
-            experiments_run.experiment.setup(experiments_run.current_implementation, experiments_run.current_case)
+            experiments_run.experiment.setup(experiments_run.state.current_implementation, experiments_run.state.current_case)
 
             # We are done, let the main process setup monitoring
             lock.acquire()
