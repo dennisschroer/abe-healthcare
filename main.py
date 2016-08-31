@@ -99,10 +99,9 @@ class ABEHealthCare(object):
     def create_user(self, name: str, insurance_attributes: list = None, national_attributes: list = None) -> UserClient:
         user = User(name, self.implementation)
 
-        connection = UserInsuranceConnection(self.insurance_service, self.implementation.serializer, benchmark=True)
-        self.connections.append(connection)
+        user_client = UserClient(user, self.insurance_service, self.implementation, verbose=True)
+        self.connections.append(user_client.insurance_connection)
 
-        user_client = UserClient(user, connection, self.implementation, verbose=True)
         user_client.set_registration_data(self.central_authority.register_user(user.gid))
 
         # Add attributes
