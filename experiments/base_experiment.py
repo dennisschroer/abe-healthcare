@@ -1,4 +1,3 @@
-import cProfile
 import os
 import shutil
 from os.path import join
@@ -6,6 +5,7 @@ from typing import List, Dict, Any
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
+from experiments.experiments_sequence import ExperimentsSequenceState
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
@@ -69,8 +69,7 @@ class BaseExperiment(object):
             cases = [ExperimentCase('base', None)]
 
         self.cases = cases  # type: List[ExperimentCase]
-        self.current_case = None  # type: ExperimentCase
-        self.current_implementation = None  # type:BaseImplementation
+        self.current_state = None  # type:ExperimentsSequenceState
 
     def global_setup(self) -> None:
         """
@@ -82,12 +81,11 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
-    def setup(self, implementation: BaseImplementation, case: ExperimentCase) -> None:
+    def setup(self, state: ExperimentsSequenceState) -> None:
         """
         Setup this experiment for a single implementation and a single case in a single run.
         """
-        self.current_case = case
-        self.current_implementation = implementation
+        self.current_state = state
 
         input_path = self.get_experiment_input_path()
 
@@ -185,25 +183,26 @@ class BaseExperiment(object):
 
     def run(self):
         # Create central authority
-        self.central_authority = self.current_implementation.create_central_authority(storage_path=self.get_central_authority_storage_path())
+        self.central_authority = self.current_state.current_implementation.create_central_authority(
+            storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
 
         # Create insurance service
-        insurance = InsuranceService(self.current_implementation.serializer,
+        insurance = InsuranceService(self.current_state.current_implementation.serializer,
                                      self.central_authority.global_parameters,
-                                     self.current_implementation.public_key_scheme,
+                                     self.current_state.current_implementation.public_key_scheme,
                                      storage_path=self.get_insurance_storage_path())
 
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
-                                                                       self.current_implementation)
+                                                                       self.current_state.current_implementation)
         for authority in self.attribute_authorities:
             insurance.add_authority(authority)
             authority.save_attribute_keys()
 
         # Create user clients
-        self.user_clients = self.create_user_clients(self.current_implementation, insurance)  # type: List[UserClient]
+        self.user_clients = self.create_user_clients(self.current_state.current_implementation, insurance)  # type: List[UserClient]
         self.register_user_clients()
         self.generate_user_keys()
 

@@ -1,6 +1,5 @@
 import cProfile
 import logging
-from enum import Enum
 from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from multiprocessing import Value
@@ -11,6 +10,7 @@ from time import sleep
 import psutil
 
 from experiments.base_experiment import BaseExperiment
+from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
@@ -21,14 +21,6 @@ from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.taac12_implementation import TAAC12Implementation
 
 debug = False
-
-
-class MeasurementType(Enum):
-    timings = 1
-    storage = 2
-    network = 3
-    memory = 4
-    cpu = 5
 
 
 class ExperimentsRunner(object):
@@ -213,7 +205,7 @@ class ExperimentsRunner(object):
             is_running.value = False  # type: ignore
 
             if experiments_sequence.state.measurement_type == MeasurementType.timings:
-                ExperimentOutput.output_timings(experiments_sequence, experiments_sequence.experiment.pr)
+                ExperimentOutput.output_timings(experiments_sequence, pr)
             if experiments_sequence.state.measurement_type == MeasurementType.network:
                 ExperimentOutput.output_connections(experiments_sequence, experiments_sequence.experiment.get_connections())
 

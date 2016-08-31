@@ -3,7 +3,7 @@ import socket
 
 from experiments.base_experiment import BaseExperiment
 from experiments.base_experiment import ExperimentCase
-from experiments_runner import MeasurementType
+from experiments.enum.measurement_type import MeasurementType
 from shared.implementations.base_implementation import BaseImplementation
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
