@@ -172,7 +172,7 @@ class BaseExperiment(object):
         """
         user = User(user_description['gid'], implementation)
         client = UserClient(user, insurance, implementation, storage_path=self.get_user_client_storage_path(),
-                            monitor_network=self.current_state.measurement_type == MeasurementType.memory)
+                            monitor_network=self.current_state.measurement_type == MeasurementType.storage_and_network)
         return client
 
     def run(self):
