@@ -12,6 +12,8 @@ from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
 OUTPUT_DIRECTORY = 'data/experiments/results'
 
+output_detailed = False
+
 
 class ExperimentOutput(object):
     """
@@ -48,9 +50,10 @@ class ExperimentOutput(object):
         :param experiments_run: The current experiments run
         :param cpu_usage: The measured cpu usage
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
-        with open(path.join(directory, 'cpu.txt'), 'w') as file:
-            file.write(str(cpu_usage))
+        if output_detailed:
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            with open(path.join(directory, 'cpu.txt'), 'w') as file:
+                file.write(str(cpu_usage))
 
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'cpu.csv')
         headers = ('implementation', 'case', 'iteration', 'usage')
@@ -84,8 +87,9 @@ class ExperimentOutput(object):
         :param experiments_run: The current experiments run.
         :param connections: The connections to output the usage of.
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
-        connections_to_csv(connections, path.join(directory, 'network.csv'))
+        if output_detailed:
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            connections_to_csv(connections, path.join(directory, 'network.csv'))
 
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'network.csv')
 
@@ -116,14 +120,15 @@ class ExperimentOutput(object):
         :param memory_usages: The list of memory usages.
         :return:
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
-        with open(path.join(directory, 'memory.csv'), 'w') as file:
-            writer = csv.DictWriter(file, fieldnames=[
-                'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
-            ])
-            writer.writeheader()
-            for row in memory_usages:
-                writer.writerow(row._asdict())
+        if output_detailed:
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            with open(path.join(directory, 'memory.csv'), 'w') as file:
+                writer = csv.DictWriter(file, fieldnames=[
+                    'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
+                ])
+                writer.writeheader()
+                for row in memory_usages:
+                    writer.writerow(row._asdict())
 
     @staticmethod
     def output_storage_space(experiments_run: ExperimentsSequence) -> None:
@@ -185,11 +190,13 @@ class ExperimentOutput(object):
                 size
             ))
 
-        # with open(path.join(directory, 'storage.csv'), 'w') as output:
-        #     writer = csv.writer(output)
-        #     writer.writerow(headers)
-        #     for row in rows:
-        #         writer.writerow(row)
+        if output_detailed:
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            with open(path.join(directory, 'storage.csv'), 'w') as output:
+                writer = csv.writer(output)
+                writer.writerow(headers)
+                for row in rows:
+                    writer.writerow(row)
 
         ExperimentOutput.append_rows_to_file(
             output_file_path,
@@ -205,20 +212,15 @@ class ExperimentOutput(object):
         :param profile: The profile.
         """
         directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
-
-        # Write raw measurements
         stats_file_path = path.join(directory, 'timings.pstats')
+
+        # Write raw stats
         profile.dump_stats(stats_file_path)
 
-        # Write formatted measurements
-        # pstats_to_csv(stats_file_path,
-        #              path.join(directory, 'timings.csv'))
-        # pstats_to_csv_filtered(stats_file_path,
-        #                       path.join(directory, 'timings2.csv'))
+        # Process raw stats
+        step_timings = pstats_to_step_timings(stats_file_path)
 
-        # Convert to step names and append to file
-        step_timings = pstats_to_step_timings(stats_file_path, path.join(directory, 'step_timings.csv'))
-
+        # Output processed stats
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'timings.csv')
         headers = ['implementation', 'case', 'iteration'] + list(algorithm_steps)
         row = {
