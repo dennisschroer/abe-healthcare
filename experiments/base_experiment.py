@@ -5,11 +5,11 @@ from typing import List, Dict, Any
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
+from experiments.enum.measurement_type import MeasurementType
 from experiments.experiments_sequence import ExperimentsSequenceState
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
-from shared.connection.user_insurance_connection import UserInsuranceConnection
 from shared.implementations.base_implementation import BaseImplementation
 from shared.model.user import User
 from shared.utils.random_file_generator import RandomFileGenerator
@@ -176,9 +176,8 @@ class BaseExperiment(object):
         :return: A list of user clients.
         """
         user = User(user_description['gid'], implementation)
-        connection = UserInsuranceConnection(insurance, implementation.serializer, benchmark=True)
-        client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path(),
-                            benchmark=True)
+        client = UserClient(user, insurance, implementation, storage_path=self.get_user_client_storage_path(),
+                            monitor_network=self.current_state.measurement_type == MeasurementType.memory)
         return client
 
     def run(self):
