@@ -59,7 +59,6 @@ class BaseExperiment(object):
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         self.memory_measure_interval = 0.05
-        self.pr = cProfile.Profile()
         self.file_name = None  # type: str
 
         self.central_authority = None  # type: CentralAuthority
@@ -183,20 +182,6 @@ class BaseExperiment(object):
         client = UserClient(user, connection, implementation, storage_path=self.get_user_client_storage_path(),
                             benchmark=True)
         return client
-
-    def start_measurements(self) -> None:
-        """
-        Start the measurements. These are only part of the measurements, namely the one which need to run
-        in the experiment process.
-        :return:
-        """
-        self.pr.enable()
-
-    def stop_measurements(self) -> None:
-        """
-        Stop the measurements.
-        """
-        self.pr.disable()
 
     def run(self):
         # Create central authority
