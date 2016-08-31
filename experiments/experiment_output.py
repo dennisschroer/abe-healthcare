@@ -58,9 +58,9 @@ class ExperimentOutput(object):
             output_file_path,
             headers,
             (
-                experiments_run.current_implementation.get_name(),
-                experiments_run.current_case.name,
-                experiments_run.iteration,
+                experiments_run.state.current_implementation.get_name(),
+                experiments_run.state.current_case.name,
+                experiments_run.state.iteration,
                 cpu_usage
             )
         )
