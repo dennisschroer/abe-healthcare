@@ -9,8 +9,8 @@ from time import sleep
 import psutil
 
 from experiments.base_experiment import BaseExperiment
-from experiments.experiment_results import OUTPUT_DIRECTORY, ExperimentResults
-from experiments.experiment_run import ExperimentsRun
+from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
+from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
@@ -38,27 +38,27 @@ class ExperimentsRunner(object):
         ]
         self._timestamp = None  # type: str
         self._device_name = None  # type: str
-        self.current_run = None  # type: ExperimentsRun
+        self.current_run = None  # type: ExperimentsSequence
 
     def run_base_experiments(self) -> None:
-        self.run_experiments_run(ExperimentsRun(BaseExperiment(), 2))
+        self.run_experiments_run(ExperimentsSequence(BaseExperiment(), 2))
 
     def run_file_size_experiments(self) -> None:
-        self.run_experiments_run(ExperimentsRun(FileSizeExperiment(), 1))
+        self.run_experiments_run(ExperimentsSequence(FileSizeExperiment(), 1))
 
     def run_policy_size_experiments(self) -> None:
-        self.run_experiments_run(ExperimentsRun(PolicySizeExperiment(), 1))
+        self.run_experiments_run(ExperimentsSequence(PolicySizeExperiment(), 1))
 
-    def run_experiments_run(self, experiments_run: ExperimentsRun) -> None:
+    def run_experiments_run(self, experiments_run: ExperimentsSequence) -> None:
         """
-        Run the experiments as defined in the ExperimentsRun and repeat it the amount defined in the ExperimentsRun.
+        Run the experiments as defined in the ExperimentsSequence and repeat it the amount defined in the ExperimentsSequence.
         :param experiments_run:
         """
         self.current_run = experiments_run
 
         # Create directories
-        if not path.exists(ExperimentResults.experiment_results_directory(self.current_run)):
-            makedirs(ExperimentResults.experiment_results_directory(self.current_run))
+        if not path.exists(ExperimentOutput.experiment_results_directory(self.current_run)):
+            makedirs(ExperimentOutput.experiment_results_directory(self.current_run))
 
         # Setup logging
         self.setup_logging()
@@ -110,7 +110,7 @@ class ExperimentsRunner(object):
         lock.acquire()
 
         # Create output directory
-        output_directory = ExperimentResults.experiment_case_iteration_results_directory(self.current_run)
+        output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_run)
         if not path.exists(output_directory):
             makedirs(output_directory)
 
@@ -146,9 +146,9 @@ class ExperimentsRunner(object):
         logging.debug("debug 7 -> gather monitoring data")
 
         # Gather process statistics
-        ExperimentResults.output_cpu_usage(self.current_run, process.cpu_percent())
-        ExperimentResults.output_memory_usages(self.current_run, memory_usages)
-        ExperimentResults.output_storage_space(self.current_run)
+        ExperimentOutput.output_cpu_usage(self.current_run, process.cpu_percent())
+        ExperimentOutput.output_memory_usages(self.current_run, memory_usages)
+        ExperimentOutput.output_storage_space(self.current_run)
 
         # Wait for the cleanup to finish
         p.join()
@@ -156,7 +156,7 @@ class ExperimentsRunner(object):
         logging.debug("debug 9 -> process stopped")
 
     @staticmethod
-    def run_experiment_case_synchronously(experiments_run: ExperimentsRun, lock: Condition, is_running: Value) -> None:
+    def run_experiment_case_synchronously(experiments_run: ExperimentsSequence, lock: Condition, is_running: Value) -> None:
         """
         Run the experiment in this process.
         :param experiments_run: The current running experiment
@@ -186,13 +186,13 @@ class ExperimentsRunner(object):
             logging.debug("debug 6 -> stop experiment")
             is_running.value = False  # type: ignore
 
-            ExperimentResults.output_timings(experiments_run, experiments_run.experiment.pr)
-            ExperimentResults.output_connections(experiments_run, experiments_run.experiment.get_connections())
+            ExperimentOutput.output_timings(experiments_run, experiments_run.experiment.pr)
+            ExperimentOutput.output_connections(experiments_run, experiments_run.experiment.get_connections())
 
             # Cleanup
             logging.debug("debug 8 -> cleanup finished")
         except BaseException:
-            ExperimentResults.output_error(experiments_run)
+            ExperimentOutput.output_error(experiments_run)
         finally:
             try:
                 is_running.value = False  # type: ignore
@@ -205,7 +205,7 @@ class ExperimentsRunner(object):
         """
         Setup logging for the current experiments run.
         """
-        directory = ExperimentResults.experiment_results_directory(self.current_run)
+        directory = ExperimentOutput.experiment_results_directory(self.current_run)
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
 
 
