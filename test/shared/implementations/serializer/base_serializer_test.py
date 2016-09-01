@@ -1,6 +1,7 @@
 import unittest
-from typing import List
+from typing import List, Any
 
+from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
@@ -37,7 +38,8 @@ class BaseSerializerTestCase(unittest.TestCase):
 
     def test_serialize_deserialize_abe_ciphertext(self):
         for implementation in self.implementations:
-            ciphertext = self._create_ciphertext(implementation,  b'Test message')
+            message = self.subject.group.random(GT)
+            ciphertext = self._create_ciphertext(implementation, message)
 
             serializer = implementation.serializer
             serialized = serializer.serialize_abe_ciphertext(ciphertext)
@@ -45,7 +47,7 @@ class BaseSerializerTestCase(unittest.TestCase):
 
             self.assertEqual(ciphertext, deserialized)
 
-    def _create_ciphertext(self, implementation: BaseImplementation, message: bytes) -> bytes:
+    def _create_ciphertext(self, implementation: BaseImplementation, message: Any) -> bytes:
         self.time_period = 1
         central_authority = implementation.create_central_authority()
         self.global_parameters = central_authority.central_setup()
@@ -57,7 +59,8 @@ class BaseSerializerTestCase(unittest.TestCase):
         print(self.public_keys)
         print(self.policy)
         print(self.time_period)
-        ciphertext = implementation.abe_encrypt(self.global_parameters, self.public_keys, message, self.policy, self.time_period)
+        ciphertext = implementation.abe_encrypt(self.global_parameters, self.public_keys, message, self.policy,
+                                                self.time_period)
         return ciphertext
 
     def test_serialize_deserialize_data_record_meta(self):
@@ -66,7 +69,7 @@ class BaseSerializerTestCase(unittest.TestCase):
             owner_keys = implementation.public_key_scheme.generate_key_pair(2048)
             write_keys = implementation.public_key_scheme.generate_key_pair(2048)
 
-            message = b'Test message'
+            message = self.subject.group.random(GT)
             ciphertext = self._create_ciphertext(implementation, message)
 
             data_record = DataRecord(
@@ -76,7 +79,8 @@ class BaseSerializerTestCase(unittest.TestCase):
                 write_public_key=write_keys.publickey(),
                 encryption_key_read=ciphertext,
                 encryption_key_owner=implementation.public_key_scheme.encrypt(message, owner_keys),
-                write_private_key=implementation.abe_encrypt_wrapped(self.global_parameters, self.public_keys, write_keys,
+                write_private_key=implementation.abe_encrypt_wrapped(self.global_parameters, self.public_keys,
+                                                                     write_keys,
                                                                      self.policy, self.time_period),
                 time_period=self.time_period,
                 info=None,
