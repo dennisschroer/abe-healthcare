@@ -2,10 +2,10 @@ import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.taac12_implementation import TAAC12Implementation
-from test.shared.implementations import ImplementationBaseTestCase
+from test.shared.implementations.base_implementation_test import BaseImplementationTestCase
 
 
-class TAAC12ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
+class TAAC12ImplementationTestCase(BaseImplementationTestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = TAAC12Implementation(self.group)

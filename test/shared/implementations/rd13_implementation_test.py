@@ -2,10 +2,10 @@ import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.rd13_implementation import RD13Implementation
-from test.shared.implementations import ImplementationBaseTestCase
+from test.shared.implementations.base_implementation_test import BaseImplementationTestCase
 
 
-class RD13ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
+class RD13ImplementationTestCase(BaseImplementationTestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = RD13Implementation(self.group)
