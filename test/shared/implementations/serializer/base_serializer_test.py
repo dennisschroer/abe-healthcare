@@ -59,8 +59,8 @@ class BaseSerializerTestCase(unittest.TestCase):
     def test_serialize_deserialize_data_record_meta(self):
         for implementation in self.implementations:
             serializer = implementation.serializer
-            owner_public, owner_private = implementation.public_key_scheme.generate_key_pair(2048)
-            write_public, write_private = implementation.public_key_scheme.generate_key_pair(2048)
+            owner_keys = implementation.public_key_scheme.generate_key_pair(2048)
+            write_keys = implementation.public_key_scheme.generate_key_pair(2048)
 
             time_period = 1
             central_authority = implementation.create_central_authority()
@@ -75,11 +75,11 @@ class BaseSerializerTestCase(unittest.TestCase):
             data_record = DataRecord(
                 read_policy='A@A AND B@A',
                 write_policy='A@A AND B@A',
-                owner_public_key=owner_public,
-                write_public_key=write_public,
+                owner_public_key=owner_keys.publickey(),
+                write_public_key=write_keys.publickey(),
                 encryption_key_read=ciphertext,
-                encryption_key_owner=implementation.public_key_scheme.encrypt(message, owner_private),
-                write_private_key=implementation.abe_encrypt_wrapped(global_parameters, public_keys, write_private,
+                encryption_key_owner=implementation.public_key_scheme.encrypt(message, owner_keys),
+                write_private_key=implementation.abe_encrypt_wrapped(global_parameters, public_keys, write_keys,
                                                                      policy, time_period),
                 time_period=time_period,
                 info=None,
