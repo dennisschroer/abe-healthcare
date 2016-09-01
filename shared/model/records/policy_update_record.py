@@ -6,7 +6,7 @@ class PolicyUpdateRecord(object):
                  read_policy: str,
                  write_policy: str,
                  write_public_key: Any,
-                 encryption_key_read: dict,
+                 encryption_key_read: bytes,
                  encryption_key_owner: bytes,
                  write_private_key: Tuple[dict, bytes],
                  time_period: int,
