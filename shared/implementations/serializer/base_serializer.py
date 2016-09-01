@@ -197,9 +197,10 @@ class BaseSerializer(object):
 
     def deserialize_data_record_meta(self, byte_object: bytes) -> DataRecord:
         """
-
-        :param byte_object:
-        :return:
+        Deserialize de meta of a data record in a DataRecord instance.
+        The data property of the DataRecord is None.
+        :param byte_object: The data to deserialize.
+        :return: An instance of the DataRecord class.
         """
         d = pickle.loads(byte_object)
         return DataRecord(
