@@ -38,8 +38,7 @@ class BaseSerializerTestCase(unittest.TestCase):
 
     def test_serialize_deserialize_abe_ciphertext(self):
         for implementation in self.implementations:
-            message = self.subject.group.random(GT)
-            ciphertext = self._create_ciphertext(implementation, message)
+            ciphertext = self._create_ciphertext(implementation)
 
             serializer = implementation.serializer
             serialized = serializer.serialize_abe_ciphertext(ciphertext)
@@ -47,7 +46,7 @@ class BaseSerializerTestCase(unittest.TestCase):
 
             self.assertEqual(ciphertext, deserialized)
 
-    def _create_ciphertext(self, implementation: BaseImplementation, message: Any) -> bytes:
+    def _create_ciphertext(self, implementation: BaseImplementation) -> bytes:
         self.time_period = 1
         central_authority = implementation.create_central_authority()
         self.global_parameters = central_authority.central_setup()
@@ -55,11 +54,8 @@ class BaseSerializerTestCase(unittest.TestCase):
         attribute_authority.setup(central_authority, ['A@A', 'B@A'])
         self.public_keys = implementation.merge_public_keys({'A': attribute_authority.public_keys(self.time_period)})
         self.policy = 'A@A AND B@A'
-        print(self.global_parameters)
-        print(self.public_keys)
-        print(self.policy)
-        print(self.time_period)
-        ciphertext = implementation.abe_encrypt(self.global_parameters, self.public_keys, message, self.policy,
+        self.message, self.symmetric_key = implementation.generate_abe_key(self.global_parameters)
+        ciphertext = implementation.abe_encrypt(self.global_parameters, self.public_keys, self.message, self.policy,
                                                 self.time_period)
         return ciphertext
 
@@ -69,8 +65,7 @@ class BaseSerializerTestCase(unittest.TestCase):
             owner_keys = implementation.public_key_scheme.generate_key_pair(2048)
             write_keys = implementation.public_key_scheme.generate_key_pair(2048)
 
-            message, symmetric_key = implementation.generate_abe_key(self.global_parameters)
-            ciphertext = self._create_ciphertext(implementation, message)
+            ciphertext = self._create_ciphertext(implementation)
 
             data_record = DataRecord(
                 read_policy='A@A AND B@A',
@@ -78,7 +73,7 @@ class BaseSerializerTestCase(unittest.TestCase):
                 owner_public_key=owner_keys.publickey(),
                 write_public_key=write_keys.publickey(),
                 encryption_key_read=ciphertext,
-                encryption_key_owner=implementation.public_key_scheme.encrypt(symmetric_key, owner_keys),
+                encryption_key_owner=implementation.public_key_scheme.encrypt(self.symmetric_key, owner_keys),
                 write_private_key=implementation.abe_encrypt_wrapped(self.global_parameters, self.public_keys,
                                                                      write_keys,
                                                                      self.policy, self.time_period),
