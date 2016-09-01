@@ -1,14 +1,14 @@
 import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
-from shared.implementations.rw15_implementation import RW15Implementation
-from test.implementations.base_test import ImplementationBaseTestCase
+from shared.implementations.taac12_implementation import TAAC12Implementation
+from test.shared.implementations import ImplementationBaseTestCase
 
 
-class RW15ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
+class TAAC12ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
-        self.subject = RW15Implementation(self.group)
+        self.subject = TAAC12Implementation(self.group)
 
     def test_encrypt_decrypt_abe(self):
         self.encrypt_decrypt_abe()
