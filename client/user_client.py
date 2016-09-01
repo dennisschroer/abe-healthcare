@@ -147,7 +147,9 @@ class UserClient(object):
             encryption_key_owner=pke.encrypt(symmetric_key, owner_key_pair),
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters,
                                                                       self.authorities_public_keys(time_period),
-                                                                      write_key_pair.exportKey('DER'), write_policy,
+                                                                      self.implementation.serializer.serialize_private_key(
+                                                                          write_key_pair),
+                                                                      write_policy,
                                                                       time_period),
             time_period=time_period,
             info=ske.ske_encrypt(pickle.dumps(info), symmetric_key),

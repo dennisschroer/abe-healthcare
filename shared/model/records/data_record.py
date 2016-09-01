@@ -10,7 +10,7 @@ class DataRecord(object):
                  write_policy: str = None,
                  owner_public_key: Any = None,
                  write_public_key: Any = None,
-                 encryption_key_read: dict = None,
+                 encryption_key_read: bytes = None,
                  encryption_key_owner: bytes = None,
                  write_private_key: Tuple[dict, bytes] = None,
                  time_period: int = None,
