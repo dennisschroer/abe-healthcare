@@ -2,7 +2,7 @@ import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
-from test.implementations.base_test import ImplementationBaseTestCase
+from test.shared.implementations import ImplementationBaseTestCase
 
 
 class DACMACS13ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
