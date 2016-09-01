@@ -37,15 +37,7 @@ class BaseSerializerTestCase(unittest.TestCase):
 
     def test_serialize_deserialize_abe_ciphertext(self):
         for implementation in self.implementations:
-            time_period = 1
-            central_authority = implementation.create_central_authority()
-            global_parameters = central_authority.central_setup()
-            attribute_authority = implementation.create_attribute_authority('A')
-            attribute_authority.setup(central_authority, ['A@A', 'B@A'])
-            public_keys = implementation.merge_public_keys({'A': attribute_authority.public_keys(time_period)})
-            message = b'Test message'
-            policy = 'A@A AND B@A'
-            ciphertext = implementation.abe_encrypt(global_parameters, public_keys, message, policy, time_period)
+            ciphertext = self._create_ciphertext(implementation,  b'Test message')
 
             serializer = implementation.serializer
             serialized = serializer.serialize_abe_ciphertext(ciphertext)
@@ -53,11 +45,22 @@ class BaseSerializerTestCase(unittest.TestCase):
 
             self.assertEqual(ciphertext, deserialized)
 
+    def _create_ciphertext(self, implementation: BaseImplementation, message: bytes) -> bytes:
+        time_period = 1
+        central_authority = implementation.create_central_authority()
+        global_parameters = central_authority.central_setup()
+        attribute_authority = implementation.create_attribute_authority('A')
+        attribute_authority.setup(central_authority, ['A@A', 'B@A'])
+        public_keys = implementation.merge_public_keys({'A': attribute_authority.public_keys(time_period)})
+        policy = 'A@A AND B@A'
+        ciphertext = implementation.abe_encrypt(global_parameters, public_keys, message, policy, time_period)
+        return ciphertext
+
     def test_serialize_deserialize_data_record_meta(self):
         for implementation in self.implementations:
             serializer = implementation.serializer
-            owner_public, owner_private = implementation.public_key_scheme.generate_key_pair()
-            write_public, write_private = implementation.public_key_scheme.generate_key_pair()
+            owner_public, owner_private = implementation.public_key_scheme.generate_key_pair(2048)
+            write_public, write_private = implementation.public_key_scheme.generate_key_pair(2048)
 
             time_period = 1
             central_authority = implementation.create_central_authority()
