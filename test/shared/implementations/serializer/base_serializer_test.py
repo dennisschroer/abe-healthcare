@@ -95,7 +95,6 @@ class BaseSerializerTestCase(unittest.TestCase):
             self.assertEqual(data_record.time_period, deserialized.time_period)
             self.assertEqual(data_record.info, deserialized.info)
             self.assertEqual(data_record.data, deserialized.data)
-            self.assertEqual(data_record, deserialized)
 
 
 if __name__ == '__main__':
