@@ -1,7 +1,6 @@
 import unittest
-from typing import List, Any
+from typing import List
 
-from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.base_implementation import BaseImplementation
 from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
@@ -75,7 +74,8 @@ class BaseSerializerTestCase(unittest.TestCase):
                 encryption_key_read=ciphertext,
                 encryption_key_owner=implementation.public_key_scheme.encrypt(self.symmetric_key, owner_keys),
                 write_private_key=implementation.abe_encrypt_wrapped(self.global_parameters, self.public_keys,
-                                                                     write_keys,
+                                                                     implementation.serializer.serialize_private_key(
+                                                                         write_keys),
                                                                      self.policy, self.time_period),
                 time_period=self.time_period,
                 info=None,

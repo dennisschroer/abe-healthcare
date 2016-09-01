@@ -171,6 +171,9 @@ class BaseSerializer(object):
     def serialize_public_key(self, public_key) -> bytes:
         return self.public_key_scheme.export_key(public_key)
 
+    def serialize_private_key(self, private_key):
+        return self.public_key_scheme.export_key(private_key)
+
     def deserialize_public_key(self, data: bytes):
         return self.public_key_scheme.import_key(data)
 
@@ -240,6 +243,8 @@ class BaseSerializer(object):
 
     def registration_data(self, registration_data):
         return self.dumps(registration_data)
+
+
 
 
 class ABEPickler(Pickler):
