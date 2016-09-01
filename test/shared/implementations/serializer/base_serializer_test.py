@@ -85,6 +85,16 @@ class BaseSerializerTestCase(unittest.TestCase):
             serialized = serializer.serialize_data_record_meta(data_record)
             deserialized = serializer.deserialize_data_record_meta(serialized)
 
+            self.assertEqual(data_record.read_policy, deserialized.read_policy)
+            self.assertEqual(data_record.write_policy, deserialized.write_policy)
+            self.assertEqual(data_record.owner_public_key, deserialized.owner_public_key)
+            self.assertEqual(data_record.write_public_key, deserialized.write_public_key)
+            self.assertEqual(data_record.encryption_key_read, deserialized.encryption_key_read)
+            self.assertEqual(data_record.encryption_key_owner, deserialized.encryption_key_owner)
+            self.assertEqual(data_record.write_private_key, deserialized.write_private_key)
+            self.assertEqual(data_record.time_period, deserialized.time_period)
+            self.assertEqual(data_record.info, deserialized.info)
+            self.assertEqual(data_record.data, deserialized.data)
             self.assertEqual(data_record, deserialized)
 
 
