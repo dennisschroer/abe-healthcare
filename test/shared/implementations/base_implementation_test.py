@@ -6,7 +6,7 @@ from shared.implementations.base_implementation import BaseImplementation
 from test.data import lorem
 
 
-class ImplementationBaseTestCase(unittest.TestCase):
+class BaseImplementationTestCase(unittest.TestCase):
     # noinspection PyUnusedLocal,PyPep8Naming
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

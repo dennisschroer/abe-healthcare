@@ -2,10 +2,10 @@ import unittest
 
 from charm.toolbox.pairinggroup import PairingGroup
 from shared.implementations.rw15_implementation import RW15Implementation
-from test.shared.implementations import ImplementationBaseTestCase
+from test.shared.implementations.base_implementation_test import BaseImplementationTestCase
 
 
-class RW15ImplementationTestCase(ImplementationBaseTestCase, unittest.TestCase):
+class RW15ImplementationTestCase(BaseImplementationTestCase):
     def setUp(self):
         self.group = PairingGroup('SS512')
         self.subject = RW15Implementation(self.group)
