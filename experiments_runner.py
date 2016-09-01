@@ -15,10 +15,6 @@ from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
-from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
-from shared.implementations.rd13_implementation import RD13Implementation
-from shared.implementations.rw15_implementation import RW15Implementation
-from shared.implementations.taac12_implementation import TAAC12Implementation
 
 
 class ExperimentsRunner(object):
@@ -30,18 +26,12 @@ class ExperimentsRunner(object):
         if not path.exists(OUTPUT_DIRECTORY):
             makedirs(OUTPUT_DIRECTORY)
 
-        self.implementations = [
-            DACMACS13Implementation(),
-            RD13Implementation(),
-            RW15Implementation(),
-            TAAC12Implementation()
-        ]
         self._timestamp = None  # type: str
         self._device_name = None  # type: str
         self.current_sequence = None  # type: ExperimentsSequence
 
     def run_base_experiments(self) -> None:
-        self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 2))
+        self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 20))
 
     def run_file_size_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(FileSizeExperiment(), 1))
@@ -72,6 +62,7 @@ class ExperimentsRunner(object):
 
         for i in range(0, experiments_sequence.amount):
             self.current_sequence.state.iteration = i
+            print("%d/%d" % (self.current_sequence.state.iteration, experiments_sequence.amount))
             self.run_current_experiment()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
@@ -83,7 +74,7 @@ class ExperimentsRunner(object):
         """
         Run the experiment of the current run a single time.
         """
-        for implementation in self.implementations:
+        for implementation in self.current_sequence.implementations:
             self.current_sequence.state.current_implementation = implementation
             for case in self.current_sequence.experiment.cases:
                 self.current_sequence.state.current_case = case
@@ -102,8 +93,8 @@ class ExperimentsRunner(object):
             self.current_sequence.amount,
             self.current_sequence.experiment.get_name(),
             self.current_sequence.state.current_implementation.get_name(),
-            self.implementations.index(self.current_sequence.state.current_implementation) + 1,
-            len(self.implementations),
+            self.current_sequence.implementations.index(self.current_sequence.state.current_implementation) + 1,
+            len(self.current_sequence.implementations),
             self.current_sequence.state.current_case.name,
             self.current_sequence.experiment.cases.index(self.current_sequence.state.current_case) + 1,
             len(self.current_sequence.experiment.cases),

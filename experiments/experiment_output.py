@@ -205,13 +205,13 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
-    def output_timings(experiments_run: ExperimentsSequence, profile: Profile) -> None:
+    def output_timings(experiments_sequence: ExperimentsSequence, profile: Profile) -> None:
         """
         Output the timings measured by the profiler.
-        :param experiments_run: The current experiments run.
+        :param experiments_sequence: The current experiments run.
         :param profile: The profile.
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
         stats_file_path = path.join(directory, 'timings.pstats')
 
         # Write raw stats
@@ -221,19 +221,22 @@ class ExperimentOutput(object):
         step_timings = pstats_to_step_timings(stats_file_path)
 
         # Output processed stats
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'timings.csv')
-        headers = ['implementation', 'case', 'iteration'] + list(algorithm_steps)
-        row = {
-            'implementation': experiments_run.state.current_implementation.get_name(),
-            'case': experiments_run.state.current_case.name,
-            'iteration': experiments_run.state.iteration
-        }
-        row.update(step_timings)
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'timings.csv')
+        headers = ['step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
+        implementation_index = experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
 
-        ExperimentOutput.append_dict_to_file(
+        rows = list()
+        for step, timing in step_timings.items():
+            row = [None] * 6
+            row[0] = step
+            row[implementation_index+1] = timing
+            row[5] = experiments_sequence.state.current_implementation.__class__.__name__
+            rows.append(row)
+
+        ExperimentOutput.append_rows_to_file(
             output_file_path,
             headers,
-            row
+            rows
         )
 
     @staticmethod
