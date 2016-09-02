@@ -171,11 +171,23 @@ class ExperimentOutput(object):
         step_timings = pstats_to_step_timings(stats_file_path)
         step_timings['total'] = sum(step_timings.values())
 
-        ExperimentOutput.output_case_results(experiments_sequence, 'timings', step_timings)
+        ExperimentOutput.output_case_results(experiments_sequence, 'timings', step_timings,
+                                             skip_categories_in_case_files=['total'])
 
     @staticmethod
     def output_case_results(experiments_sequence: ExperimentsSequence, name: str, values: Dict[str, Any],
-                            skip_categories=False):
+                            skip_categories=False, skip_categories_in_case_files: List[str] = list()) -> None:
+        """
+        Output the results of a single case to the different files (one file for the current case, one file
+        for each category)
+        :param experiments_sequence: The current experiments sequence
+        :param name: The name of the measurement (for example 'network' or 'memory')
+        :param values: A dictionary of category to value. A category is for example a step in the algorithm ('encrypt', 'decrypt'),
+        or filename for storage.
+        :param skip_categories: If true, skip appending to the category specific files
+        :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
+        example be used to create a file containing totals, without having a total category in the case file.
+        """
         headers = ['case/step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
         implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
 
@@ -184,7 +196,8 @@ class ExperimentOutput(object):
 
         case_rows = list()
         for category, value in values.items():
-            case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
+            if category not in skip_categories_in_case_files:
+                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
 
             if not skip_categories:
                 category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, value,
