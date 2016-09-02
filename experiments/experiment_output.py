@@ -98,15 +98,23 @@ class ExperimentOutput(object):
         ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
 
     @staticmethod
-    def output_memory_usages(experiments_run: ExperimentsSequence, memory_usages: List[Any]) -> None:
+    def output_memory_usages(experiments_sequence: ExperimentsSequence, memory_usages: List[Any]) -> None:
         """
         Output the memory usages.
         :param experiments_run: The current experiments run.
         :param memory_usages: The list of memory usages.
         :return:
         """
+        values = dict()
+        i = 0
+        for row in memory_usages:
+            values[i] = row.rss + row.swap
+            i += 1
+
+        ExperimentOutput.output_case_results(experiments_sequence, 'memory', values, skip_categories=True)
+
         if OUTPUT_DETAILED:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            directory = ExperimentOutput.experiment_results_directory(experiments_sequence)
             with open(path.join(directory, 'memory.csv'), 'w') as file:
                 writer = csv.DictWriter(file, fieldnames=[
                     'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
@@ -166,7 +174,8 @@ class ExperimentOutput(object):
         ExperimentOutput.output_case_results(experiments_sequence, 'timings', step_timings)
 
     @staticmethod
-    def output_case_results(experiments_sequence: ExperimentsSequence, name: str, values: Dict[str, Any]):
+    def output_case_results(experiments_sequence: ExperimentsSequence, name: str, values: Dict[str, Any],
+                            skip_categories=False):
         headers = ['case/step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
         implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
 
@@ -176,16 +185,18 @@ class ExperimentOutput(object):
         case_rows = list()
         for category, value in values.items():
             case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
-            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, value,
-                                                       implementation_index)
 
-            category_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                                  '%s-category-%s.csv' % (name, category))
-            ExperimentOutput.append_row_to_file(
-                category_output_file_path,
-                headers,
-                category_row
-            )
+            if not skip_categories:
+                category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, value,
+                                                           implementation_index)
+                category_output_file_path = path.join(
+                    ExperimentOutput.experiment_results_directory(experiments_sequence),
+                    '%s-category-%s.csv' % (name, category))
+                ExperimentOutput.append_row_to_file(
+                    category_output_file_path,
+                    headers,
+                    category_row
+                )
 
         ExperimentOutput.append_rows_to_file(
             case_output_file_path,
