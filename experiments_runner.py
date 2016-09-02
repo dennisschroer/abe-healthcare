@@ -11,7 +11,7 @@ import psutil
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
+from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput, OUTPUT_DETAILED
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
@@ -107,9 +107,10 @@ class ExperimentsRunner(object):
         is_running = Value('b', False)
 
         # Create output directory
-        output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_sequence)
-        if not path.exists(output_directory):
-            makedirs(output_directory)
+        if OUTPUT_DETAILED:
+            output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_sequence)
+            if not path.exists(output_directory):
+                makedirs(output_directory)
 
         # Initialize variables
         memory_usages = list()
