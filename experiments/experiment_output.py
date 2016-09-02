@@ -5,10 +5,11 @@ import traceback
 from cProfile import Profile
 from os import path, listdir
 from typing import List, Any, Dict
+from typing import Union
 
 from experiments.experiments_sequence import ExperimentsSequence
 from shared.connection.base_connection import BaseConnection
-from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings, algorithm_steps
+from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
 OUTPUT_DIRECTORY = 'data/experiments/results'
 
@@ -223,13 +224,14 @@ class ExperimentOutput(object):
         # Output processed stats
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'timings.csv')
         headers = ['step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
-        implementation_index = experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
+        implementation_index = experiments_sequence.implementations.index(
+            experiments_sequence.state.current_implementation)
 
         rows = list()
         for step, timing in step_timings.items():
-            row = [None] * 6
+            row = [None] * 6  # type: List[Union[str, float]]
             row[0] = step
-            row[implementation_index+1] = timing
+            row[implementation_index + 1] = timing
             row[5] = experiments_sequence.state.current_implementation.__class__.__name__
             rows.append(row)
 
