@@ -79,26 +79,28 @@ class ExperimentOutput(object):
             traceback.print_exc(file=file)
 
     @staticmethod
-    def output_connections(experiments_run: ExperimentsSequence, connections: List[BaseConnection]) -> None:
+    def output_connections(experiments_sequence: ExperimentsSequence, connections: List[BaseConnection]) -> None:
         """
         Output the network usage.
         :param experiments_run: The current experiments run.
         :param connections: The connections to output the usage of.
         """
         if output_detailed:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             connections_to_csv(connections, path.join(directory, 'network.csv'))
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'network.csv')
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'network.csv')
 
+        values = dict()
         rows = []
         for connection in connections:
             for (name, sizes) in connection.benchmarks.items():
                 for size in sizes:
+                    values[name] = size
                     rows.append((
-                        experiments_run.state.current_implementation.get_name(),
-                        experiments_run.state.current_case.name,
-                        experiments_run.state.iteration,
+                        experiments_sequence.state.current_implementation.get_name(),
+                        experiments_sequence.state.current_case.name,
+                        experiments_sequence.state.iteration,
                         connection.__class__.__name__,
                         name,
                         size
@@ -109,6 +111,8 @@ class ExperimentOutput(object):
             ('implementation', 'case', 'iteration', 'connection', 'name', 'size'),
             rows
         )
+
+        ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
 
     @staticmethod
     def output_memory_usages(experiments_run: ExperimentsSequence, memory_usages: List[Any]) -> None:
@@ -217,23 +221,26 @@ class ExperimentOutput(object):
 
         # Process raw stats
         step_timings = pstats_to_step_timings(stats_file_path)
+        step_timings['total'] = sum(step_timings.values())
 
-        # Output processed stats
-        case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                          'timings-case-%s.csv' % experiments_sequence.state.current_case.name)
+        ExperimentOutput.output_case_results(experiments_sequence, 'timings', step_timings)
 
+    @staticmethod
+    def output_case_results(experiments_sequence: ExperimentsSequence, name: str, values: Dict[str, Any]):
         headers = ['case/step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
         implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
 
-        # Append detailed times for this case to the file of this case
+        case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
+                                          '%s-case-%s.csv' % (name, experiments_sequence.state.current_case.name))
+
         case_rows = list()
-        for category, timing in step_timings.items():
-            case_rows.append(ExperimentOutput.create_row(category, timing, implementation_index))
-            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, timing,
+        for category, value in values.items():
+            case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
+            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, value,
                                                        implementation_index)
 
             category_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                                  'timings-category-%s.csv' % category)
+                                                  '%s-category-%s.csv' % (name, category))
             ExperimentOutput.append_row_to_file(
                 category_output_file_path,
                 headers,
@@ -244,16 +251,6 @@ class ExperimentOutput(object):
             case_output_file_path,
             headers,
             case_rows
-        )
-
-        # Append total time for this case to the overall file
-        total_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                           'timings.csv')
-        ExperimentOutput.append_row_to_file(
-            total_output_file_path,
-            headers,
-            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, sum(step_timings.values()),
-                                        implementation_index)
         )
 
     @staticmethod
