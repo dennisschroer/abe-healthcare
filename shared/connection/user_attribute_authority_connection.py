@@ -15,8 +15,8 @@ class UserAttributeAuthorityConnection(BaseConnection):
     def public_keys(self, time_period: int) -> Any:
         response = self.attribute_authority.public_keys(time_period)
         if self.benchmark:
-            self.add_benchmark('> public_keys', (time_period.bit_length() + 7) // 8)
-            self.add_benchmark('< public_keys', len(self.serializer.serialize_authority_public_keys(response)))
+            self.add_benchmark('out public_keys', (time_period.bit_length() + 7) // 8)
+            self.add_benchmark('in public_keys', len(self.serializer.serialize_authority_public_keys(response)))
         return response
 
     def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
@@ -28,6 +28,6 @@ class UserAttributeAuthorityConnection(BaseConnection):
         }
         response = self.attribute_authority.keygen(gid, registration_data, attributes, time_period)
         if self.benchmark:
-            self.add_benchmark('> keygen', len(self.serializer.serialize_keygen_request(request)))
-            self.add_benchmark('< keygen', len(self.serializer.serialize_secret_keys(response)))
+            self.add_benchmark('out keygen', len(self.serializer.serialize_keygen_request(request)))
+            self.add_benchmark('in keygen', len(self.serializer.serialize_secret_keys(response)))
         return response
