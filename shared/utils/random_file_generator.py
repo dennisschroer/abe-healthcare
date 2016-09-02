@@ -1,3 +1,4 @@
+import logging
 from os import urandom, makedirs, path
 
 
@@ -25,11 +26,11 @@ class RandomFileGenerator(object):
                 continue
             with open(path.join(output_path, '%i-%i' % (size, i)), 'wb') as f:
                 if verbose:
-                    print("Generating %s" % path.join(output_path, '%i-%i' % (size, i)))
+                    logging.debug("Generating %s" % path.join(output_path, '%i-%i' % (size, i)))
                 number_of_blocks = size // RandomFileGenerator.block_size
                 for j in range(0, number_of_blocks):
                     if verbose and (j % 100) == 99:
-                        print("Block %d of %d" % (j + 1, number_of_blocks))
+                        logging.debug("Block %d of %d" % (j + 1, number_of_blocks))
                     f.write(urandom(RandomFileGenerator.block_size))
                 # Write the remainder
                 f.write(urandom(size % RandomFileGenerator.block_size))

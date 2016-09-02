@@ -1,8 +1,14 @@
 import datetime
 import socket
+from typing import List
 
 from experiments.base_experiment import BaseExperiment
 from experiments.experiments_sequence_state import ExperimentsSequenceState
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
+from shared.implementations.rw15_implementation import RW15Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
 
 TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
@@ -17,6 +23,12 @@ class ExperimentsSequence(object):
         self.amount = amount
         self.experiment = experiment
         self.state = ExperimentsSequenceState()
+        self.implementations = [
+            DACMACS13Implementation(),
+            RD13Implementation(),
+            RW15Implementation(),
+            TAAC12Implementation()
+        ]  # type: List[BaseImplementation]
 
         self._timestamp = None  # type:str
         self._device_name = None  # type:str
