@@ -1,6 +1,5 @@
 import csv
 import logging
-import os
 import sys
 import traceback
 from cProfile import Profile
@@ -122,83 +121,30 @@ class ExperimentOutput(object):
         Output the storage space used by the different parties.
         :param experiments_sequence: The current experiments run.
         """
-        # directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
         insurance_storage = experiments_sequence.experiment.get_insurance_storage_path()
         client_storage = experiments_sequence.experiment.get_user_client_storage_path()
         authority_storage = experiments_sequence.experiment.get_attribute_authority_storage_path()
         central_authority_storage = experiments_sequence.experiment.get_central_authority_storage_path()
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'storage.csv')
-        headers = ('implementation', 'case', 'iteration', 'entity', 'filename', 'size')
-        rows = list()
-
         values = dict()
-
-        ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
 
         for file in listdir(insurance_storage):
             size = path.getsize(path.join(insurance_storage, file))
-            values[os.path.splitext(file)[1]] = size
-            rows.append((
-                experiments_sequence.state.current_implementation.get_name(),
-                experiments_sequence.state.current_case.name,
-                experiments_sequence.state.iteration,
-                'insurance',
-                file,
-                size
-            ))
+            values[path.splitext(file)[1]] = size
 
         for file in listdir(client_storage):
             size = path.getsize(path.join(client_storage, file))
             values[file] = size
-            rows.append((
-                experiments_sequence.state.current_implementation.get_name(),
-                experiments_sequence.state.current_case.name,
-                experiments_sequence.state.iteration,
-                'client',
-                file,
-                size
-            ))
 
         for file in listdir(authority_storage):
             size = path.getsize(path.join(authority_storage, file))
             values[file] = size
-            rows.append((
-                experiments_sequence.state.current_implementation.get_name(),
-                experiments_sequence.state.current_case.name,
-                experiments_sequence.state.iteration,
-                'authority',
-                file,
-                size
-            ))
 
         for file in listdir(central_authority_storage):
             size = path.getsize(path.join(central_authority_storage, file))
             values[file] = size
-            rows.append((
-                experiments_sequence.state.current_implementation.get_name(),
-                experiments_sequence.state.current_case.name,
-                experiments_sequence.state.iteration,
-                'central_authority',
-                file,
-                size
-            ))
-
-        if OUTPUT_DETAILED:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
-            with open(path.join(directory, 'storage.csv'), 'w') as output:
-                writer = csv.writer(output)
-                writer.writerow(headers)
-                for row in rows:
-                    writer.writerow(row)
 
         ExperimentOutput.output_case_results(experiments_sequence, 'storage', values)
-
-        ExperimentOutput.append_rows_to_file(
-            output_file_path,
-            headers,
-            rows
-        )
 
     @staticmethod
     def output_timings(experiments_sequence: ExperimentsSequence, profile: Profile) -> None:
