@@ -229,11 +229,16 @@ class ExperimentOutput(object):
 
         rows = list()
         for step, timing in step_timings.items():
-            row = [None] * 6  # type: List[Union[str, float]]
+            row = [None] * 5  # type: List[Union[str, float]]
             row[0] = step
             row[implementation_index + 1] = timing
-            row[5] = experiments_sequence.state.current_implementation.__class__.__name__
             rows.append(row)
+
+        # append total time
+        row = [None] * 5  # type: List[Union[str, float]]
+        row[0] = 'total'
+        row[implementation_index + 1] = sum(step_timings.values())
+        rows.append(row)
 
         ExperimentOutput.append_rows_to_file(
             output_file_path,
