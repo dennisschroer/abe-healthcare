@@ -1,5 +1,6 @@
 import csv
 import logging
+import os
 import sys
 import traceback
 from cProfile import Profile
@@ -13,7 +14,7 @@ from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
 OUTPUT_DIRECTORY = 'data/experiments/results'
 
-output_detailed = False
+OUTPUT_DETAILED = False
 
 
 class ExperimentOutput(object):
@@ -51,7 +52,7 @@ class ExperimentOutput(object):
         :param experiments_sequence: The current experiments run
         :param cpu_usage: The measured cpu usage
         """
-        if output_detailed:
+        if OUTPUT_DETAILED:
             directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             with open(path.join(directory, 'cpu.txt'), 'w') as file:
                 file.write(str(cpu_usage))
@@ -85,7 +86,7 @@ class ExperimentOutput(object):
         :param experiments_run: The current experiments run.
         :param connections: The connections to output the usage of.
         """
-        if output_detailed:
+        if OUTPUT_DETAILED:
             directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             connections_to_csv(connections, path.join(directory, 'network.csv'))
 
@@ -105,7 +106,7 @@ class ExperimentOutput(object):
         :param memory_usages: The list of memory usages.
         :return:
         """
-        if output_detailed:
+        if OUTPUT_DETAILED:
             directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
             with open(path.join(directory, 'memory.csv'), 'w') as file:
                 writer = csv.DictWriter(file, fieldnames=[
@@ -116,27 +117,32 @@ class ExperimentOutput(object):
                     writer.writerow(row._asdict())
 
     @staticmethod
-    def output_storage_space(experiments_run: ExperimentsSequence) -> None:
+    def output_storage_space(experiments_sequence: ExperimentsSequence) -> None:
         """
         Output the storage space used by the different parties.
-        :param experiments_run: The current experiments run.
+        :param experiments_sequence: The current experiments run.
         """
-        # directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
-        insurance_storage = experiments_run.experiment.get_insurance_storage_path()
-        client_storage = experiments_run.experiment.get_user_client_storage_path()
-        authority_storage = experiments_run.experiment.get_attribute_authority_storage_path()
-        central_authority_storage = experiments_run.experiment.get_central_authority_storage_path()
+        # directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
+        insurance_storage = experiments_sequence.experiment.get_insurance_storage_path()
+        client_storage = experiments_sequence.experiment.get_user_client_storage_path()
+        authority_storage = experiments_sequence.experiment.get_attribute_authority_storage_path()
+        central_authority_storage = experiments_sequence.experiment.get_central_authority_storage_path()
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'storage.csv')
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'storage.csv')
         headers = ('implementation', 'case', 'iteration', 'entity', 'filename', 'size')
         rows = list()
 
+        values = dict()
+
+        ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
+
         for file in listdir(insurance_storage):
             size = path.getsize(path.join(insurance_storage, file))
+            values[os.path.splitext(file)[1]] = size
             rows.append((
-                experiments_run.state.current_implementation.get_name(),
-                experiments_run.state.current_case.name,
-                experiments_run.state.iteration,
+                experiments_sequence.state.current_implementation.get_name(),
+                experiments_sequence.state.current_case.name,
+                experiments_sequence.state.iteration,
                 'insurance',
                 file,
                 size
@@ -144,10 +150,11 @@ class ExperimentOutput(object):
 
         for file in listdir(client_storage):
             size = path.getsize(path.join(client_storage, file))
+            values[file] = size
             rows.append((
-                experiments_run.state.current_implementation.get_name(),
-                experiments_run.state.current_case.name,
-                experiments_run.state.iteration,
+                experiments_sequence.state.current_implementation.get_name(),
+                experiments_sequence.state.current_case.name,
+                experiments_sequence.state.iteration,
                 'client',
                 file,
                 size
@@ -155,10 +162,11 @@ class ExperimentOutput(object):
 
         for file in listdir(authority_storage):
             size = path.getsize(path.join(authority_storage, file))
+            values[file] = size
             rows.append((
-                experiments_run.state.current_implementation.get_name(),
-                experiments_run.state.current_case.name,
-                experiments_run.state.iteration,
+                experiments_sequence.state.current_implementation.get_name(),
+                experiments_sequence.state.current_case.name,
+                experiments_sequence.state.iteration,
                 'authority',
                 file,
                 size
@@ -166,22 +174,25 @@ class ExperimentOutput(object):
 
         for file in listdir(central_authority_storage):
             size = path.getsize(path.join(central_authority_storage, file))
+            values[file] = size
             rows.append((
-                experiments_run.state.current_implementation.get_name(),
-                experiments_run.state.current_case.name,
-                experiments_run.state.iteration,
+                experiments_sequence.state.current_implementation.get_name(),
+                experiments_sequence.state.current_case.name,
+                experiments_sequence.state.iteration,
                 'central_authority',
                 file,
                 size
             ))
 
-        if output_detailed:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+        if OUTPUT_DETAILED:
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             with open(path.join(directory, 'storage.csv'), 'w') as output:
                 writer = csv.writer(output)
                 writer.writerow(headers)
                 for row in rows:
                     writer.writerow(row)
+
+        ExperimentOutput.output_case_results(experiments_sequence, 'storage', values)
 
         ExperimentOutput.append_rows_to_file(
             output_file_path,
