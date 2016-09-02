@@ -108,7 +108,7 @@ class ExperimentOutput(object):
         values = dict()
         i = 0
         for row in memory_usages:
-            values[i] = row.rss + row.swap
+            values[str(i)] = row.rss + row.swap
             i += 1
 
         ExperimentOutput.output_case_results(experiments_sequence, 'memory', values, skip_categories=True)
