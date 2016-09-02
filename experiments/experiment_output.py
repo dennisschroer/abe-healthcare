@@ -89,28 +89,11 @@ class ExperimentOutput(object):
             directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             connections_to_csv(connections, path.join(directory, 'network.csv'))
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'network.csv')
-
         values = dict()
-        rows = []
         for connection in connections:
             for (name, sizes) in connection.benchmarks.items():
                 for size in sizes:
                     values[name] = size
-                    rows.append((
-                        experiments_sequence.state.current_implementation.get_name(),
-                        experiments_sequence.state.current_case.name,
-                        experiments_sequence.state.iteration,
-                        connection.__class__.__name__,
-                        name,
-                        size
-                    ))
-
-        ExperimentOutput.append_rows_to_file(
-            output_file_path,
-            ('implementation', 'case', 'iteration', 'connection', 'name', 'size'),
-            rows
-        )
 
         ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
 
