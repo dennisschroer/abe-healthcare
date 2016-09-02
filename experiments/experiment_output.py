@@ -45,28 +45,25 @@ class ExperimentOutput(object):
                          str(experiments_run.state.iteration))
 
     @staticmethod
-    def output_cpu_usage(experiments_run: ExperimentsSequence, cpu_usage: float) -> None:
+    def output_cpu_usage(experiments_sequence: ExperimentsSequence, cpu_usage: float) -> None:
         """
         Output the cpu usage of the previous experiment.
-        :param experiments_run: The current experiments run
+        :param experiments_sequence: The current experiments run
         :param cpu_usage: The measured cpu usage
         """
         if output_detailed:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
             with open(path.join(directory, 'cpu.txt'), 'w') as file:
                 file.write(str(cpu_usage))
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_run), 'cpu.csv')
-        headers = ('implementation', 'case', 'iteration', 'usage')
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'cpu.csv')
+        headers = ['case'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
+        implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
+
         ExperimentOutput.append_row_to_file(
             output_file_path,
             headers,
-            (
-                experiments_run.state.current_implementation.get_name(),
-                experiments_run.state.current_case.name,
-                experiments_run.state.iteration,
-                cpu_usage
-            )
+            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, cpu_usage, implementation_index)
         )
 
     @staticmethod
@@ -254,7 +251,7 @@ class ExperimentOutput(object):
 
         # Append total time for this case to the overall file
         total_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                           'timings.csv' % experiments_sequence.state.current_case.name)
+                                           'timings.csv')
         ExperimentOutput.append_row_to_file(
             total_output_file_path,
             headers,
