@@ -206,13 +206,17 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
+    def determine_implementation_index(experiments_sequence: ExperimentsSequence):
+        return experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
+
+    @staticmethod
     def output_timings(experiments_sequence: ExperimentsSequence, profile: Profile) -> None:
         """
         Output the timings measured by the profiler.
         :param experiments_sequence: The current experiments run.
         :param profile: The profile.
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
+        directory = ExperimentOutput.experiment_results_directory(experiments_sequence)
         stats_file_path = path.join(directory, 'timings.pstats')
 
         # Write raw stats
@@ -222,29 +226,47 @@ class ExperimentOutput(object):
         step_timings = pstats_to_step_timings(stats_file_path)
 
         # Output processed stats
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'timings.csv')
-        headers = ['step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
-        implementation_index = experiments_sequence.implementations.index(
-            experiments_sequence.state.current_implementation)
+        case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
+                                          'timings-case-%s.csv' % experiments_sequence.state.current_case.name)
 
-        rows = list()
-        for step, timing in step_timings.items():
-            row = [None] * 5  # type: List[Union[str, float]]
-            row[0] = step
-            row[implementation_index + 1] = timing
-            rows.append(row)
+        headers = ['case/step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
+        implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
 
-        # append total time
-        row = [None] * 5  # type: List[Union[str, float]]
-        row[0] = 'total'
-        row[implementation_index + 1] = sum(step_timings.values())
-        rows.append(row)
+        # Append detailed times for this case to the file of this case
+        case_rows = list()
+        for category, timing in step_timings.items():
+            case_rows.append(ExperimentOutput.create_row(category, timing, implementation_index))
+            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, timing, implementation_index)
+
+            category_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
+                                                  'timings-category-%s.csv' % category)
+            ExperimentOutput.append_row_to_file(
+                category_output_file_path,
+                headers,
+                category_row
+            )
 
         ExperimentOutput.append_rows_to_file(
-            output_file_path,
+            case_output_file_path,
             headers,
-            rows
+            case_rows
         )
+
+        # Append total time for this case to the overall file
+        total_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
+                                           'timings.csv' % experiments_sequence.state.current_case.name)
+        ExperimentOutput.append_row_to_file(
+            total_output_file_path,
+            headers,
+            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, sum(step_timings.values()), implementation_index)
+        )
+
+    @staticmethod
+    def create_row(category : str, value: float, implementation_index):
+        row = [None] * 5  # type: List[Union[str, Any]]
+        row[0] = category
+        row[implementation_index + 1] = value
+        return row
 
     @staticmethod
     def append_rows_to_file(file_path, headers, rows):
