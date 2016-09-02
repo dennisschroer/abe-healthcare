@@ -203,10 +203,6 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
-    def determine_implementation_index(experiments_sequence: ExperimentsSequence):
-        return experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
-
-    @staticmethod
     def output_timings(experiments_sequence: ExperimentsSequence, profile: Profile) -> None:
         """
         Output the timings measured by the profiler.
@@ -233,7 +229,8 @@ class ExperimentOutput(object):
         case_rows = list()
         for category, timing in step_timings.items():
             case_rows.append(ExperimentOutput.create_row(category, timing, implementation_index))
-            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, timing, implementation_index)
+            category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, timing,
+                                                       implementation_index)
 
             category_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
                                                   'timings-category-%s.csv' % category)
@@ -255,15 +252,20 @@ class ExperimentOutput(object):
         ExperimentOutput.append_row_to_file(
             total_output_file_path,
             headers,
-            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, sum(step_timings.values()), implementation_index)
+            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, sum(step_timings.values()),
+                                        implementation_index)
         )
 
     @staticmethod
-    def create_row(category : str, value: float, implementation_index):
+    def create_row(category: str, value: float, implementation_index):
         row = [None] * 5  # type: List[Union[str, Any]]
         row[0] = category
         row[implementation_index + 1] = value
         return row
+
+    @staticmethod
+    def determine_implementation_index(experiments_sequence: ExperimentsSequence):
+        return experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
 
     @staticmethod
     def append_rows_to_file(file_path, headers, rows):
