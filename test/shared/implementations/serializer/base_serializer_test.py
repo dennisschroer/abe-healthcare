@@ -53,7 +53,7 @@ class BaseSerializerTestCase(unittest.TestCase):
                 self.global_parameters.scheme_parameters)
             deserialized = implementation.serializer.deserialize_global_scheme_parameters(serialized)
 
-            self.assertEqual(serialized, deserialized)
+            self.assertEqual(self.global_parameters.scheme_parameters, deserialized)
 
     def test_serialize_deserialize_global_parameters(self):
         for implementation in self.implementations:
@@ -62,7 +62,7 @@ class BaseSerializerTestCase(unittest.TestCase):
                 self.global_parameters)
             deserialized = implementation.serializer.deserialize_global_parameters(serialized)
 
-            self.assertEqual(serialized, deserialized)
+            self.assertEqual(self.global_parameters, deserialized)
 
     def _setup_authorities(self, implementation: BaseImplementation) -> None:
         self.time_period = 1
