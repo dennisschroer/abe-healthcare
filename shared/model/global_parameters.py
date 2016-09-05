@@ -10,7 +10,7 @@ class GlobalParameters(object):
         self.scheme_parameters = scheme_parameters
 
     def __eq__(self, other):
-        return issubclass(other, GlobalParameters) \
+        return isinstance(other, GlobalParameters) \
                and self.group == other.group \
                and self.scheme_parameters_equal(self.scheme_parameters, other.scheme_parameters)
 
