@@ -53,7 +53,8 @@ class BaseSerializerTestCase(unittest.TestCase):
                 self.global_parameters.scheme_parameters)
             deserialized = implementation.serializer.deserialize_global_scheme_parameters(serialized)
 
-            self.assertEqual(self.global_parameters.scheme_parameters, deserialized)
+            self.assertTrue(
+                GlobalParameters.scheme_parameters_equal(self.global_parameters.scheme_parameters, deserialized))
 
     def test_serialize_deserialize_global_parameters(self):
         for implementation in self.implementations:
