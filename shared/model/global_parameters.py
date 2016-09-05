@@ -11,7 +11,8 @@ class GlobalParameters(object):
 
     def __eq__(self, other):
         return isinstance(other, GlobalParameters) \
-               and self.group == other.group \
+               and self.group.groupSetting() == other.group.groupSetting() \
+               and self.group.groupType() == other.group.groupType() \
                and self.scheme_parameters_equal(self.scheme_parameters, other.scheme_parameters)
 
     @staticmethod
