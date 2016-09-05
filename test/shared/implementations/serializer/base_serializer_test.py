@@ -118,6 +118,21 @@ class BaseSerializerTestCase(unittest.TestCase):
             self.assertEqual(data_record.info, deserialized.info)
             self.assertEqual(data_record.data, deserialized.data)
 
+    def test_serialize_deserialize_authority_public_keys(self):
+        pass
+
+    def test_serialize_deserialize_authority_secret_keys(self):
+        pass
+
+    def test_serialize_deserialize_keygen_request(self):
+        pass
+
+    def test_serialize_deserialize_secret_keys(self):
+        pass
+
+    def test_serialize_deserialize_registration_data(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
