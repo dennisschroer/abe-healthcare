@@ -60,6 +60,20 @@ class BaseSerializer(object):
     def deserialize_global_scheme_parameters(self, scheme_parameters):
         raise NotImplementedError()
 
+    def serialize_global_parameters(self, global_parameters: GlobalParameters) -> bytes:
+        return pickle.dumps({
+            'group': global_parameters.group.param,
+            'scheme': self.serialize_global_scheme_parameters(
+                global_parameters.scheme_parameters)
+        })
+
+    def deserialize_global_parameters(self, data: bytes) -> GlobalParameters:
+        unpickled = pickle.loads(data)
+        return GlobalParameters(
+            PairingGroup(unpickled['group']),
+            self.deserialize_global_scheme_parameters(unpickled['scheme'])
+        )
+
     def replace_attributes(self, dict: dict, keyword: str) -> int:
         """
         Determine a shorter identifier for the given keyword, and store it in the dict. If a keyword is already
@@ -114,13 +128,6 @@ class BaseSerializer(object):
         KeyError: 123
         """
         return dict[replacement]
-
-    def serialize_global_parameters(self, global_parameters: GlobalParameters) -> bytes:
-        return pickle.dumps({
-            'group': global_parameters.group.param,
-            'scheme': self.serialize_global_scheme_parameters(
-                global_parameters.scheme_parameters)
-        })
 
     def serialize_data_record(self, data_record: DataRecord) -> bytes:
         return pickle.dumps({

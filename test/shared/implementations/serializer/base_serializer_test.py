@@ -49,9 +49,18 @@ class BaseSerializerTestCase(unittest.TestCase):
     def test_serialize_deserialize_global_scheme_parameters(self):
         for implementation in self.implementations:
             self._setup_authorities(implementation)
-            serialized = implementation.serializer.serialize_global_scheme_parameters(self.global_parameters.scheme_parameters)
-            deserialized = implementation.serializer.deserialize_global_scheme_parameters(
+            serialized = implementation.serializer.serialize_global_scheme_parameters(
                 self.global_parameters.scheme_parameters)
+            deserialized = implementation.serializer.deserialize_global_scheme_parameters(serialized)
+
+            self.assertEqual(serialized, deserialized)
+
+    def test_serialize_deserialize_global_parameters(self):
+        for implementation in self.implementations:
+            self._setup_authorities(implementation)
+            serialized = implementation.serializer.serialize_global_parameters(
+                self.global_parameters)
+            deserialized = implementation.serializer.deserialize_global_parameters(serialized)
 
             self.assertEqual(serialized, deserialized)
 
