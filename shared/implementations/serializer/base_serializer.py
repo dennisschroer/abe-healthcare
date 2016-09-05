@@ -1,5 +1,6 @@
 import pickle
 import sys
+from pickle import Unpickler
 from typing import Any
 
 from charm.toolbox.pairinggroup import PairingGroup
@@ -235,24 +236,44 @@ class BaseSerializer(object):
     def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps(public_keys)
 
+    def deserialize_authority_public_keys(self, data: bytes) -> AuthorityPublicKeysStore:
+        return self.loads(data)
+
     def serialize_authority_secret_keys(self, secret_keys: AuthoritySecretKeysStore) -> bytes:
         return self.dumps(secret_keys)
+
+    def deserialize_authority_secret_keys(self, data: bytes) -> AuthoritySecretKeysStore:
+        return self.loads(data)
 
     def serialize_keygen_request(self, request) -> bytes:
         return self.dumps(request)
 
-    def serialize_secret_keys(self, secret_keys: SecretKeyStore) -> bytes:
+    def deserialize_keygen_request(self, data: bytes):
+        return self.loads(data)
+
+    def serialize_user_secret_keys(self, secret_keys: SecretKeyStore) -> bytes:
         return self.dumps(secret_keys)
 
-    def dumps(self, obj) -> bytes:
+    def deserialize_user_secret_keys(self, data: bytes) -> SecretKeyStore:
+        return self.loads(data)
+
+    def serialize_registration_data(self, registration_data) -> bytes:
+        return self.dumps(registration_data)
+
+    def deserialize_registration_data(self, data: bytes):
+        return self.loads(data)
+
+    def loads(self, data: bytes) -> Any:
+        io = StringIO(data)
+        unpickler = ABEUnpickler(io, self)
+        return unpickler.load()
+
+    def dumps(self, obj: Any) -> bytes:
         io = StringIO()
         pickler = ABEPickler(io, self)
         pickler.dump(obj)
         io.flush()
         return io.getvalue()
-
-    def serialize_registration_data(self, registration_data):
-        return self.dumps(registration_data)
 
 
 class ABEPickler(Pickler):
@@ -265,6 +286,12 @@ class ABEPickler(Pickler):
             return "pairing.Element", self.serializer.group.serialize(obj)
         # pickle as usual
         return None
+
+
+class ABEUnpickler(Unpickler):
+    def __init__(self, file, serializer: BaseSerializer) -> None:
+        super().__init__(file)
+        self.serializer = serializer
 
     def persistent_load(self, pid):
         type, id = pid
