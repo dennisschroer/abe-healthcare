@@ -9,6 +9,7 @@ from shared.implementations.rd13_implementation import RD13Implementation
 from shared.implementations.rw15_implementation import RW15Implementation
 from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.implementations.taac12_implementation import TAAC12Implementation
+from shared.model.global_parameters import GlobalParameters
 from shared.model.records.data_record import DataRecord
 
 
@@ -45,13 +46,25 @@ class BaseSerializerTestCase(unittest.TestCase):
 
             self.assertEqual(ciphertext, deserialized)
 
-    def _create_ciphertext(self, implementation: BaseImplementation) -> bytes:
+    def test_serialize_deserialize_global_scheme_parameters(self):
+        for implementation in self.implementations:
+            self._setup_authorities(implementation)
+            serialized = implementation.serializer.serialize_global_scheme_parameters(self.global_parameters.scheme_parameters)
+            deserialized = implementation.serializer.deserialize_global_scheme_parameters(
+                self.global_parameters.scheme_parameters)
+
+            self.assertEqual(serialized, deserialized)
+
+    def _setup_authorities(self, implementation: BaseImplementation) -> None:
         self.time_period = 1
         central_authority = implementation.create_central_authority()
-        self.global_parameters = central_authority.central_setup()
+        self.global_parameters = central_authority.central_setup()  # type: GlobalParameters
         attribute_authority = implementation.create_attribute_authority('A')
         attribute_authority.setup(central_authority, ['A@A', 'B@A'])
         self.public_keys = implementation.merge_public_keys({'A': attribute_authority.public_keys(self.time_period)})
+
+    def _create_ciphertext(self, implementation: BaseImplementation) -> bytes:
+        self._setup_authorities(implementation)
         self.policy = 'A@A AND B@A'
         self.message, self.symmetric_key = implementation.generate_abe_key(self.global_parameters)
         ciphertext = implementation.abe_encrypt(self.global_parameters, self.public_keys, self.message, self.policy,

@@ -57,6 +57,9 @@ class BaseSerializer(object):
     def serialize_global_scheme_parameters(self, scheme_parameters):
         raise NotImplementedError()
 
+    def deserialize_global_scheme_parameters(self, scheme_parameters):
+        raise NotImplementedError()
+
     def replace_attributes(self, dict: dict, keyword: str) -> int:
         """
         Determine a shorter identifier for the given keyword, and store it in the dict. If a keyword is already

@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
-from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
+from charm.toolbox.pairinggroup import G1, PairingGroup
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
@@ -155,6 +155,14 @@ class DACMACS13Serializer(BaseSerializer):
         return {
             'g': self.group.serialize(scheme_parameters['g']),
             'g^a': self.group.serialize(scheme_parameters['g^a'])
+        }
+
+    def deserialize_global_scheme_parameters(self, data):
+        # GPP = {'g': g, 'g^a': g_a, 'H': H}
+        return {
+            'g': self.group.serialize(data['g']),
+            'g^a': self.group.serialize(data['g^a']),
+            'H': lambda x: self.group.hash(x, G1),
         }
 
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
