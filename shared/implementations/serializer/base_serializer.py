@@ -251,10 +251,8 @@ class BaseSerializer(object):
         io.flush()
         return io.getvalue()
 
-    def registration_data(self, registration_data):
+    def serialize_registration_data(self, registration_data):
         return self.dumps(registration_data)
-
-
 
 
 class ABEPickler(Pickler):

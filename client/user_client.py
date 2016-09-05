@@ -394,7 +394,7 @@ class UserClient(object):
                 os.remove(save_file_path)
         else:
             with open(save_file_path, 'wb') as f:
-                f.write(self.implementation.serializer.registration_data(self.user.registration_data))
+                f.write(self.implementation.serializer.serialize_registration_data(self.user.registration_data))
 
     def get_owner_key(self) -> Any:
         """
