@@ -160,8 +160,8 @@ class DACMACS13Serializer(BaseSerializer):
     def deserialize_global_scheme_parameters(self, data):
         # GPP = {'g': g, 'g^a': g_a, 'H': H}
         return {
-            'g': self.group.serialize(data['g']),
-            'g^a': self.group.serialize(data['g^a']),
+            'g': self.group.deserialize(data['g']),
+            'g^a': self.group.deserialize(data['g^a']),
             'H': lambda x: self.group.hash(x, G1),
         }
 
