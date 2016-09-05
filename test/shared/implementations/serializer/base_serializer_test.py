@@ -135,11 +135,10 @@ class BaseSerializerTestCase(unittest.TestCase):
             serialized = implementation.serializer.serialize_authority_secret_keys(
                 self.attribute_authority._secret_keys)
             deserialized = implementation.serializer.deserialize_authority_secret_keys(serialized)
-
+            self.maxDiff = None
             self.assertEqual(self.attribute_authority._secret_keys, deserialized)
 
     def test_serialize_deserialize_keygen_request(self):
-
         for implementation in self.implementations:
             self._setup_authorities(implementation)
             request = {
