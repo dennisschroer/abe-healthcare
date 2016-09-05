@@ -131,6 +131,9 @@ class TAAC12Serializer(BaseSerializer):
     def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps({key: value for key, value in public_keys.items() if key != 'H'})
 
+    def deserialize_authority_public_keys(self, data: bytes) -> bytes:
+        return self.loads(data).update({'H': lambda x, t: self.group.hash((x, t), G1)})
+
     def serialize_global_scheme_parameters(self, scheme_parameters):
         # gp = {'g': g, 'H': h}
         return {
