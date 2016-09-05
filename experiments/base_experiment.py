@@ -193,7 +193,6 @@ class BaseExperiment(object):
                                                                        self.current_state.current_implementation)
         for authority in self.attribute_authorities:
             insurance.add_authority(authority)
-            authority.save_attribute_keys()
 
         # Create user clients
         self.user_clients = self.create_user_clients(self.current_state.current_implementation,
@@ -203,6 +202,12 @@ class BaseExperiment(object):
 
         location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
         self.user_clients[1].decrypt_file(location)
+
+        # To make sure all keys are saved, we do this as last step
+        # In some schemes, keys are only generated when requested as they are time period dependant.
+        # RD13 is an example of this.
+        for authority in self.attribute_authorities:
+            authority.save_attribute_keys()
 
     def get_connections(self) -> List[BaseConnection]:
         """
