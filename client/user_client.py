@@ -356,7 +356,7 @@ class UserClient(object):
     def save_user_secret_keys(self):
         save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
         with open(save_file_path, 'wb') as f:
-            f.write(self.implementation.serializer.serialize_secret_keys(self.user.secret_keys))
+            f.write(self.implementation.serializer.serialize_user_secret_keys(self.user.secret_keys))
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
@@ -394,7 +394,7 @@ class UserClient(object):
                 os.remove(save_file_path)
         else:
             with open(save_file_path, 'wb') as f:
-                f.write(self.implementation.serializer.registration_data(self.user.registration_data))
+                f.write(self.implementation.serializer.serialize_registration_data(self.user.registration_data))
 
     def get_owner_key(self) -> Any:
         """
