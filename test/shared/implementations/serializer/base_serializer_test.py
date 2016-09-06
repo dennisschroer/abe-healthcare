@@ -11,6 +11,7 @@ from shared.implementations.serializer.base_serializer import BaseSerializer
 from shared.implementations.taac12_implementation import TAAC12Implementation
 from shared.model.global_parameters import GlobalParameters
 from shared.model.records.data_record import DataRecord
+from shared.utils.dict_utils import dict_equals_except_functions
 
 
 class BaseSerializerTestCase(unittest.TestCase):
@@ -127,7 +128,7 @@ class BaseSerializerTestCase(unittest.TestCase):
                 self.attribute_authority._public_keys)
             deserialized = implementation.serializer.deserialize_authority_public_keys(serialized)
 
-            self.assertEqual(self.attribute_authority._public_keys, deserialized)
+            self.assertTrue(dict_equals_except_functions(self.attribute_authority._public_keys, deserialized))
 
     def test_serialize_deserialize_authority_secret_keys(self):
         for implementation in self.implementations:
