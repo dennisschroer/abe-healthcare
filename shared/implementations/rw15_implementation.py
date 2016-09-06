@@ -1,8 +1,9 @@
 from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
-from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15, PairingGroup
+from charm.schemes.abenc.abenc_maabe_rw15 import MaabeRW15
 from charm.toolbox.secretutil import SecretUtil
+from charm.toolbox.pairinggroup import G2, PairingGroup
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
@@ -91,6 +92,16 @@ class RW15Serializer(BaseSerializer):
             'g1': self.group.serialize(scheme_parameters['g1']),
             'g2': self.group.serialize(scheme_parameters['g2']),
             'egg': self.group.serialize(scheme_parameters['egg'])
+        }
+
+    def deserialize_global_scheme_parameters(self, data):
+        # gp = {'g1': g1, 'g2': g2, 'egg': egg, 'H': H, 'F': F}
+        return {
+            'g1': self.group.deserialize(data['g1']),
+            'g2': self.group.deserialize(data['g2']),
+            'egg': self.group.deserialize(data['egg']),
+            'H': lambda x: self.group.hash(x, G2),
+            'F': lambda x: self.group.hash(x, G2)
         }
 
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:

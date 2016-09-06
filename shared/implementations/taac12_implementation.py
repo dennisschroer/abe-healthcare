@@ -1,9 +1,9 @@
 from typing import Dict, Any
 
 from authority.attribute_authority import AttributeAuthority
-from charm.schemes.abenc.abenc_maabe_rw15 import PairingGroup
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
 from charm.toolbox.secretutil import SecretUtil
+from charm.toolbox.pairinggroup import G1, PairingGroup
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
@@ -131,10 +131,22 @@ class TAAC12Serializer(BaseSerializer):
     def serialize_authority_public_keys(self, public_keys: AuthorityPublicKeysStore) -> bytes:
         return self.dumps({key: value for key, value in public_keys.items() if key != 'H'})
 
+    def deserialize_authority_public_keys(self, data: bytes) -> bytes:
+        result = self.loads(data)
+        result.update({'H': lambda x, t: self.group.hash((x, t), G1)})
+        return result
+
     def serialize_global_scheme_parameters(self, scheme_parameters):
         # gp = {'g': g, 'H': h}
         return {
             'g': self.group.serialize(scheme_parameters['g'])
+        }
+
+    def deserialize_global_scheme_parameters(self, data):
+        # gp = {'g': g, 'H': h}
+        return {
+            'g': self.group.deserialize(data['g']),
+            'H': lambda x: self.group.hash(x, G1),
         }
 
     def serialize_abe_ciphertext(self, ciphertext: AbeEncryption) -> Any:
