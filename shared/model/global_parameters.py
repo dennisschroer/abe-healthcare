@@ -15,5 +15,3 @@ class GlobalParameters(object):
                and self.group.groupSetting() == other.group.groupSetting() \
                and self.group.groupType() == other.group.groupType() \
                and dict_equals_except_functions(self.scheme_parameters, other.scheme_parameters)
-
-
