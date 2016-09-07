@@ -175,33 +175,49 @@ class BaseExperiment(object):
                             monitor_network=self.current_state.measurement_type == MeasurementType.storage_and_network)
         return client
 
-    def run(self):
+    def run_setup(self):
         # Create central authority
         self.central_authority = self.current_state.current_implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
 
-        # Create insurance service
-        insurance = InsuranceService(self.current_state.current_implementation.serializer,
-                                     self.central_authority.global_parameters,
-                                     self.current_state.current_implementation.public_key_scheme,
-                                     storage_path=self.get_insurance_storage_path())
-
+    def run_authsetup(self):
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.current_state.current_implementation)
         for authority in self.attribute_authorities:
-            insurance.add_authority(authority)
+            self.insurance.add_authority(authority)
 
+    def run_register(self):
         # Create user clients
         self.user_clients = self.create_user_clients(self.current_state.current_implementation,
-                                                     insurance)  # type: List[UserClient]
+                                                     self.insurance)  # type: List[UserClient]
         self.register_user_clients()
+
+    def run_keygen(self):
         self.generate_user_keys()
 
-        location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
-        self.user_clients[1].decrypt_file(location)
+    def run_encrypt(self):
+        self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
+
+    def run_decrypt(self):
+        self.user_clients[1].decrypt_file(self.location)
+
+    def run(self):
+        self.run_setup()
+
+        # Create insurance service
+        self.insurance = InsuranceService(self.current_state.current_implementation.serializer,
+                                     self.central_authority.global_parameters,
+                                     self.current_state.current_implementation.public_key_scheme,
+                                     storage_path=self.get_insurance_storage_path())
+
+        self.run_authsetup()
+        self.run_register()
+        self.run_keygen()
+        self.run_encrypt()
+        self.run_decrypt()
 
         # To make sure all keys are saved, we do this as last step
         # In some schemes, keys are only generated when requested as they are time period dependant.
