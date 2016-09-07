@@ -134,6 +134,19 @@ class BaseExperiment(object):
             self.attribute_authority_descriptions
         ))
 
+    def load_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
+            List[AttributeAuthority]:
+        """
+        Create the attribute authorities defined in the descriptions (self.attribute_authority_descriptions).
+        :param central_authority: The central authority in the scheme.
+        :param implementation: The implementation to use.
+        :return: A list of attribute authorities.
+        """
+        return list(map(
+            lambda d: self.load_attribute_authority(d, central_authority, implementation),
+            self.attribute_authority_descriptions
+        ))
+
     # noinspection PyMethodMayBeStatic
     def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
                                    implementation: BaseImplementation) -> AttributeAuthority:
@@ -147,6 +160,22 @@ class BaseExperiment(object):
         attribute_authority = implementation.create_attribute_authority(authority_description['name'],
                                                                         storage_path=self.get_attribute_authority_storage_path())
         attribute_authority.setup(central_authority, authority_description['attributes'])
+        return attribute_authority
+
+    def load_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
+                                 implementation: BaseImplementation) -> AttributeAuthority:
+        """
+        Create an attribute authority defined in a description.
+        :param authority_description: The description of the authority.
+        :param central_authority: The central authority in the scheme.
+        :param implementation: The implementation to use.
+        :return: The attribute authority.
+        """
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
+                                                                        storage_path=self.get_attribute_authority_storage_path())
+        attribute_authority.global_parameters = central_authority.global_parameters
+        attribute_authority.attributes = authority_description['attributes']
+        attribute_authority.load_attribute_keys()
         return attribute_authority
 
     def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:
@@ -182,10 +211,21 @@ class BaseExperiment(object):
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
 
+    def load_setup(self):
+        self.central_authority = self.current_state.current_implementation.create_central_authority(
+            storage_path=self.get_central_authority_storage_path())
+        self.central_authority.load_global_parameters()
+
     def run_authsetup(self):
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.current_state.current_implementation)
+        for authority in self.attribute_authorities:
+            self.insurance.add_authority(authority)
+
+    def load_authsetup(self):
+        self.attribute_authorities = self.load_attribute_authorities(self.central_authority,
+                                                                     self.current_state.current_implementation)
         for authority in self.attribute_authorities:
             self.insurance.add_authority(authority)
 
@@ -209,9 +249,9 @@ class BaseExperiment(object):
 
         # Create insurance service
         self.insurance = InsuranceService(self.current_state.current_implementation.serializer,
-                                     self.central_authority.global_parameters,
-                                     self.current_state.current_implementation.public_key_scheme,
-                                     storage_path=self.get_insurance_storage_path())
+                                          self.central_authority.global_parameters,
+                                          self.current_state.current_implementation.public_key_scheme,
+                                          storage_path=self.get_insurance_storage_path())
 
         self.run_authsetup()
         self.run_register()
