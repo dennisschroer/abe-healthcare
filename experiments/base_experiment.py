@@ -17,6 +17,14 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class BaseExperiment(object):
+    run_descriptions = {
+        # Can be 'always' or 'once'
+        # When 'always', it is run in the run() method
+        # When 'once', it is run during global setup and loaded in the run() method
+        'setup_authsetup': 'always',
+        'register_keygen': 'always',
+        'encrypt_decrypt': 'always'
+    }
     # Default configurations
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
@@ -76,14 +84,19 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
+        if self.run_descriptions['setup_authsetup'] == 'once':
+            self.run_setup()
+            self.run_authsetup()
+        if self.run_descriptions['register_keygen'] == 'once':
+            self.run_register()
+            self.run_keygen()
+
     def setup(self, state: ExperimentsSequenceState) -> None:
         """
         Setup this experiment for a single implementation and a single case in a single run.
         """
         self.current_state = state
-
         input_path = self.get_experiment_input_path()
-
         self.file_name = join(input_path, '%i-0' % self.file_size)
 
     def register_user_clients(self):
@@ -210,11 +223,20 @@ class BaseExperiment(object):
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
+        self.setup_insurance()
 
     def load_setup(self):
         self.central_authority = self.current_state.current_implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.load_global_parameters()
+        self.setup_insurance()
+
+    def setup_insurance(self):
+        # Create insurance service
+        self.insurance = InsuranceService(self.current_state.current_implementation.serializer,
+                                          self.central_authority.global_parameters,
+                                          self.current_state.current_implementation.public_key_scheme,
+                                          storage_path=self.get_insurance_storage_path())
 
     def run_authsetup(self):
         # Create attribute authorities
@@ -222,6 +244,7 @@ class BaseExperiment(object):
                                                                        self.current_state.current_implementation)
         for authority in self.attribute_authorities:
             self.insurance.add_authority(authority)
+            authority.save_attribute_keys()
 
     def load_authsetup(self):
         self.attribute_authorities = self.load_attribute_authorities(self.central_authority,
@@ -245,17 +268,19 @@ class BaseExperiment(object):
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self):
-        self.run_setup()
+        if self.run_descriptions['setup_authsetup'] == 'always':
+            self.run_setup()
+            self.run_authsetup()
+        else:
+            self.load_setup()
+            self.load_authsetup()
+        if self.run_descriptions['register_keygen'] == 'always':
+            self.run_register()
+            self.run_keygen()
+        else:
+            self.load_register()
+            self.load_keygen()
 
-        # Create insurance service
-        self.insurance = InsuranceService(self.current_state.current_implementation.serializer,
-                                          self.central_authority.global_parameters,
-                                          self.current_state.current_implementation.public_key_scheme,
-                                          storage_path=self.get_insurance_storage_path())
-
-        self.run_authsetup()
-        self.run_register()
-        self.run_keygen()
         self.run_encrypt()
         self.run_decrypt()
 
