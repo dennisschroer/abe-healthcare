@@ -28,6 +28,9 @@ class RD13Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
+    def get_name(self):
+        return "RD-DABE"
+
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return RD13AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
