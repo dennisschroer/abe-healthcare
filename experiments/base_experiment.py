@@ -84,6 +84,10 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
+    def implementation_setup(self) -> None:
+        """
+        Setup implementation specific things, which only have to run once per implementation
+        """
         if self.run_descriptions['setup_authsetup'] == 'once':
             self.run_setup()
             self.run_authsetup()
@@ -106,6 +110,7 @@ class BaseExperiment(object):
         """
         for user_client in self.user_clients:
             user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
+            user_client.save_registration_data()
 
     def get_user_client(self, gid: str) -> UserClient:
         """
@@ -122,17 +127,6 @@ class BaseExperiment(object):
         :return: The attribute authority or None.
         """
         return next((x for x in self.attribute_authorities if x.name == name), None)
-
-    def generate_user_keys(self) -> None:
-        """
-        Generate the user secret keys for each current user client by generating the
-        keys at the attribute authorities. The attributes to issue/generate are taken from the user
-        descriptions (self.user_descriptions)
-        :requires: self.user_clients is not None
-        """
-        for user_description in self.user_descriptions:
-            user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
@@ -258,8 +252,28 @@ class BaseExperiment(object):
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
 
+    def load_register(self):
+        self.user_clients = self.create_user_clients(self.current_state.current_implementation,
+                                                     self.insurance)  # type: List[UserClient]
+        for user_client in self.user_clients:
+            user_client.load_registration_data()
+
     def run_keygen(self):
-        self.generate_user_keys()
+        """
+        Generate the user secret keys for each current user client by generating the
+        keys at the attribute authorities. The attributes to issue/generate are taken from the user
+        descriptions (self.user_descriptions)
+        :requires: self.user_clients is not None
+        """
+        for user_description in self.user_descriptions:
+            user_client = self.get_user_client(user_description['gid'])  # type: ignore
+            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
+            user_client.save_user_secret_keys()
+
+    def load_keygen(self):
+        for user_description in self.user_descriptions:
+            user_client = self.get_user_client(user_description['gid'])  # type: ignore
+            user_client.load_user_secret_keys()
 
     def run_encrypt(self):
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
