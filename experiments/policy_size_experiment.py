@@ -16,7 +16,7 @@ class PolicySizeExperiment(BaseExperiment):
                 range(10)
             ))
             for case in cases:
-                logging.debug(case.arguments)
+                logging.debug(str(case.arguments))
         super().__init__(cases)
 
     def run(self):
