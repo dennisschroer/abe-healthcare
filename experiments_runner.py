@@ -58,6 +58,13 @@ class ExperimentsRunner(object):
             self.current_sequence.experiment.get_name(),
             self.current_sequence.timestamp,
             self.current_sequence.amount))
+        logging.info("Run configurations: %s" % str(self.current_sequence.experiment.run_descriptions))
+        logging.info("Authority descriptions: %s" % str(self.current_sequence.experiment.attribute_authority_descriptions))
+        logging.info("User descriptions: %s" % str(self.current_sequence.experiment.user_descriptions))
+        logging.info("File size: %s" % str(self.current_sequence.experiment.file_size))
+        logging.info("Read policy: %s" % str(self.current_sequence.experiment.read_policy))
+        logging.info("Write policy: %s" % str(self.current_sequence.experiment.write_policy))
+        logging.info("Cases: %s" % str(self.current_sequence.experiment.cases))
 
         self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
