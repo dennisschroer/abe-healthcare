@@ -351,22 +351,33 @@ class BaseExperiment(object):
         """
         Gets the path of the location to be used for the storage of user client data.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'client')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'client')
 
     def get_insurance_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the insurance service.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'insurance')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            'insurance')
 
     def get_attribute_authority_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the attribute authorities.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'authorities')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'authorities')
 
     def get_central_authority_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the central authorities.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'central_authority')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'central_authority')
