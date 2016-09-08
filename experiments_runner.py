@@ -54,21 +54,21 @@ class ExperimentsRunner(object):
         self.setup_logging()
 
         logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
-            experiments_sequence.timestamp,
-            experiments_sequence.amount))
-        experiments_sequence.experiment.global_setup()
+            self.current_sequence.device_name,
+            self.current_sequence.experiment.get_name(),
+            self.current_sequence.timestamp,
+            self.current_sequence.amount))
+
+        self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
 
-        for i in range(0, experiments_sequence.amount):
-            self.current_sequence.state.iteration = i
-            print("%d/%d" % (self.current_sequence.state.iteration, experiments_sequence.amount))
-            self.run_current_experiment()
+        self.run_current_experiment()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
-            experiments_sequence.timestamp,
-            experiments_sequence.current_time_formatted()))
+            self.current_sequence.device_name,
+            self.current_sequence.experiment.get_name(),
+            self.current_sequence.timestamp,
+            self.current_sequence.current_time_formatted()))
 
     def run_current_experiment(self) -> None:
         """
@@ -76,11 +76,14 @@ class ExperimentsRunner(object):
         """
         for implementation in self.current_sequence.implementations:
             self.current_sequence.state.current_implementation = implementation
-            for case in self.current_sequence.experiment.cases:
-                self.current_sequence.state.current_case = case
-                for measurement_type in MeasurementType:  # type:ignore
-                    self.current_sequence.state.measurement_type = measurement_type
-                    self.run_current_experiment_case()
+            self.current_sequence.experiment.implementation_setup()
+            for i in range(0, self.current_sequence.amount):
+                self.current_sequence.state.iteration = i
+                for case in self.current_sequence.experiment.cases:
+                    self.current_sequence.state.current_case = case
+                    for measurement_type in MeasurementType:  # type:ignore
+                        self.current_sequence.state.measurement_type = measurement_type
+                        self.run_current_experiment_case()
 
     def run_current_experiment_case(self) -> None:
         """
