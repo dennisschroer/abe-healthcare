@@ -27,6 +27,9 @@ class DACMACS13Implementation(BaseImplementation):
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
 
+    def get_name(self):
+        return "DAC-MACS"
+
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return DACMACS13AttributeAuthority(name, self.serializer, storage_path=storage_path)
 
