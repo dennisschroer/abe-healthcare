@@ -1,9 +1,8 @@
+import logging
 from typing import List
 
 from experiments.base_experiment import BaseExperiment
 from experiments.experiment_case import ExperimentCase
-
-debug = False
 
 
 class PolicySizeExperiment(BaseExperiment):
@@ -16,9 +15,8 @@ class PolicySizeExperiment(BaseExperiment):
                 lambda size: ExperimentCase(str(size + 1), {'policy': ' AND '.join(attributes[:size + 1])}),
                 range(10)
             ))
-            if debug:
-                for case in cases:
-                    print(case.arguments)
+            for case in cases:
+                logging.debug(case.arguments)
         super().__init__(cases)
 
     def run(self):
