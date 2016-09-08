@@ -318,21 +318,25 @@ class BaseExperiment(object):
     def get_name(self):
         return self.__class__.__name__
 
+    def clear_insurance_storage(self) -> None:
+        if os.path.exists(self.get_insurance_storage_path()):
+            shutil.rmtree(self.get_insurance_storage_path())
+        os.makedirs(self.get_insurance_storage_path())
+
     def setup_directories(self) -> None:
         """
         Setup the directories used in this experiment. Empty directories and create them if they do not exist.
         """
+        assert self.current_state.current_implementation is not None
+
         # Empty storage directories
         if os.path.exists(self.get_user_client_storage_path()):
             shutil.rmtree(self.get_user_client_storage_path())
-        if os.path.exists(self.get_insurance_storage_path()):
-            shutil.rmtree(self.get_insurance_storage_path())
 
         # Create directories
         if not os.path.exists(self.get_experiment_input_path()):
             os.makedirs(self.get_experiment_input_path())
         os.makedirs(self.get_user_client_storage_path())
-        os.makedirs(self.get_insurance_storage_path())
 
     def get_experiment_storage_base_path(self) -> str:
         """

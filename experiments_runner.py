@@ -72,16 +72,24 @@ class ExperimentsRunner(object):
 
     def run_current_experiment(self) -> None:
         """
-        Run the experiment of the current run a single time.
+        Run the experiments of the current sequence.
         """
-        for implementation in self.current_sequence.implementations:
-            self.current_sequence.state.current_implementation = implementation
-            self.current_sequence.experiment.implementation_setup()
-            for i in range(0, self.current_sequence.amount):
-                self.current_sequence.state.iteration = i
+        self.current_sequence.experiment.current_state = self.current_sequence.state
+
+        for i in range(0, self.current_sequence.amount):
+            self.current_sequence.state.iteration = i
+
+            for implementation in self.current_sequence.implementations:
+                self.current_sequence.state.current_implementation = implementation
+                if i == 0:
+                    # We need to do some cleanup first
+                    self.current_sequence.experiment.setup_directories()
+                    self.current_sequence.experiment.implementation_setup()
+
                 for case in self.current_sequence.experiment.cases:
                     self.current_sequence.state.current_case = case
-                    for measurement_type in MeasurementType:  # type:ignore
+
+                    for measurement_type in MeasurementType:  # type: ignore
                         self.current_sequence.state.measurement_type = measurement_type
                         self.run_current_experiment_case()
 
@@ -109,11 +117,12 @@ class ExperimentsRunner(object):
         lock.acquire()
         is_running = Value('b', False)
 
-        # Create output directory
+        # Setup directories
         if OUTPUT_DETAILED:
             output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_sequence)
             if not path.exists(output_directory):
                 makedirs(output_directory)
+        self.current_sequence.experiment.clear_insurance_storage()
 
         # Initialize variables
         memory_usages = list()
@@ -176,7 +185,6 @@ class ExperimentsRunner(object):
             logging.debug("debug 2 -> process started")
 
             # Empty the storage directories
-            experiments_sequence.experiment.setup_directories()
             experiments_sequence.experiment.setup(experiments_sequence.state)
 
             # Setup variables
