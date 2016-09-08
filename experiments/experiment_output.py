@@ -72,11 +72,11 @@ class ExperimentOutput(object):
         Output an error. The last exception is printed.
         :param experiments_run: The current experiments run
         """
-        directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
+        # directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_run)
         logging.error(traceback.format_exc())
         traceback.print_exc(file=sys.stderr)
-        with open(path.join(directory, 'ERROR.txt'), 'w') as file:
-            traceback.print_exc(file=file)
+        # with open(path.join(directory, 'ERROR.txt'), 'w') as file:
+        #     traceback.print_exc(file=file)
 
     @staticmethod
     def output_connections(experiments_sequence: ExperimentsSequence, connections: List[BaseConnection]) -> None:
