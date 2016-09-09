@@ -224,7 +224,7 @@ class ExperimentsRunner(object):
             # Cleanup
             logging.debug("debug 8 -> cleanup finished")
         except:
-            ExperimentOutput.output_error(experiments_sequence)
+            ExperimentOutput.output_error()
         finally:
             # noinspection PyBroadException
             try:
