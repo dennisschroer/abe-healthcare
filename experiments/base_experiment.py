@@ -21,7 +21,7 @@ class BaseExperiment(object):
         # Can be 'always' or 'once'
         # When 'always', it is run in the run() method
         # When 'once', it is run during global setup and loaded in the run() method
-        'setup_authsetup': 'always',
+        'setup_authsetup': 'once',
         'register_keygen': 'always',
         'encrypt_decrypt': 'always'
     }
@@ -88,7 +88,7 @@ class BaseExperiment(object):
         """
         Setup implementation specific things, which only have to run once per implementation
         """
-        if self.run_descriptions['setup_authsetup'] == 'once':
+        if self.run_descriptions['setup_authsetup'] == 'once' or self.run_descriptions['register_keygen'] == 'once':
             self.run_setup()
             self.run_authsetup()
         if self.run_descriptions['register_keygen'] == 'once':
@@ -279,7 +279,7 @@ class BaseExperiment(object):
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
     def run_decrypt(self):
-        self.user_clients[1].decrypt_file(self.location)
+        self.user_clients[0].decrypt_file(self.location)
 
     def run(self):
         if self.run_descriptions['setup_authsetup'] == 'always':

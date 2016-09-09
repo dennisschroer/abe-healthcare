@@ -135,15 +135,24 @@ class UserClient(object):
         write_key_pair = pke.generate_key_pair(RSA_KEY_SIZE)
         owner_key_pair = self.get_owner_key()
 
+        encrypted_info = ske.ske_encrypt(pickle.dumps(info), symmetric_key)
+
+        ekr = self.implementation.abe_encrypt(self.global_parameters,
+                                        self.authorities_public_keys(time_period), key,
+                                        read_policy, time_period)
+        print("encrypt ciper:      ", ekr)
+        print("encrypt gp:         ", self.global_parameters.scheme_parameters)
+        print("encrypt sk:         ", self.user.secret_keys)
+        print("encrypt pk:         ", self.authorities_public_keys(time_period))
+        print("encrypt time:       ", time_period)
+
         # Encrypt data and create a record
         return CreateRecord(
             read_policy=read_policy,
             write_policy=write_policy,
             owner_public_key=owner_key_pair.publickey(),
             write_public_key=write_key_pair.publickey(),
-            encryption_key_read=self.implementation.abe_encrypt(self.global_parameters,
-                                                                self.authorities_public_keys(time_period), key,
-                                                                read_policy, time_period),
+            encryption_key_read=ekr,
             encryption_key_owner=pke.encrypt(symmetric_key, owner_key_pair),
             write_private_key=self.implementation.abe_encrypt_wrapped(self.global_parameters,
                                                                       self.authorities_public_keys(time_period),
@@ -152,7 +161,7 @@ class UserClient(object):
                                                                       write_policy,
                                                                       time_period),
             time_period=time_period,
-            info=ske.ske_encrypt(pickle.dumps(info), symmetric_key),
+            info=encrypted_info,
             data=ske.ske_encrypt(message, symmetric_key)
         )
 
@@ -190,6 +199,13 @@ class UserClient(object):
                                                               self.user.registration_data,
                                                               ciphertext,
                                                               time_period)
+
+        print("decrypt ciper:      ", ciphertext)
+        print("decrypt gp:         ", self.global_parameters.scheme_parameters)
+        print("decrypt sk:         ", self.user.secret_keys)
+        print("decrypt pk:         ", self.authorities_public_keys(time_period))
+        print("decrypt time:       ", time_period)
+
         return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext,
                                                self.user.registration_data)
 
@@ -204,12 +220,14 @@ class UserClient(object):
         ske = self.implementation.symmetric_key_scheme
         # Check if we need to fetch update keys first
         key = self._decrypt_abe(record.encryption_key_read, record.time_period)
+
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
-        return pickle.loads(
-            ske.ske_decrypt(record.info, symmetric_key)), ske.ske_decrypt(
-            record.data,
-            symmetric_key)
+        raw_info = ske.ske_decrypt(record.info, symmetric_key)
+
+        info = pickle.loads(raw_info)
+        data = ske.ske_decrypt(record.data, symmetric_key)
+        return info, data
 
     def update_file(self, location: str, message: bytes = b'updated content'):
         """
@@ -353,16 +371,6 @@ class UserClient(object):
 
         self.save_user_secret_keys()
 
-    def save_user_secret_keys(self):
-        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
-        with open(save_file_path, 'wb') as f:
-            f.write(self.implementation.serializer.serialize_user_secret_keys(self.user.secret_keys))
-
-    def load_user_secret_keys(self):
-        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
-        with open(save_file_path, 'rb') as f:
-            self.user.secret_keys = (self.implementation.serializer.deserialize_user_secret_keys(f.read()))
-
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
         Send a CreateRecord to the insurance company.
@@ -392,23 +400,6 @@ class UserClient(object):
         self.user.registration_data = registration_data
         self.save_registration_data()
 
-    def save_registration_data(self):
-        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
-        if self.user.registration_data is None:
-            if os.path.exists(save_file_path):
-                os.remove(save_file_path)
-        else:
-            with open(save_file_path, 'wb') as f:
-                f.write(self.implementation.serializer.serialize_registration_data(self.user.registration_data))
-
-    def load_registration_data(self):
-        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
-        if path.exists(save_file_path):
-            with open(save_file_path, 'rb') as f:
-                self.user.registration_data = self.implementation.serializer.deserialize_registration_data(f.read())
-        else:
-            self.user.registration_data = None
-
     def get_owner_key(self) -> Any:
         """
         Loads the keys from storage, or creates them if they do not exist
@@ -435,6 +426,33 @@ class UserClient(object):
         """
         pke = self.implementation.public_key_scheme
         return pke.generate_key_pair(RSA_KEY_SIZE)
+
+    def save_registration_data(self):
+        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
+        if self.user.registration_data is None:
+            if os.path.exists(save_file_path):
+                os.remove(save_file_path)
+        else:
+            with open(save_file_path, 'wb') as f:
+                f.write(self.implementation.serializer.serialize_registration_data(self.user.registration_data))
+
+    def load_registration_data(self):
+        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
+        if path.exists(save_file_path):
+            with open(save_file_path, 'rb') as f:
+                self.user.registration_data = self.implementation.serializer.deserialize_registration_data(f.read())
+        else:
+            self.user.registration_data = None
+
+    def save_user_secret_keys(self):
+        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.implementation.serializer.serialize_user_secret_keys(self.user.secret_keys))
+
+    def load_user_secret_keys(self):
+        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
+        with open(save_file_path, 'rb') as f:
+            self.user.secret_keys = (self.implementation.serializer.deserialize_user_secret_keys(f.read()))
 
     def save_owner_keys(self, key_pair: Any) -> Any:
         """
