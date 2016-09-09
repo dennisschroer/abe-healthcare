@@ -54,33 +54,51 @@ class ExperimentsRunner(object):
         self.setup_logging()
 
         logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
-            experiments_sequence.timestamp,
-            experiments_sequence.amount))
-        experiments_sequence.experiment.global_setup()
+            self.current_sequence.device_name,
+            self.current_sequence.experiment.get_name(),
+            self.current_sequence.timestamp,
+            self.current_sequence.amount))
+        logging.info("Run configurations: %s" % str(self.current_sequence.experiment.run_descriptions))
+        logging.info("Authority descriptions: %s" % str(self.current_sequence.experiment.attribute_authority_descriptions))
+        logging.info("User descriptions: %s" % str(self.current_sequence.experiment.user_descriptions))
+        logging.info("File size: %s" % str(self.current_sequence.experiment.file_size))
+        logging.info("Read policy: %s" % str(self.current_sequence.experiment.read_policy))
+        logging.info("Write policy: %s" % str(self.current_sequence.experiment.write_policy))
+        logging.info("Cases: %s" % str(self.current_sequence.experiment.cases))
+
+        self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
 
-        for i in range(0, experiments_sequence.amount):
-            self.current_sequence.state.iteration = i
-            print("%d/%d" % (self.current_sequence.state.iteration, experiments_sequence.amount))
-            self.run_current_experiment()
+        self.run_current_experiment()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
-            experiments_sequence.device_name, experiments_sequence.experiment.get_name(),
-            experiments_sequence.timestamp,
-            experiments_sequence.current_time_formatted()))
+            self.current_sequence.device_name,
+            self.current_sequence.experiment.get_name(),
+            self.current_sequence.timestamp,
+            self.current_sequence.current_time_formatted()))
 
     def run_current_experiment(self) -> None:
         """
-        Run the experiment of the current run a single time.
+        Run the experiments of the current sequence.
         """
-        for implementation in self.current_sequence.implementations:
-            self.current_sequence.state.current_implementation = implementation
-            for case in self.current_sequence.experiment.cases:
-                self.current_sequence.state.current_case = case
-                for measurement_type in MeasurementType:  # type:ignore
-                    self.current_sequence.state.measurement_type = measurement_type
-                    self.run_current_experiment_case()
+        self.current_sequence.experiment.current_state = self.current_sequence.state
+
+        for i in range(0, self.current_sequence.amount):
+            self.current_sequence.state.iteration = i
+
+            for implementation in self.current_sequence.implementations:
+                self.current_sequence.state.current_implementation = implementation
+                if i == 0:
+                    # We need to do some cleanup first
+                    self.current_sequence.experiment.setup_directories()
+                    self.current_sequence.experiment.implementation_setup()
+
+                for case in self.current_sequence.experiment.cases:
+                    self.current_sequence.state.current_case = case
+
+                    for measurement_type in MeasurementType:  # type: ignore
+                        self.current_sequence.state.measurement_type = measurement_type
+                        self.run_current_experiment_case()
 
     def run_current_experiment_case(self) -> None:
         """
@@ -106,11 +124,12 @@ class ExperimentsRunner(object):
         lock.acquire()
         is_running = Value('b', False)
 
-        # Create output directory
+        # Setup directories
         if OUTPUT_DETAILED:
             output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_sequence)
             if not path.exists(output_directory):
                 makedirs(output_directory)
+        self.current_sequence.experiment.clear_insurance_storage()
 
         # Initialize variables
         memory_usages = list()
@@ -173,7 +192,6 @@ class ExperimentsRunner(object):
             logging.debug("debug 2 -> process started")
 
             # Empty the storage directories
-            experiments_sequence.experiment.setup_directories()
             experiments_sequence.experiment.setup(experiments_sequence.state)
 
             # Setup variables
@@ -206,7 +224,7 @@ class ExperimentsRunner(object):
             # Cleanup
             logging.debug("debug 8 -> cleanup finished")
         except:
-            ExperimentOutput.output_error(experiments_sequence)
+            ExperimentOutput.output_error()
         finally:
             # noinspection PyBroadException
             try:
