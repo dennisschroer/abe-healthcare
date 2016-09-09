@@ -121,3 +121,12 @@ class AttributeAuthority(object):
         save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
         with open(save_file_path, 'wb') as f:
             f.write(self.serializer.serialize_authority_secret_keys(self._secret_keys))
+
+    def load_attribute_keys(self):
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_PUBLIC_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'rb') as f:
+            self._public_keys = self.serializer.deserialize_authority_public_keys(f.read())
+
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'rb') as f:
+            self._secret_keys = self.serializer.deserialize_authority_secret_keys(f.read())

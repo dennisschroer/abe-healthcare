@@ -43,3 +43,8 @@ class CentralAuthority(object):
         save_file_path = os.path.join(self.storage_path, GLOBAL_PARAMETERS_FILENAME)
         with open(save_file_path, 'wb') as f:
             f.write(self.serializer.serialize_global_parameters(self.global_parameters))
+
+    def load_global_parameters(self):
+        save_file_path = os.path.join(self.storage_path, GLOBAL_PARAMETERS_FILENAME)
+        with open(save_file_path, 'rb') as f:
+            self.global_parameters = self.serializer.deserialize_global_parameters(f.read())

@@ -17,6 +17,14 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class BaseExperiment(object):
+    run_descriptions = {
+        # Can be 'always' or 'once'
+        # When 'always', it is run in the run() method
+        # When 'once', it is run during global setup and loaded in the run() method
+        'setup_authsetup': 'always',
+        'register_keygen': 'always',
+        'encrypt_decrypt': 'always'
+    }
     # Default configurations
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
@@ -76,14 +84,23 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
+    def implementation_setup(self) -> None:
+        """
+        Setup implementation specific things, which only have to run once per implementation
+        """
+        if self.run_descriptions['setup_authsetup'] == 'once':
+            self.run_setup()
+            self.run_authsetup()
+        if self.run_descriptions['register_keygen'] == 'once':
+            self.run_register()
+            self.run_keygen()
+
     def setup(self, state: ExperimentsSequenceState) -> None:
         """
         Setup this experiment for a single implementation and a single case in a single run.
         """
         self.current_state = state
-
         input_path = self.get_experiment_input_path()
-
         self.file_name = join(input_path, '%i-0' % self.file_size)
 
     def register_user_clients(self):
@@ -93,6 +110,7 @@ class BaseExperiment(object):
         """
         for user_client in self.user_clients:
             user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
+            user_client.save_registration_data()
 
     def get_user_client(self, gid: str) -> UserClient:
         """
@@ -110,17 +128,6 @@ class BaseExperiment(object):
         """
         return next((x for x in self.attribute_authorities if x.name == name), None)
 
-    def generate_user_keys(self) -> None:
-        """
-        Generate the user secret keys for each current user client by generating the
-        keys at the attribute authorities. The attributes to issue/generate are taken from the user
-        descriptions (self.user_descriptions)
-        :requires: self.user_clients is not None
-        """
-        for user_description in self.user_descriptions:
-            user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
-
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
         """
@@ -131,6 +138,19 @@ class BaseExperiment(object):
         """
         return list(map(
             lambda d: self.create_attribute_authority(d, central_authority, implementation),
+            self.attribute_authority_descriptions
+        ))
+
+    def load_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
+            List[AttributeAuthority]:
+        """
+        Create the attribute authorities defined in the descriptions (self.attribute_authority_descriptions).
+        :param central_authority: The central authority in the scheme.
+        :param implementation: The implementation to use.
+        :return: A list of attribute authorities.
+        """
+        return list(map(
+            lambda d: self.load_attribute_authority(d, central_authority, implementation),
             self.attribute_authority_descriptions
         ))
 
@@ -147,6 +167,22 @@ class BaseExperiment(object):
         attribute_authority = implementation.create_attribute_authority(authority_description['name'],
                                                                         storage_path=self.get_attribute_authority_storage_path())
         attribute_authority.setup(central_authority, authority_description['attributes'])
+        return attribute_authority
+
+    def load_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
+                                 implementation: BaseImplementation) -> AttributeAuthority:
+        """
+        Create an attribute authority defined in a description.
+        :param authority_description: The description of the authority.
+        :param central_authority: The central authority in the scheme.
+        :param implementation: The implementation to use.
+        :return: The attribute authority.
+        """
+        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
+                                                                        storage_path=self.get_attribute_authority_storage_path())
+        attribute_authority.global_parameters = central_authority.global_parameters
+        attribute_authority.attributes = authority_description['attributes']
+        attribute_authority.load_attribute_keys()
         return attribute_authority
 
     def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:
@@ -175,33 +211,92 @@ class BaseExperiment(object):
                             monitor_network=self.current_state.measurement_type == MeasurementType.storage_and_network)
         return client
 
-    def run(self):
+    def run_setup(self):
         # Create central authority
         self.central_authority = self.current_state.current_implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
+        self.setup_insurance()
 
+    def load_setup(self):
+        self.central_authority = self.current_state.current_implementation.create_central_authority(
+            storage_path=self.get_central_authority_storage_path())
+        self.central_authority.load_global_parameters()
+        self.setup_insurance()
+
+    def setup_insurance(self):
         # Create insurance service
-        insurance = InsuranceService(self.current_state.current_implementation.serializer,
-                                     self.central_authority.global_parameters,
-                                     self.current_state.current_implementation.public_key_scheme,
-                                     storage_path=self.get_insurance_storage_path())
+        self.insurance = InsuranceService(self.current_state.current_implementation.serializer,
+                                          self.central_authority.global_parameters,
+                                          self.current_state.current_implementation.public_key_scheme,
+                                          storage_path=self.get_insurance_storage_path())
 
+    def run_authsetup(self):
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.current_state.current_implementation)
         for authority in self.attribute_authorities:
-            insurance.add_authority(authority)
+            self.insurance.add_authority(authority)
+            authority.save_attribute_keys()
 
+    def load_authsetup(self):
+        self.attribute_authorities = self.load_attribute_authorities(self.central_authority,
+                                                                     self.current_state.current_implementation)
+        for authority in self.attribute_authorities:
+            self.insurance.add_authority(authority)
+
+    def run_register(self):
         # Create user clients
         self.user_clients = self.create_user_clients(self.current_state.current_implementation,
-                                                     insurance)  # type: List[UserClient]
+                                                     self.insurance)  # type: List[UserClient]
         self.register_user_clients()
-        self.generate_user_keys()
 
-        location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
-        self.user_clients[1].decrypt_file(location)
+    def load_register(self):
+        self.user_clients = self.create_user_clients(self.current_state.current_implementation,
+                                                     self.insurance)  # type: List[UserClient]
+        for user_client in self.user_clients:
+            user_client.load_registration_data()
+
+    def run_keygen(self):
+        """
+        Generate the user secret keys for each current user client by generating the
+        keys at the attribute authorities. The attributes to issue/generate are taken from the user
+        descriptions (self.user_descriptions)
+        :requires: self.user_clients is not None
+        """
+        for user_description in self.user_descriptions:
+            user_client = self.get_user_client(user_description['gid'])  # type: ignore
+            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
+            user_client.save_user_secret_keys()
+
+    def load_keygen(self):
+        for user_description in self.user_descriptions:
+            user_client = self.get_user_client(user_description['gid'])  # type: ignore
+            user_client.load_user_secret_keys()
+
+    def run_encrypt(self):
+        self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
+
+    def run_decrypt(self):
+        self.user_clients[1].decrypt_file(self.location)
+
+    def run(self):
+        if self.run_descriptions['setup_authsetup'] == 'always':
+            self.run_setup()
+            self.run_authsetup()
+        else:
+            self.load_setup()
+            self.load_authsetup()
+        if self.run_descriptions['register_keygen'] == 'always':
+            self.run_register()
+            self.run_keygen()
+        else:
+            self.load_register()
+            self.load_keygen()
+
+        self.run_encrypt()
+        self.run_decrypt()
 
         # To make sure all keys are saved, we do this as last step
         # In some schemes, keys are only generated when requested as they are time period dependant.
@@ -223,21 +318,25 @@ class BaseExperiment(object):
     def get_name(self):
         return self.__class__.__name__
 
+    def clear_insurance_storage(self) -> None:
+        if os.path.exists(self.get_insurance_storage_path()):
+            shutil.rmtree(self.get_insurance_storage_path())
+        os.makedirs(self.get_insurance_storage_path())
+
     def setup_directories(self) -> None:
         """
         Setup the directories used in this experiment. Empty directories and create them if they do not exist.
         """
+        assert self.current_state.current_implementation is not None
+
         # Empty storage directories
         if os.path.exists(self.get_user_client_storage_path()):
             shutil.rmtree(self.get_user_client_storage_path())
-        if os.path.exists(self.get_insurance_storage_path()):
-            shutil.rmtree(self.get_insurance_storage_path())
 
         # Create directories
         if not os.path.exists(self.get_experiment_input_path()):
             os.makedirs(self.get_experiment_input_path())
         os.makedirs(self.get_user_client_storage_path())
-        os.makedirs(self.get_insurance_storage_path())
 
     def get_experiment_storage_base_path(self) -> str:
         """
@@ -256,22 +355,33 @@ class BaseExperiment(object):
         """
         Gets the path of the location to be used for the storage of user client data.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'client')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'client')
 
     def get_insurance_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the insurance service.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'insurance')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            'insurance')
 
     def get_attribute_authority_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the attribute authorities.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'authorities')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'authorities')
 
     def get_central_authority_storage_path(self) -> str:
         """
         Gets the path of the location to be used for the storage of the central authorities.
         """
-        return os.path.join(self.get_experiment_storage_base_path(), 'central_authority')
+        return os.path.join(
+            self.get_experiment_storage_base_path(),
+            self.current_state.current_implementation.get_name(),
+            'central_authority')

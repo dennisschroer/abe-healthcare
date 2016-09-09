@@ -358,6 +358,11 @@ class UserClient(object):
         with open(save_file_path, 'wb') as f:
             f.write(self.implementation.serializer.serialize_user_secret_keys(self.user.secret_keys))
 
+    def load_user_secret_keys(self):
+        save_file_path = os.path.join(self.storage_path, USER_SECRET_KEYS_FILENAME % self.user.gid)
+        with open(save_file_path, 'rb') as f:
+            self.user.secret_keys = (self.implementation.serializer.deserialize_user_secret_keys(f.read()))
+
     def send_create_record(self, create_record: CreateRecord) -> str:
         """
         Send a CreateRecord to the insurance company.
@@ -395,6 +400,14 @@ class UserClient(object):
         else:
             with open(save_file_path, 'wb') as f:
                 f.write(self.implementation.serializer.serialize_registration_data(self.user.registration_data))
+
+    def load_registration_data(self):
+        save_file_path = os.path.join(self.storage_path, USER_REGISTRATION_DATA_FILENAME % self.user.gid)
+        if path.exists(save_file_path):
+            with open(save_file_path, 'rb') as f:
+                self.user.registration_data = self.implementation.serializer.deserialize_registration_data(f.read())
+        else:
+            self.user.registration_data = None
 
     def get_owner_key(self) -> Any:
         """

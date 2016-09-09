@@ -1,6 +1,8 @@
+import os
 from typing import Dict, Any
 
-from authority.attribute_authority import AttributeAuthority
+from authority.attribute_authority import AttributeAuthority, ATTRIBUTE_PUBLIC_KEYS_FILENAME, \
+    ATTRIBUTE_SECRET_KEYS_FILENAME
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
 from charm.toolbox.secretutil import SecretUtil
 from charm.toolbox.pairinggroup import G1, PairingGroup
@@ -29,6 +31,9 @@ class TAAC12Implementation(BaseImplementation):
     def __init__(self, group: PairingGroup = None) -> None:
         super().__init__(group)
         self._serializer = None  # type: BaseSerializer
+
+    def get_name(self):
+        return "TAAC"
 
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         return TAAC12AttributeAuthority(name, self.serializer, storage_path=storage_path)
@@ -98,15 +103,22 @@ class TAAC12CentralAuthority(CentralAuthority):
 class TAAC12AttributeAuthority(AttributeAuthority):
     def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
         super().__init__(name, serializer, storage_path=storage_path)
-        self.states = None  # type: dict
         self.update_keys = {}  # type: dict
 
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         taac = Taac(self.global_parameters.group)
-        self._public_keys, self._secret_keys, self.states = taac.authsetup(
+        self._secret_keys = dict()
+        self._public_keys, self._secret_keys['secret'], self._secret_keys['states'] = taac.authsetup(
             central_authority.global_parameters.scheme_parameters, attributes, BINARY_TREE_HEIGHT)
+
+    @property
+    def states(self):
+        return self._secret_keys['states']
+
+    def secret_keys(self, time_period: int) -> Any:
+        return self._secret_keys['secret']
 
     def _keygen(self, gid, registration_data, attributes, time_period):
         taac = Taac(self.global_parameters.group)
