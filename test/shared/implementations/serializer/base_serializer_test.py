@@ -107,7 +107,8 @@ class BaseSerializerTestCase(unittest.TestCase):
             )
 
             serialized = serializer.serialize_data_record_meta(data_record)
-            deserialized = serializer.deserialize_data_record_meta(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = serializer.deserialize_data_record_meta(reloaded_serialized)
 
             self.assertEqual(data_record.read_policy, deserialized.read_policy)
             self.assertEqual(data_record.write_policy, deserialized.write_policy)
@@ -125,7 +126,8 @@ class BaseSerializerTestCase(unittest.TestCase):
             self._setup_authorities(implementation)
             serialized = implementation.serializer.serialize_authority_public_keys(
                 self.attribute_authority._public_keys)
-            deserialized = implementation.serializer.deserialize_authority_public_keys(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = implementation.serializer.deserialize_authority_public_keys(reloaded_serialized)
 
             self.assertTrue(dict_equals_except_functions(self.attribute_authority._public_keys, deserialized))
 
@@ -134,7 +136,8 @@ class BaseSerializerTestCase(unittest.TestCase):
             self._setup_authorities(implementation)
             serialized = implementation.serializer.serialize_authority_secret_keys(
                 self.attribute_authority._secret_keys)
-            deserialized = implementation.serializer.deserialize_authority_secret_keys(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = implementation.serializer.deserialize_authority_secret_keys(reloaded_serialized)
             self.maxDiff = None
             self.assertEqual(self.attribute_authority._secret_keys, deserialized)
 
@@ -149,7 +152,8 @@ class BaseSerializerTestCase(unittest.TestCase):
             }
 
             serialized = implementation.serializer.serialize_keygen_request(request)
-            deserialized = implementation.serializer.deserialize_keygen_request(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = implementation.serializer.deserialize_keygen_request(reloaded_serialized)
 
             self.assertEqual(request, deserialized)
 
@@ -164,7 +168,8 @@ class BaseSerializerTestCase(unittest.TestCase):
                                               self.attribute_authority.keygen('bob', registration_data, attributes, 1))
 
             serialized = implementation.serializer.serialize_user_secret_keys(secret_keys)
-            deserialized = implementation.serializer.deserialize_user_secret_keys(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = implementation.serializer.deserialize_user_secret_keys(reloaded_serialized)
 
             self.assertEqual(secret_keys, deserialized)
 
@@ -174,9 +179,18 @@ class BaseSerializerTestCase(unittest.TestCase):
 
             registration_data = self.central_authority.register_user('bob')
             serialized = implementation.serializer.serialize_registration_data(registration_data)
-            deserialized = implementation.serializer.deserialize_registration_data(serialized)
+            reloaded_serialized = self.save_and_load_from_file(serialized)
+            deserialized = implementation.serializer.deserialize_registration_data(reloaded_serialized)
 
             self.assertEqual(registration_data, deserialized)
+
+    @staticmethod
+    def save_and_load_from_file(data):
+        with open('temp.dat', 'wb') as f:
+            f.write(data)
+
+        with open('temp.dat', 'rb') as f:
+            return f.read()
 
 
 if __name__ == '__main__':
