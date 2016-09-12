@@ -1,6 +1,7 @@
 import cProfile
 import os
 import shutil
+from cProfile import Profile
 from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from os.path import join
@@ -81,6 +82,7 @@ class BaseExperiment():
         self.cases = cases  # type: List[ExperimentCase]
 
         self.setup_lock = Condition()
+        self.profiler = None # type: Profile
 
     @property
     def sequence_state(self):
@@ -363,17 +365,16 @@ class BaseExperiment():
 
     def start_measurements(self):
         if self.state.measurement_type == MeasurementType.timings:
-            self.pr = cProfile.Profile()
-            self.pr.enable()
+            self.profiler = Profile()
+            self.profiler.enable()
 
     def stop_measurements(self):
         if self.state.measurement_type == MeasurementType.timings:
-            self.pr = cProfile.Profile()
-            self.pr.disable()
+            self.profiler.disable()
 
     def finish_measurements(self):
         if self.state.measurement_type == MeasurementType.timings:
-            self.output.output_timings(self.pr)
+            self.output.output_timings(self.profiler)
         if self.state.measurement_type == MeasurementType.storage_and_network:
             self.output.output_connections(self.get_connections())
 
