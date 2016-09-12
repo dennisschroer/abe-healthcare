@@ -21,7 +21,7 @@ from shared.model.user import User
 from shared.utils.random_file_generator import RandomFileGenerator
 
 
-class BaseExperiment(Process):
+class BaseExperiment():
     run_descriptions = {
         # Can be 'always' or 'once'
         # When 'always', it is run in the run() method
@@ -66,10 +66,9 @@ class BaseExperiment(Process):
     write_policy = read_policy
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
-        super().__init__(name=self.get_name(), target=self.run_experiment)
-        self.state = None  # type:ExperimentState
-        self.sequence_state = None  # type: ExperimentsSequenceState
-        self.output_path = None  # type: str
+        self.state = ExperimentState()  # type:ExperimentState
+        self.output = None  # type: ExperimentOutput
+        self._sequence_state = None  # type: ExperimentsSequenceState
         self.memory_measure_interval = 0.05
         self.file_name = None  # type: str
 
@@ -82,6 +81,15 @@ class BaseExperiment(Process):
         self.cases = cases  # type: List[ExperimentCase]
 
         self.setup_lock = Condition()
+
+    @property
+    def sequence_state(self):
+        return self._sequence_state
+
+    @sequence_state.setter
+    def sequence_state(self, value: ExperimentsSequenceState):
+        self._sequence_state = value
+        self.output = ExperimentOutput(self.get_name(), self.state, self.sequence_state)
 
     def global_setup(self) -> None:
         """
@@ -365,9 +373,9 @@ class BaseExperiment(Process):
 
     def finish_measurements(self):
         if self.state.measurement_type == MeasurementType.timings:
-            ExperimentOutput.output_timings(self, self.pr)
+            self.output.output_timings(self.pr)
         if self.state.measurement_type == MeasurementType.storage_and_network:
-            ExperimentOutput.output_connections(self, self.get_connections())
+            self.output.output_connections(self.get_connections())
 
     def get_connections(self) -> List[BaseConnection]:
         """
