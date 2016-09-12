@@ -299,29 +299,6 @@ class BaseExperiment():
     def run_decrypt(self):
         self.user_clients[1].decrypt_file(self.location)
 
-    def run_experiment(self):
-        if self.run_descriptions['setup_authsetup'] == 'always':
-            self.run_setup()
-            self.run_authsetup()
-        else:
-            self.load_setup()
-            self.load_authsetup()
-        if self.run_descriptions['register_keygen'] == 'always':
-            self.run_register()
-            self.run_keygen()
-        else:
-            self.load_register()
-            self.load_keygen()
-
-        self.run_encrypt()
-        self.run_decrypt()
-
-        # To make sure all keys are saved, we do this as last step
-        # In some schemes, keys are only generated when requested as they are time period dependant.
-        # RD13 is an example of this.
-        for authority in self.attribute_authorities:
-            authority.save_attribute_keys()
-
     def run(self):
         self.setup()
 
