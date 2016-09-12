@@ -1,18 +1,13 @@
-import cProfile
 import logging
-from multiprocessing import Condition  # type: ignore
-from multiprocessing import Process
-from multiprocessing import Value
 from os import makedirs
 from os import path
-from time import sleep
 
 import psutil
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput, OUTPUT_DETAILED
-from experiments.experiments_sequence import ExperimentsSequence
+from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
+from experiments.experiments_sequence import ExperimentsSequence, implementations
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
 
@@ -29,6 +24,7 @@ class ExperimentsRunner(object):
         self._timestamp = None  # type: str
         self._device_name = None  # type: str
         self.current_sequence = None  # type: ExperimentsSequence
+        self.psutil_process = None  # type: psutil.Process
 
     def run_base_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 20))
@@ -37,7 +33,7 @@ class ExperimentsRunner(object):
         self.run_experiments_sequence(ExperimentsSequence(FileSizeExperiment(), 1))
 
     def run_policy_size_experiments(self) -> None:
-        self.run_experiments_sequence(ExperimentsSequence(PolicySizeExperiment(), 1))
+        self.run_experiments_sequence(ExperimentsSequence(PolicySizeExperiment(), 10))
 
     def run_experiments_sequence(self, experiments_sequence: ExperimentsSequence) -> None:
         """
@@ -45,203 +41,169 @@ class ExperimentsRunner(object):
         :param experiments_sequence:
         """
         self.current_sequence = experiments_sequence
+        current_state = self.current_sequence.state
 
         # Create directories
-        if not path.exists(ExperimentOutput.experiment_results_directory(self.current_sequence)):
-            makedirs(ExperimentOutput.experiment_results_directory(self.current_sequence))
+        if not path.exists(ExperimentOutput.experiment_results_directory(self.current_sequence.experiment)):
+            makedirs(ExperimentOutput.experiment_results_directory(self.current_sequence.experiment))
 
         # Setup logging
         self.setup_logging()
-
-        logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
-            self.current_sequence.device_name,
-            self.current_sequence.experiment.get_name(),
-            self.current_sequence.timestamp,
-            self.current_sequence.amount))
-        logging.info("Run configurations: %s" % str(self.current_sequence.experiment.run_descriptions))
-        logging.info("Authority descriptions: %s" % str(self.current_sequence.experiment.attribute_authority_descriptions))
-        logging.info("User descriptions: %s" % str(self.current_sequence.experiment.user_descriptions))
-        logging.info("File size: %s" % str(self.current_sequence.experiment.file_size))
-        logging.info("Read policy: %s" % str(self.current_sequence.experiment.read_policy))
-        logging.info("Write policy: %s" % str(self.current_sequence.experiment.write_policy))
-        logging.info("Cases: %s" % str(self.current_sequence.experiment.cases))
+        self.log_experiment_start()
 
         self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
 
-        self.run_current_experiment()
+        for i in range(0, current_state.amount):
+            current_state.iteration = i
 
-        logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
-            self.current_sequence.device_name,
-            self.current_sequence.experiment.get_name(),
-            self.current_sequence.timestamp,
-            self.current_sequence.current_time_formatted()))
-
-    def run_current_experiment(self) -> None:
-        """
-        Run the experiments of the current sequence.
-        """
-        self.current_sequence.experiment.current_state = self.current_sequence.state
-
-        for i in range(0, self.current_sequence.amount):
-            self.current_sequence.state.iteration = i
-
-            for implementation in self.current_sequence.implementations:
-                self.current_sequence.state.current_implementation = implementation
+            for implementation in implementations:
+                current_state.implementation = implementation
                 if i == 0:
                     # We need to do some cleanup first
-                    self.current_sequence.experiment.setup_directories()
-                    self.current_sequence.experiment.implementation_setup()
+                    current_state.experiment.setup_directories()
+                    current_state.experiment.implementation_setup()
 
-                for case in self.current_sequence.experiment.cases:
-                    self.current_sequence.state.current_case = case
+                self.run_current_experiment_with_current_state()
 
-                    for measurement_type in MeasurementType:  # type: ignore
-                        self.current_sequence.state.measurement_type = measurement_type
-                        self.run_current_experiment_case()
+        logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
+            current_state.device_name,
+            current_state.experiment.get_name(),
+            current_state.timestamp,
+            current_state.current_time_formatted()))
 
-    def run_current_experiment_case(self) -> None:
-        """
-        Run the current case with the current implementation of the current experiment.
+    def log_experiment_start(self):
+        current_state = self.current_sequence.state
+        logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
+            current_state.device_name,
+            current_state.experiment.get_name(),
+            current_state.timestamp,
+            current_state.amount))
+        logging.info("Run configurations: %s" % str(current_state.experiment.run_descriptions))
+        logging.info(
+            "Authority descriptions: %s" % str(current_state.experiment.attribute_authority_descriptions))
+        logging.info("User descriptions: %s" % str(current_state.experiment.user_descriptions))
+        logging.info("File size: %s" % str(current_state.experiment.file_size))
+        logging.info("Read policy: %s" % str(current_state.experiment.read_policy))
+        logging.info("Write policy: %s" % str(current_state.experiment.write_policy))
+        logging.info("Cases: %s" % str(current_state.experiment.cases))
 
-        This is done by starting the experiment in a seperate process.
-        """
+    def log_current_experiment(self):
         logging.info("=> Run %d/%d of %s, implementation=%s (%d/%d), case=%s (%d/%d), measurement=%s" % (
             self.current_sequence.state.iteration + 1,
-            self.current_sequence.amount,
+            self.current_sequence.state.amount,
             self.current_sequence.experiment.get_name(),
             self.current_sequence.state.current_implementation.get_name(),
-            self.current_sequence.implementations.index(self.current_sequence.state.current_implementation) + 1,
-            len(self.current_sequence.implementations),
+            implementations.index(self.current_sequence.state.current_implementation) + 1,
+            len(implementations),
             self.current_sequence.state.current_case.name,
-            self.current_sequence.experiment.cases.index(self.current_sequence.state.current_case) + 1,
-            len(self.current_sequence.experiment.cases),
+            self.current_sequence.state.experiment.cases.index(self.current_sequence.state.current_case) + 1,
+            len(self.current_sequence.state.experiment.cases),
             self.current_sequence.state.measurement_type
         ))
 
-        # Create a lock
-        lock = Condition()
-        lock.acquire()
-        is_running = Value('b', False)
+    def run_current_experiment_with_current_state(self) -> None:
+        """
+        Run the current case with the current implementation of the current experiment.
 
-        # Setup directories
-        if OUTPUT_DETAILED:
-            output_directory = ExperimentOutput.experiment_case_iteration_results_directory(self.current_sequence)
-            if not path.exists(output_directory):
-                makedirs(output_directory)
-        self.current_sequence.experiment.clear_insurance_storage()
+        This is done by starting the experiment in a separate process.
+        """
+        self.log_current_experiment()
+
+        self.current_sequence.experiment.sequence_state = self.current_sequence.state
+
+        self.current_sequence.experiment.setup_lock.acquire()
+
+        self.current_sequence.experiment.start()
+
+        self.current_sequence.experiment.setup_lock.wait()
 
         # Initialize variables
         memory_usages = list()
 
-        # Create a separate process
-        p = Process(target=self.run_experiment_case_synchronously,
-                    args=(self.current_sequence, lock, is_running))
+        # Setup is finished
+        # while self.current_sequence.state.experiment.state.progress.value != ExperimentProgress.stopping:
+        # self.start_measurements()
 
-        logging.debug("debug 1 -> start process")
+        # while self.current_sequence.state.experiment.current_state.progress.value == ExperimentProgress.running:
+        #     if self.current_sequence.state.measurement_type is MeasurementType.memory:
+        #         memory_usages.append(self.pr.memory_full_info())
+        #     sleep(self.current_sequence.state.experiment.memory_measure_interval)
 
-        # Start the process
-        p.start()
+        self.current_sequence.state.experiment.join()
 
-        # Wait until the setup of the experiment is finished
-        lock.wait()
-
-        logging.debug("debug 4 -> start monitoring")
-
+    def start_measurements(self):
         # Setup is finished, start monitoring
         if self.current_sequence.state.measurement_type in (MeasurementType.cpu, MeasurementType.memory):
-            process = psutil.Process(p.pid)  # type: ignore
-            process.cpu_percent()
+            self.psutil_process = psutil.Process(self.current_sequence.experiment.pid)
+            self.psutil_process.cpu_percent()
 
-        # Release the lock, signaling the experiment to start, and wait for the experiment to finish
-        lock.notify()
-        is_running.value = True  # type: ignore
-        lock.release()
-
-        while is_running.value:  # type: ignore
-            if self.current_sequence.state.measurement_type is MeasurementType.memory:
-                memory_usages.append(process.memory_full_info())
-            sleep(self.current_sequence.experiment.memory_measure_interval)
-
-        logging.debug("debug 7 -> gather monitoring data")
-
-        # Gather process statistics
-        if self.current_sequence.state.measurement_type is MeasurementType.cpu:
-            ExperimentOutput.output_cpu_usage(self.current_sequence, process.cpu_percent())
-        if self.current_sequence.state.measurement_type is MeasurementType.memory:
-            ExperimentOutput.output_memory_usages(self.current_sequence, memory_usages)
-        if self.current_sequence.state.measurement_type is MeasurementType.storage_and_network:
-            ExperimentOutput.output_storage_space(self.current_sequence)
-
-        # Wait for the cleanup to finish
-        p.join()
-
-        logging.debug("debug 9 -> process stopped")
-
-    @staticmethod
-    def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,
-                                          is_running: Value) -> None:
-        """
-        Run the experiment in this process.
-        :param experiments_sequence: The current running experiment
-        :param lock: A lock, required for synchronization
-        :param is_running: A flag indicating whether the experiment is running
-        """
-        # noinspection PyBroadException
-        try:
-            logging.debug("debug 2 -> process started")
-
-            # Empty the storage directories
-            experiments_sequence.experiment.setup(experiments_sequence.state)
-
-            # Setup variables
-            pr = cProfile.Profile()
-
-            # We are done, let the main process setup monitoring
-            lock.acquire()
-            logging.debug("debug 3 -> experiment setup finished")
-            lock.notify()
-            lock.wait()
-            logging.debug("debug 5 -> start experiment")
-
-            # And off we go
-            if experiments_sequence.state.measurement_type == MeasurementType.timings:
-                pr.enable()
-            experiments_sequence.experiment.run()
-            if experiments_sequence.state.measurement_type == MeasurementType.timings:
-                pr.disable()
-
-            # We are done, notify the main process to stop monitoring
-            logging.debug("debug 6 -> stop experiment")
-            is_running.value = False  # type: ignore
-
-            if experiments_sequence.state.measurement_type == MeasurementType.timings:
-                ExperimentOutput.output_timings(experiments_sequence, pr)
-            if experiments_sequence.state.measurement_type == MeasurementType.storage_and_network:
-                ExperimentOutput.output_connections(experiments_sequence,
-                                                    experiments_sequence.experiment.get_connections())
-
-            # Cleanup
-            logging.debug("debug 8 -> cleanup finished")
-        except:
-            ExperimentOutput.output_error()
-        finally:
-            # noinspection PyBroadException
-            try:
-                is_running.value = False  # type: ignore
-                lock.notify()
-                lock.release()
-            except:
-                pass
+    # @staticmethod
+    # def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,
+    #                                       is_running: Value) -> None:
+    #     """
+    #     Run the experiment in this process.
+    #     :param experiments_sequence: The current running experiment
+    #     :param lock: A lock, required for synchronization
+    #     :param is_running: A flag indicating whether the experiment is running
+    #     """
+    #     # noinspection PyBroadException
+    #     try:
+    #         logging.debug("debug 2 -> process started")
+    #
+    #         # Empty the storage directories
+    #         experiments_sequence.experiment.setup(experiments_sequence.state)
+    #
+    #         # Setup variables
+    #         pr = cProfile.Profile()
+    #
+    #         # We are done, let the main process setup monitoring
+    #         lock.acquire()
+    #         logging.debug("debug 3 -> experiment setup finished")
+    #         lock.notify()
+    #         lock.wait()
+    #         logging.debug("debug 5 -> start experiment")
+    #
+    #         # And off we go
+    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
+    #             pr.enable()
+    #         experiments_sequence.experiment.run()
+    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
+    #             pr.disable()
+    #
+    #         # We are done, notify the main process to stop monitoring
+    #         logging.debug("debug 6 -> stop experiment")
+    #         is_running.value = False  # type: ignore
+    #
+    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
+    #             ExperimentOutput.output_timings(experiments_sequence, pr)
+    #         if experiments_sequence.state.measurement_type == MeasurementType.storage_and_network:
+    #             ExperimentOutput.output_connections(experiments_sequence,
+    #                                                 experiments_sequence.experiment.get_connections())
+    #
+    #         # Cleanup
+    #         logging.debug("debug 8 -> cleanup finished")
+    #     except:
+    #         ExperimentOutput.output_error()
+    #     finally:
+    #         # noinspection PyBroadException
+    #         try:
+    #             is_running.value = False  # type: ignore
+    #             lock.notify()
+    #             lock.release()
+    #         except:
+    #             pass
 
     def setup_logging(self) -> None:
         """
         Setup logging for the current experiments run.
         """
         directory = ExperimentOutput.experiment_results_directory(self.current_sequence)
+        print("Logging to %s" % path.join(directory, 'log.log'))
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
 
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_base_experiments()
+    # runner.run_base_experiments()
+    runner.run_policy_size_experiments()

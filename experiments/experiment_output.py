@@ -7,7 +7,9 @@ from os import path, listdir
 from typing import List, Any, Dict
 from typing import Union
 
-from experiments.experiments_sequence import ExperimentsSequence
+from experiments.base_experiment import BaseExperiment
+from experiments.experiments_sequence import implementations
+from experiments.experiments_sequence_state import ExperimentsSequenceState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
@@ -22,68 +24,68 @@ class ExperimentOutput(object):
     """
 
     @staticmethod
-    def experiment_results_directory(experiments_run: ExperimentsSequence) -> str:
+    def experiment_results_directory(experiment: BaseExperiment) -> str:
         """
         Gets the base directory for the results of the experiment
-        :param experiments_run: The current experiment run
+        :param experiment: The experiment
         """
         return path.join(OUTPUT_DIRECTORY,
-                         experiments_run.experiment.get_name(),
-                         experiments_run.device_name,
-                         experiments_run.timestamp)
+                         experiment.get_name(),
+                         experiment.sequence_state.device_name,
+                         experiment.sequence_state.timestamp,
+                         experiment.sequence_state.implementation.get_name())
 
     @staticmethod
-    def experiment_case_iteration_results_directory(experiments_run: ExperimentsSequence) -> str:
+    def experiment_case_iteration_results_directory(experiment: BaseExperiment) -> str:
         """
         Gets the base directory for the results of the experiment for the current case and implementation.
-        :require: experiments_run.current_implementation is not None and experiments_run.current_case is not None
-        :param experiments_run: The current experiment run.
+        :require: experiments_run.implementation is not None and experiments_run.case is not None
+        :param experiment: The experiment
         """
-        return path.join(ExperimentOutput.experiment_results_directory(experiments_run),
-                         experiments_run.state.current_implementation.get_name(),
-                         experiments_run.state.current_case.name,
-                         str(experiments_run.state.iteration))
+        return path.join(
+            ExperimentOutput.experiment_results_directory(experiment),
+            experiment.state.case.name
+        )
 
     @staticmethod
-    def output_cpu_usage(experiments_sequence: ExperimentsSequence, cpu_usage: float) -> None:
+    def output_cpu_usage(experiment: BaseExperiment, cpu_usage: float) -> None:
         """
         Output the cpu usage of the previous experiment.
-        :param experiments_sequence: The current experiments run
+        :param experiment: The experiment
         :param cpu_usage: The measured cpu usage
         """
-        if OUTPUT_DETAILED:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
-            with open(path.join(directory, 'cpu.txt'), 'w') as file:
-                file.write(str(cpu_usage))
+        # if OUTPUT_DETAILED:
+        #     directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_state)
+        #     with open(path.join(directory, 'cpu.txt'), 'w') as file:
+        #         file.write(str(cpu_usage))
 
-        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence), 'cpu.csv')
-        headers = ['case'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
-        implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
+        output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiment), 'cpu.csv')
+        headers = ['case'] + list(map(lambda i: i.get_name(), experiment.sequence_state.implementation))
+        implementation_index = ExperimentOutput.determine_implementation_index(experiment.sequence_state)
 
         ExperimentOutput.append_row_to_file(
             output_file_path,
             headers,
-            ExperimentOutput.create_row(experiments_sequence.state.current_case.name, cpu_usage, implementation_index)
+            ExperimentOutput.create_row(experiment.state.case.name, cpu_usage, implementation_index)
         )
 
     @staticmethod
     def output_error() -> None:
         """
         Output an error. The last exception is printed.
-        :param experiments_run: The current experiments run
         """
         logging.error(traceback.format_exc())
         traceback.print_exc(file=sys.stderr)
 
     @staticmethod
-    def output_connections(experiments_sequence: ExperimentsSequence, connections: List[BaseConnection]) -> None:
+    def output_connections(experiment: BaseExperiment, connections: List[BaseConnection]) -> None:
         """
         Output the network usage.
-        :param experiments_run: The current experiments run.
+        :param experiment: The experiment
         :param connections: The connections to output the usage of.
         """
         if OUTPUT_DETAILED:
-            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiments_sequence)
+            directory = ExperimentOutput.experiment_case_iteration_results_directory(experiment)
             connections_to_csv(connections, path.join(directory, 'network.csv'))
 
         values = dict()
@@ -92,13 +94,13 @@ class ExperimentOutput(object):
                 for size in sizes:
                     values[name] = size
 
-        ExperimentOutput.output_case_results(experiments_sequence, 'network', values)
+        ExperimentOutput.output_case_results(experiment, 'network', values)
 
     @staticmethod
-    def output_memory_usages(experiments_sequence: ExperimentsSequence, memory_usages: List[Any]) -> None:
+    def output_memory_usages(experiment: BaseExperiment, memory_usages: List[Any]) -> None:
         """
         Output the memory usages.
-        :param experiments_run: The current experiments run.
+        :param experiment: The experiment
         :param memory_usages: The list of memory usages.
         :return:
         """
@@ -108,10 +110,10 @@ class ExperimentOutput(object):
             values[str(i)] = row.rss + row.swap
             i += 1
 
-        ExperimentOutput.output_case_results(experiments_sequence, 'memory', values, skip_categories=True)
+        ExperimentOutput.output_case_results(experiment, 'memory', values, skip_categories=True)
 
         if OUTPUT_DETAILED:
-            directory = ExperimentOutput.experiment_results_directory(experiments_sequence)
+            directory = ExperimentOutput.experiment_results_directory(experiment)
             with open(path.join(directory, 'memory.csv'), 'w') as file:
                 writer = csv.DictWriter(file, fieldnames=[
                     'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
@@ -121,15 +123,15 @@ class ExperimentOutput(object):
                     writer.writerow(row._asdict())
 
     @staticmethod
-    def output_storage_space(experiments_sequence: ExperimentsSequence) -> None:
+    def output_storage_space(experiment: BaseExperiment) -> None:
         """
         Output the storage space used by the different parties.
-        :param experiments_sequence: The current experiments run.
+        :param experiment: The experiment
         """
-        insurance_storage = experiments_sequence.experiment.get_insurance_storage_path()
-        client_storage = experiments_sequence.experiment.get_user_client_storage_path()
-        authority_storage = experiments_sequence.experiment.get_attribute_authority_storage_path()
-        central_authority_storage = experiments_sequence.experiment.get_central_authority_storage_path()
+        insurance_storage = experiment.get_insurance_storage_path()
+        client_storage = experiment.get_user_client_storage_path()
+        authority_storage = experiment.get_attribute_authority_storage_path()
+        central_authority_storage = experiment.get_central_authority_storage_path()
 
         values = dict()
 
@@ -149,16 +151,16 @@ class ExperimentOutput(object):
             size = path.getsize(path.join(central_authority_storage, file))
             values[file] = size
 
-        ExperimentOutput.output_case_results(experiments_sequence, 'storage', values)
+        ExperimentOutput.output_case_results(experiment, 'storage', values)
 
     @staticmethod
-    def output_timings(experiments_sequence: ExperimentsSequence, profile: Profile) -> None:
+    def output_timings(experiment: BaseExperiment, profile: Profile) -> None:
         """
         Output the timings measured by the profiler.
-        :param experiments_sequence: The current experiments run.
+        :param experiment: The experiment
         :param profile: The profile.
         """
-        directory = ExperimentOutput.experiment_results_directory(experiments_sequence)
+        directory = ExperimentOutput.experiment_results_directory(experiment)
         stats_file_path = path.join(directory, 'timings.pstats')
 
         # Write raw stats
@@ -168,16 +170,16 @@ class ExperimentOutput(object):
         step_timings = pstats_to_step_timings(stats_file_path)
         step_timings['total'] = sum(step_timings.values())
 
-        ExperimentOutput.output_case_results(experiments_sequence, 'timings', step_timings,
+        ExperimentOutput.output_case_results(experiment, 'timings', step_timings,
                                              skip_categories_in_case_files=['total'])
 
     @staticmethod
-    def output_case_results(experiments_sequence: ExperimentsSequence, name: str, values: Dict[str, Any],
+    def output_case_results(experiment: BaseExperiment, name: str, values: Dict[str, Any],
                             skip_categories=False, skip_categories_in_case_files: List[str] = list()) -> None:
         """
         Output the results of a single case to the different files (one file for the current case, one file
         for each category)
-        :param experiments_sequence: The current experiments sequence
+        :param experiment: The experiment
         :param name: The name of the measurement (for example 'network' or 'memory')
         :param values: A dictionary of category to value. A category is for example a step in the algorithm ('encrypt', 'decrypt'),
         or filename for storage.
@@ -185,11 +187,11 @@ class ExperimentOutput(object):
         :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
         example be used to create a file containing totals, without having a total category in the case file.
         """
-        headers = ['case/step'] + list(map(lambda i: i.__class__.__name__, experiments_sequence.implementations))
-        implementation_index = ExperimentOutput.determine_implementation_index(experiments_sequence)
+        headers = ['case/step'] + list(map(lambda i: i.get_name(), experiment.sequence_state.implementation))
+        implementation_index = ExperimentOutput.determine_implementation_index(experiment.sequence_state)
 
-        case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiments_sequence),
-                                          '%s-case-%s.csv' % (name, experiments_sequence.state.current_case.name))
+        case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiment),
+                                          '%s-case-%s.csv' % (name, experiment.state.case.name))
 
         case_rows = list()
         for category, value in values.items():
@@ -197,10 +199,10 @@ class ExperimentOutput(object):
                 case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
 
             if not skip_categories:
-                category_row = ExperimentOutput.create_row(experiments_sequence.state.current_case.name, value,
+                category_row = ExperimentOutput.create_row(experiment.state.case.name, value,
                                                            implementation_index)
                 category_output_file_path = path.join(
-                    ExperimentOutput.experiment_results_directory(experiments_sequence),
+                    ExperimentOutput.experiment_results_directory(experiment),
                     '%s-category-%s.csv' % (name, category))
                 ExperimentOutput.append_row_to_file(
                     category_output_file_path,
@@ -222,8 +224,8 @@ class ExperimentOutput(object):
         return row
 
     @staticmethod
-    def determine_implementation_index(experiments_sequence: ExperimentsSequence):
-        return experiments_sequence.implementations.index(experiments_sequence.state.current_implementation)
+    def determine_implementation_index(state: ExperimentsSequenceState):
+        return implementations.index(state.implementation)
 
     @staticmethod
     def append_rows_to_file(file_path, headers, rows):
