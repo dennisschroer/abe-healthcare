@@ -61,14 +61,14 @@ class ExperimentsRunner(object):
                 current_state.implementation = implementation
                 if i == 0:
                     # We need to do some cleanup first
-                    current_state.experiment.setup_directories()
-                    current_state.experiment.implementation_setup()
+                    experiments_sequence.experiment.setup_directories()
+                    experiments_sequence.experiment.implementation_setup()
 
                 self.run_current_experiment_with_current_state()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
             current_state.device_name,
-            current_state.experiment.get_name(),
+            experiments_sequence.experiment.get_name(),
             current_state.timestamp,
             current_state.current_time_formatted()))
 
@@ -119,7 +119,7 @@ class ExperimentsRunner(object):
         self.current_sequence.experiment.setup_lock.wait()
 
         # Initialize variables
-        memory_usages = list()
+        memory_usages = list()  # type: List[dict]
 
         # Setup is finished
         # while self.current_sequence.state.experiment.state.progress.value != ExperimentProgress.stopping:
@@ -130,7 +130,7 @@ class ExperimentsRunner(object):
         #         memory_usages.append(self.pr.memory_full_info())
         #     sleep(self.current_sequence.state.experiment.memory_measure_interval)
 
-        self.current_sequence.state.experiment.join()
+        self.current_sequence.experiment.join()
 
     def start_measurements(self):
         # Setup is finished, start monitoring
@@ -198,7 +198,7 @@ class ExperimentsRunner(object):
         """
         Setup logging for the current experiments run.
         """
-        directory = ExperimentOutput.experiment_results_directory(self.current_sequence)
+        directory = ExperimentOutput.experiment_results_directory(self.current_sequence.experiment)
         print("Logging to %s" % path.join(directory, 'log.log'))
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
 

@@ -60,7 +60,7 @@ class ExperimentOutput(object):
         #         file.write(str(cpu_usage))
 
         output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiment), 'cpu.csv')
-        headers = ['case'] + list(map(lambda i: i.get_name(), experiment.sequence_state.implementation))
+        headers = ['case'] + list(map(lambda i: i.get_name(), implementations))
         implementation_index = ExperimentOutput.determine_implementation_index(experiment.sequence_state)
 
         ExperimentOutput.append_row_to_file(
@@ -187,7 +187,7 @@ class ExperimentOutput(object):
         :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
         example be used to create a file containing totals, without having a total category in the case file.
         """
-        headers = ['case/step'] + list(map(lambda i: i.get_name(), experiment.sequence_state.implementation))
+        headers = ['case/step'] + list(map(lambda i: i.get_name(), implementations))
         implementation_index = ExperimentOutput.determine_implementation_index(experiment.sequence_state)
 
         case_output_file_path = path.join(ExperimentOutput.experiment_results_directory(experiment),

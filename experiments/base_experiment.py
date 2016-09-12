@@ -1,7 +1,7 @@
 import cProfile
 import os
 import shutil
-from multiprocessing import Condition
+from multiprocessing import Condition  # type: ignore
 from multiprocessing import Process
 from os.path import join
 from typing import List, Dict, Any
@@ -327,7 +327,7 @@ class BaseExperiment(Process):
         self.setup_lock.release()
 
         for case in self.cases:
-            for measurement_type in MeasurementType:
+            for measurement_type in MeasurementType:  # type: ignore
                 self.state.case = case
                 self.state.measurement_type = measurement_type
 
