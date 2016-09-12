@@ -123,33 +123,43 @@ class ExperimentOutput(object):
                     writer.writerow(row._asdict())
 
     @staticmethod
-    def output_storage_space(experiment: BaseExperiment) -> None:
+    def output_storage_space(experiment: BaseExperiment, directories: List[dict]) -> None:
         """
         Output the storage space used by the different parties.
         :param experiment: The experiment
+        :param directories: A list of directory options. Each directory option contains at least a 'path' value.
+        An 'filename_mapper' value is optional.
         """
-        insurance_storage = experiment.get_insurance_storage_path()
-        client_storage = experiment.get_user_client_storage_path()
-        authority_storage = experiment.get_attribute_authority_storage_path()
-        central_authority_storage = experiment.get_central_authority_storage_path()
+        # insurance_storage = experiment.get_insurance_storage_path()
+        # client_storage = experiment.get_user_client_storage_path()
+        # authority_storage = experiment.get_attribute_authority_storage_path()
+        # central_authority_storage = experiment.get_central_authority_storage_path()
 
         values = dict()
 
-        for file in listdir(insurance_storage):
-            size = path.getsize(path.join(insurance_storage, file))
-            values[path.splitext(file)[1]] = size
+        for directory_options in directories:
+            directory_path = directories['path']
+            filename_mapper = directories['filename_mapper'] if 'filename_mapper' in directories else lambda x: x
 
-        for file in listdir(client_storage):
-            size = path.getsize(path.join(client_storage, file))
-            values[file] = size
+            for file in listdir(directory_path):
+                size = path.getsize(path.join(directory_path, file))
+                values[filename_mapper(file)] = size
 
-        for file in listdir(authority_storage):
-            size = path.getsize(path.join(authority_storage, file))
-            values[file] = size
-
-        for file in listdir(central_authority_storage):
-            size = path.getsize(path.join(central_authority_storage, file))
-            values[file] = size
+        # for file in listdir(insurance_storage):
+        #     size = path.getsize(path.join(insurance_storage, file))
+        #     values[path.splitext(file)[1]] = size
+        #
+        # for file in listdir(client_storage):
+        #     size = path.getsize(path.join(client_storage, file))
+        #     values[file] = size
+        #
+        # for file in listdir(authority_storage):
+        #     size = path.getsize(path.join(authority_storage, file))
+        #     values[file] = size
+        #
+        # for file in listdir(central_authority_storage):
+        #     size = path.getsize(path.join(central_authority_storage, file))
+        #     values[file] = size
 
         ExperimentOutput.output_case_results(experiment, 'storage', values)
 
