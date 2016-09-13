@@ -133,7 +133,7 @@ class ExperimentOutput(object):
 
         for directory_options in directories:
             directory_path = directory_options['path']
-            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directories else lambda x: x
+            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
