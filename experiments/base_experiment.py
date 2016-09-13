@@ -84,7 +84,13 @@ class BaseExperiment(object):
             cases = [ExperimentCase('base', None)]
         self.cases = cases  # type: List[ExperimentCase]
 
-        self.sync_lock = Condition()
+        # When the state of the next experiment is set
+        self.state_sync = Condition()
+        # - When the setup is done and the measurements should start
+        self.setup_done_sync = Condition()
+        # - When the results are saved and before the state is updated for the next experiment
+        self.results_saved_sync = Condition()
+
         self.profiler = None  # type: Profile
 
     @property
@@ -265,7 +271,7 @@ class BaseExperiment(object):
             for measurement_type in MeasurementType:  # type: ignore
                 self.state.measurement_type = measurement_type
 
-                self.sync()
+                self.sync(self.state_sync)
 
                 self.clear_insurance_storage()
                 self.start_measurements()
@@ -288,7 +294,7 @@ class BaseExperiment(object):
                 self.finish_measurements()
 
         self.state.progress = ExperimentProgress.stopping
-        self.sync()
+        self.sync(self.state_sync)
 
     def start_measurements(self):
         logging.debug("Experiment.start")
@@ -298,7 +304,7 @@ class BaseExperiment(object):
 
         self.state.progress = ExperimentProgress.running
         logging.debug("Experiment acquiring lock")
-        self.sync()
+        self.sync(self.setup_done_sync)
         # self.setup_lock.acquire()
         # self.setup_lock.notify()
         # self.setup_lock.release()
@@ -330,19 +336,19 @@ class BaseExperiment(object):
                     'path': self.get_central_authority_storage_path()
                 }
             ])
-        self.sync()
+        self.sync(self.results_saved_sync)
         # Now sync with the other process
 
-    def sync(self):
+    def sync(self, condition):
         """
         Synchronize with the main process. This happens at three moments:
         - When the state of the next experiment is set
         - When the setup is done and the measurements should start
         - When the results are saved and before the state is updated for the next experiment
         """
-        logging.debug("Experiment.sync")
-        with self.sync_lock:
-            self.sync_lock.notify_all()
+        with condition:
+            condition.notify_all()
+            logging.debug("Experiment.sync %s", condition)
 
     def get_user_client(self, gid: str) -> UserClient:
         """
