@@ -287,6 +287,7 @@ class BaseExperiment(object):
                     self.finish_measurements()
                 except:
                     self.output.output_error()
+                    self.state.progress = ExperimentProgress.setup
                     self.remaining_syncs()
 
         self.state.progress = ExperimentProgress.stopping
