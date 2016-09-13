@@ -87,6 +87,7 @@ class ExperimentsRunner(object):
             current_state.timestamp,
             current_state.amount))
         logging.info("Run configurations: %s" % str(self.current_sequence.experiment.run_descriptions))
+        logging.info("Measure interval: %s" % str(self.current_sequence.experiment.memory_measure_interval))
         logging.info(
             "Authority descriptions: %s" % str(self.current_sequence.experiment.attribute_authority_descriptions))
         logging.info("User descriptions: %s" % str(self.current_sequence.experiment.user_descriptions))
@@ -180,10 +181,10 @@ class ExperimentsRunner(object):
         """
         directory = self.current_sequence.experiment.output.experiment_results_directory()
         print("Logging to %s" % path.join(directory, 'log.log'))
-        logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.DEBUG)
+        logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
 
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_base_experiments()
-    # runner.run_policy_size_experiments()
+    # runner.run_base_experiments()
+    runner.run_policy_size_experiments()
