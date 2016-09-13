@@ -4,7 +4,6 @@ import shutil
 from cProfile import Profile
 from multiprocessing import Condition  # type: ignore
 from os.path import join
-from time import time
 from typing import List, Dict, Any
 
 from os import path
@@ -24,7 +23,7 @@ from shared.model.user import User
 from shared.utils.random_file_generator import RandomFileGenerator
 
 
-class BaseExperiment():
+class BaseExperiment(object):
     run_descriptions = {
         # Can be 'always' or 'once'
         # When 'always', it is run in the run() method
@@ -123,6 +122,21 @@ class BaseExperiment():
         input_path = self.get_experiment_input_path()
         self.file_name = join(input_path, '%i-0' % self.file_size)
 
+    def setup_directories(self) -> None:
+        """
+        Setup the directories used in this experiment. Empty directories and create them if they do not exist.
+        """
+        assert self.sequence_state.implementation is not None
+
+        # Empty storage directories
+        if os.path.exists(self.get_user_client_storage_path()):
+            shutil.rmtree(self.get_user_client_storage_path())
+
+        # Create directories
+        if not os.path.exists(self.get_experiment_input_path()):
+            os.makedirs(self.get_experiment_input_path())
+        os.makedirs(self.get_user_client_storage_path())
+
     def register_user_clients(self):
         """
         Register all current user clients in this experiment to the central authority.
@@ -131,22 +145,6 @@ class BaseExperiment():
         for user_client in self.user_clients:
             user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
             user_client.save_registration_data()
-
-    def get_user_client(self, gid: str) -> UserClient:
-        """
-        Gets the UserClient for the given global identifier, or returns None.
-        :param gid: The global identifier.
-        :return: The user client or None.
-        """
-        return next((x for x in self.user_clients if x.user.gid == gid), None)
-
-    def get_attribute_authority(self, name: str) -> AttributeAuthority:
-        """
-        Gets the AttributeAuthority for the given name, or returns None.
-        :param name: The authority name.
-        :return: The attribute authority or None.
-        """
-        return next((x for x in self.attribute_authorities if x.name == name), None)
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
@@ -161,20 +159,6 @@ class BaseExperiment():
             self.attribute_authority_descriptions
         ))
 
-    def load_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
-            List[AttributeAuthority]:
-        """
-        Create the attribute authorities defined in the descriptions (self.attribute_authority_descriptions).
-        :param central_authority: The central authority in the scheme.
-        :param implementation: The implementation to use.
-        :return: A list of attribute authorities.
-        """
-        return list(map(
-            lambda d: self.load_attribute_authority(d, central_authority, implementation),
-            self.attribute_authority_descriptions
-        ))
-
-    # noinspection PyMethodMayBeStatic
     def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
                                    implementation: BaseImplementation) -> AttributeAuthority:
         """
@@ -187,22 +171,6 @@ class BaseExperiment():
         attribute_authority = implementation.create_attribute_authority(authority_description['name'],
                                                                         storage_path=self.get_attribute_authority_storage_path())
         attribute_authority.setup(central_authority, authority_description['attributes'])
-        return attribute_authority
-
-    def load_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
-                                 implementation: BaseImplementation) -> AttributeAuthority:
-        """
-        Create an attribute authority defined in a description.
-        :param authority_description: The description of the authority.
-        :param central_authority: The central authority in the scheme.
-        :param implementation: The implementation to use.
-        :return: The attribute authority.
-        """
-        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
-                                                                        storage_path=self.get_attribute_authority_storage_path())
-        attribute_authority.global_parameters = central_authority.global_parameters
-        attribute_authority.attributes = authority_description['attributes']
-        attribute_authority.load_attribute_keys()
         return attribute_authority
 
     def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:
@@ -239,12 +207,6 @@ class BaseExperiment():
         self.central_authority.save_global_parameters()
         self.setup_insurance()
 
-    def load_setup(self):
-        self.central_authority = self.sequence_state.implementation.create_central_authority(
-            storage_path=self.get_central_authority_storage_path())
-        self.central_authority.load_global_parameters()
-        self.setup_insurance()
-
     def setup_insurance(self):
         # Create insurance service
         self.insurance = InsuranceService(self.sequence_state.implementation.serializer,
@@ -260,23 +222,11 @@ class BaseExperiment():
             self.insurance.add_authority(authority)
             authority.save_attribute_keys()
 
-    def load_authsetup(self):
-        self.attribute_authorities = self.load_attribute_authorities(self.central_authority,
-                                                                     self.sequence_state.implementation)
-        for authority in self.attribute_authorities:
-            self.insurance.add_authority(authority)
-
     def run_register(self):
         # Create user clients
         self.user_clients = self.create_user_clients(self.sequence_state.implementation,
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
-
-    def load_register(self):
-        self.user_clients = self.create_user_clients(self.sequence_state.implementation,
-                                                     self.insurance)  # type: List[UserClient]
-        for user_client in self.user_clients:
-            user_client.load_registration_data()
 
     def run_keygen(self):
         """
@@ -289,11 +239,6 @@ class BaseExperiment():
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
-
-    def load_keygen(self):
-        for user_description in self.user_descriptions:
-            user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            user_client.load_user_secret_keys()
 
     def run_encrypt(self):
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
@@ -397,6 +342,22 @@ class BaseExperiment():
         with self.sync_lock:
             self.sync_lock.notify_all()
 
+    def get_user_client(self, gid: str) -> UserClient:
+        """
+        Gets the UserClient for the given global identifier, or returns None.
+        :param gid: The global identifier.
+        :return: The user client or None.
+        """
+        return next((x for x in self.user_clients if x.user.gid == gid), None)
+
+    def get_attribute_authority(self, name: str) -> AttributeAuthority:
+        """
+        Gets the AttributeAuthority for the given name, or returns None.
+        :param name: The authority name.
+        :return: The attribute authority or None.
+        """
+        return next((x for x in self.attribute_authorities if x.name == name), None)
+
     def get_connections(self) -> List[BaseConnection]:
         """
         Get all connections used in this experiment of which the usage should be outputted.
@@ -415,21 +376,6 @@ class BaseExperiment():
         if os.path.exists(self.get_insurance_storage_path()):
             shutil.rmtree(self.get_insurance_storage_path())
         os.makedirs(self.get_insurance_storage_path())
-
-    def setup_directories(self) -> None:
-        """
-        Setup the directories used in this experiment. Empty directories and create them if they do not exist.
-        """
-        assert self.sequence_state.implementation is not None
-
-        # Empty storage directories
-        if os.path.exists(self.get_user_client_storage_path()):
-            shutil.rmtree(self.get_user_client_storage_path())
-
-        # Create directories
-        if not os.path.exists(self.get_experiment_input_path()):
-            os.makedirs(self.get_experiment_input_path())
-        os.makedirs(self.get_user_client_storage_path())
 
     def get_experiment_storage_base_path(self) -> str:
         """
