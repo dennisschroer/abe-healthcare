@@ -90,7 +90,7 @@ class BaseExperiment(object):
         self.setup_done_sync = Condition()
         # - When the results are saved and before the state is updated for the next experiment
         self.results_saved_sync = Condition()
-
+        self.sync_count = 0
         self.profiler = None  # type: Profile
 
     @property
@@ -269,29 +269,34 @@ class BaseExperiment(object):
         for case in self.cases:
             self.state.case = case
             for measurement_type in MeasurementType:  # type: ignore
-                self.state.measurement_type = measurement_type
+                try:
+                    self.state.measurement_type = measurement_type
 
-                self.sync(self.state_sync)
+                    self.sync(self.state_sync) # 1
 
-                self.clear_insurance_storage()
-                self.start_measurements()
+                    self.clear_insurance_storage()
+                    self.start_measurements() #2
 
-                if self.run_descriptions['setup_authsetup'] == 'always':
-                    self.run_setup()
-                    self.run_authsetup()
-                if self.run_descriptions['register_keygen'] == 'always':
-                    self.run_register()
-                    self.run_keygen()
-                self.run_encrypt()
-                self.run_decrypt()
+                    if self.run_descriptions['setup_authsetup'] == 'always':
+                        self.run_setup()
+                        self.run_authsetup()
+                    if self.run_descriptions['register_keygen'] == 'always':
+                        self.run_register()
+                        self.run_keygen()
+                    self.run_encrypt()
+                    self.run_decrypt()
 
-                self.stop_measurements()
+                    self.stop_measurements()
 
-                if measurement_type == MeasurementType.storage_and_network:
-                    for authority in self.attribute_authorities:
-                        authority.save_attribute_keys()
+                    if measurement_type == MeasurementType.storage_and_network:
+                        for authority in self.attribute_authorities:
+                            authority.save_attribute_keys()
 
-                self.finish_measurements()
+                    self.finish_measurements() # 0
+                except:
+                    self.output.output_error()
+                    self.state.progress = ExperimentProgress.setup
+                    self.remaining_syncs()
 
         self.state.progress = ExperimentProgress.stopping
         self.sync(self.state_sync)
@@ -349,6 +354,14 @@ class BaseExperiment(object):
         with condition:
             condition.notify_all()
             logging.debug("Experiment.sync %s", condition)
+            self.sync_count = (self.sync_count + 1) % 3
+
+    def remaining_syncs(self):
+        if self.sync_count == 1:
+            self.sync(self.setup_done_sync)
+            self.sync(self.results_saved_sync)
+        elif self.sync_count == 2:
+            self.sync(self.results_saved_sync)
 
     def get_user_client(self, gid: str) -> UserClient:
         """
