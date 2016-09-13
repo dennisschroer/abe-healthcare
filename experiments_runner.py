@@ -160,7 +160,7 @@ class ExperimentsRunner(object):
             self.current_sequence.experiment.output.output_cpu_usage(self.psutil_process.cpu_percent())
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
             self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
-        # Wait for the experiment to output the resuls
+        # Wait for the experiment to output the result
         self.sync()
 
     def sync(self):
@@ -173,62 +173,6 @@ class ExperimentsRunner(object):
         logging.debug("Runner.sync")
         self.current_sequence.experiment.sync_lock.wait()
         self.current_sequence.experiment.sync_lock.acquire()
-
-    # @staticmethod
-    # def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,
-    #                                       is_running: Value) -> None:
-    #     """
-    #     Run the experiment in this process.
-    #     :param experiments_sequence: The current running experiment
-    #     :param lock: A lock, required for synchronization
-    #     :param is_running: A flag indicating whether the experiment is running
-    #     """
-    #     # noinspection PyBroadException
-    #     try:
-    #         logging.debug("debug 2 -> process started")
-    #
-    #         # Empty the storage directories
-    #         experiments_sequence.experiment.setup(experiments_sequence.state)
-    #
-    #         # Setup variables
-    #         pr = cProfile.Profile()
-    #
-    #         # We are done, let the main process setup monitoring
-    #         lock.acquire()
-    #         logging.debug("debug 3 -> experiment setup finished")
-    #         lock.notify()
-    #         lock.wait()
-    #         logging.debug("debug 5 -> start experiment")
-    #
-    #         # And off we go
-    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
-    #             pr.enable()
-    #         experiments_sequence.experiment.run()
-    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
-    #             pr.disable()
-    #
-    #         # We are done, notify the main process to stop monitoring
-    #         logging.debug("debug 6 -> stop experiment")
-    #         is_running.value = False  # type: ignore
-    #
-    #         if experiments_sequence.state.measurement_type == MeasurementType.timings:
-    #             ExperimentOutput.output_timings(experiments_sequence, pr)
-    #         if experiments_sequence.state.measurement_type == MeasurementType.storage_and_network:
-    #             ExperimentOutput.output_connections(experiments_sequence,
-    #                                                 experiments_sequence.experiment.get_connections())
-    #
-    #         # Cleanup
-    #         logging.debug("debug 8 -> cleanup finished")
-    #     except:
-    #         ExperimentOutput.output_error()
-    #     finally:
-    #         # noinspection PyBroadException
-    #         try:
-    #             is_running.value = False  # type: ignore
-    #             lock.notify()
-    #             lock.release()
-    #         except:
-    #             pass
 
     def setup_logging(self) -> None:
         """
