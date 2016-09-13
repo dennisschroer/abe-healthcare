@@ -151,7 +151,6 @@ class ExperimentsRunner(object):
             self.psutil_process.cpu_percent()
 
     def run_measurement(self):
-        logging.debug("Runner.run")
         if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
             self.memory_usages.append(self.psutil_process.memory_full_info())
 
@@ -237,7 +236,7 @@ class ExperimentsRunner(object):
         """
         directory = self.current_sequence.experiment.output.experiment_results_directory()
         print("Logging to %s" % path.join(directory, 'log.log'))
-        logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
+        logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.DEBUG)
 
 
 if __name__ == '__main__':

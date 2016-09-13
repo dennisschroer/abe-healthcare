@@ -393,6 +393,7 @@ class BaseExperiment():
         - When the setup is done and the measurements should start
         - When the results are saved and before the state is updated for the next experiment
         """
+        logging.debug("Experiment.sync")
         with self.sync_lock:
             self.sync_lock.notify_all()
 
