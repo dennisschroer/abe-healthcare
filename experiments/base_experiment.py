@@ -85,6 +85,7 @@ class BaseExperiment(object):
         self.cases = cases  # type: List[ExperimentCase]
 
         self.sync_lock = Condition()
+        self.sync_count = 0
         self.profiler = None  # type: Profile
 
     @property
@@ -263,29 +264,34 @@ class BaseExperiment(object):
         for case in self.cases:
             self.state.case = case
             for measurement_type in MeasurementType:  # type: ignore
-                self.state.measurement_type = measurement_type
+                try:
+                    self.state.measurement_type = measurement_type
 
-                self.sync()
+                    self.sync()
 
-                self.clear_insurance_storage()
-                self.start_measurements()
+                    self.clear_insurance_storage()
+                    self.start_measurements()
 
-                if self.run_descriptions['setup_authsetup'] == 'always':
-                    self.run_setup()
-                    self.run_authsetup()
-                if self.run_descriptions['register_keygen'] == 'always':
-                    self.run_register()
-                    self.run_keygen()
-                self.run_encrypt()
-                self.run_decrypt()
+                    if self.run_descriptions['setup_authsetup'] == 'always':
+                        self.run_setup()
+                        self.run_authsetup()
+                    if self.run_descriptions['register_keygen'] == 'always':
+                        self.run_register()
+                        self.run_keygen()
+                    self.run_encrypt()
+                    self.run_decrypt()
 
-                self.stop_measurements()
+                    self.stop_measurements()
 
-                if measurement_type == MeasurementType.storage_and_network:
-                    for authority in self.attribute_authorities:
-                        authority.save_attribute_keys()
+                    if measurement_type == MeasurementType.storage_and_network:
+                        for authority in self.attribute_authorities:
+                            authority.save_attribute_keys()
 
-                self.finish_measurements()
+                    self.finish_measurements()
+                except:
+                    self.output.output_error()
+                    self.state.progress = ExperimentProgress.setup
+                    self.remaining_syncs()
 
         self.state.progress = ExperimentProgress.stopping
         self.sync()
@@ -343,6 +349,11 @@ class BaseExperiment(object):
         logging.debug("Experiment.sync")
         with self.sync_lock:
             self.sync_lock.notify_all()
+        self.sync_count = (self.sync_count + 1) % 3
+
+    def remaining_syncs(self):
+        while self.sync_count > 0:
+            self.sync()
 
     def get_user_client(self, gid: str) -> UserClient:
         """
