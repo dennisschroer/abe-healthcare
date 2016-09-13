@@ -116,7 +116,9 @@ class ExperimentsRunner(object):
 
         self.current_sequence.experiment.sequence_state = self.current_sequence.state
 
-        self.current_sequence.experiment.sync_lock.acquire()
+        self.current_sequence.experiment.setup_done_sync.acquire()
+        self.current_sequence.experiment.results_saved_sync.acquire()
+        self.current_sequence.experiment.state_sync.acquire()
 
         self.experiment_process = Process(name=self.current_sequence.experiment.get_name(),
                                           target=self.current_sequence.experiment.run)
@@ -126,7 +128,7 @@ class ExperimentsRunner(object):
         self.memory_usages = list()
 
         # Wait untill the state of the experiment is correct
-        self.sync()
+        self.sync(self.current_sequence.experiment.state_sync)
 
         # Setup is finished
         while self.current_sequence.experiment.state.progress != ExperimentProgress.stopping:
@@ -138,14 +140,14 @@ class ExperimentsRunner(object):
 
             self.finish_measurements()
             # Wait for the state to be updated
-            self.sync()
+            self.sync(self.current_sequence.experiment.state_sync)
 
         self.experiment_process.join()
 
     def start_measurements(self):
         logging.debug("Runner.start about to wait")
         # Wait untill setup is finished
-        self.sync()
+        self.sync(self.current_sequence.experiment.setup_done_sync)
         # Setup is finished, start monitoring
         if self.current_sequence.experiment.state.measurement_type in (MeasurementType.cpu, MeasurementType.memory):
             self.psutil_process = psutil.Process(self.experiment_process.pid)
@@ -162,18 +164,18 @@ class ExperimentsRunner(object):
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
             self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
         # Wait for the experiment to output the result
-        self.sync()
+        self.sync(self.current_sequence.experiment.results_saved_sync)
 
-    def sync(self):
+    def sync(self, condition):
         """
         Synchronize with the experiment's process. This happens at three moments:
         - When the state of the next experiment is set
         - When the setup is done and the measurements should start
         - When the results are saved and before the state is updated for the next experiment
         """
-        logging.debug("Runner.sync")
-        self.current_sequence.experiment.sync_lock.wait()
-        self.current_sequence.experiment.sync_lock.acquire()
+        condition.wait()
+        condition.acquire()
+        logging.debug("Runner.sync %s", condition)
 
     def setup_logging(self) -> None:
         """
