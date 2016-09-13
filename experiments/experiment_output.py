@@ -133,7 +133,8 @@ class ExperimentOutput(object):
 
         for directory_options in directories:
             directory_path = directory_options['path']
-            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda x: x
+            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda \
+                x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
@@ -186,7 +187,7 @@ class ExperimentOutput(object):
         :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
         example be used to create a file containing totals, without having a total category in the case file.
         """
-        headers = ['case/step'] + list(map(lambda i: i.get_name(), implementations)) # type: ignore
+        headers = ['case/step'] + list(map(lambda i: i.get_name(), implementations))  # type: ignore
         implementation_index = self.determine_implementation_index()
 
         case_output_file_path = path.join(self.experiment_results_directory(),
