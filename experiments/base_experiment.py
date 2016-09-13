@@ -83,9 +83,7 @@ class BaseExperiment():
             cases = [ExperimentCase('base', None)]
         self.cases = cases  # type: List[ExperimentCase]
 
-        self.setup_lock = Condition()
-        self.output_finished_lock = Condition()
-        self.next_case_lock = Condition()
+        self.sync_lock = Condition()
         self.profiler = None  # type: Profile
 
     @property
@@ -320,7 +318,7 @@ class BaseExperiment():
             for measurement_type in MeasurementType:  # type: ignore
                 self.state.measurement_type = measurement_type
 
-                self.sync_next_case()
+                self.sync()
 
                 self.clear_insurance_storage()
                 self.start_measurements()
@@ -343,7 +341,7 @@ class BaseExperiment():
                 self.finish_measurements()
 
         self.state.progress = ExperimentProgress.stopping
-        self.sync_next_case()
+        self.sync()
 
     def start_measurements(self):
         logging.debug("Experiment.start")
@@ -353,9 +351,7 @@ class BaseExperiment():
 
         self.state.progress = ExperimentProgress.running
         logging.debug("Experiment acquiring lock")
-        with self.setup_lock:
-            logging.debug("Notifying")
-            self.setup_lock.notify_all()
+        self.sync()
         # self.setup_lock.acquire()
         # self.setup_lock.notify()
         # self.setup_lock.release()
@@ -387,28 +383,18 @@ class BaseExperiment():
                     'path': self.get_central_authority_storage_path()
                 }
             ])
-        self.sync_output_finished()
+        self.sync()
         # Now sync with the other process
 
-    def sync_next_case(self):
+    def sync(self):
         """
-        Executed when the experiment is done and set the state for the next run. This can be either a new run
-        of the experiment, or a state indicating that we are done with this experiment.
-        :return:
+        Synchronize with the main process. This happens at three moments:
+        - When the state of the next experiment is set
+        - When the setup is done and the measurements should start
+        - When the results are saved and before the state is updated for the next experiment
         """
-        logging.debug("Experiment.next_case")
-        with self.next_case_lock:
-            self.next_case_lock.notify_all()
-
-    def sync_output_finished(self):
-        """
-        Executed when the experiment is done and set the state for the next run. This can be either a new run
-        of the experiment, or a state indicating that we are done with this experiment.
-        :return:
-        """
-        logging.debug("Experiment.output_finished")
-        with self.output_finished_lock:
-            self.output_finished_lock.notify_all()
+        with self.sync_lock:
+            self.sync_lock.notify_all()
 
     def get_connections(self) -> List[BaseConnection]:
         """
