@@ -1,14 +1,16 @@
 import logging
+from multiprocessing import Process
 from os import makedirs
 from os import path
-from multiprocessing import Process
+from time import sleep
 
 import psutil
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY, ExperimentOutput
+from experiments.experiment_output import OUTPUT_DIRECTORY
+from experiments.experiment_state import ExperimentProgress
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
@@ -27,6 +29,8 @@ class ExperimentsRunner(object):
         self._device_name = None  # type: str
         self.current_sequence = None  # type: ExperimentsSequence
         self.psutil_process = None  # type: psutil.Process
+        self.experiment_process = None  # type: Process
+        self.memory_usages = None  # type: List[dict]
 
     def run_base_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 20))
@@ -113,30 +117,45 @@ class ExperimentsRunner(object):
 
         self.current_sequence.experiment.setup_lock.acquire()
 
-        process = Process(name=self.current_sequence.experiment.get_name(), target=self.current_sequence.experiment.run)
-        process.start()
-
-        self.current_sequence.experiment.setup_lock.wait()
+        self.experiment_process = Process(name=self.current_sequence.experiment.get_name(),
+                                          target=self.current_sequence.experiment.run)
+        self.experiment_process.start()
 
         # Initialize variables
-        memory_usages = list()  # type: List[dict]
+        self.memory_usages = list()
 
         # Setup is finished
-        # while self.current_sequence.state.experiment.state.progress.value != ExperimentProgress.stopping:
-        # self.start_measurements()
+        while self.current_sequence.experiment.state.progress != ExperimentProgress.stopping:
+            self.start_measurements()
 
-        # while self.current_sequence.state.experiment.current_state.progress.value == ExperimentProgress.running:
-        #     if self.current_sequence.state.measurement_type is MeasurementType.memory:
-        #         memory_usages.append(self.pr.memory_full_info())
-        #     sleep(self.current_sequence.state.experiment.memory_measure_interval)
+            while self.current_sequence.experiment.state.progress == ExperimentProgress.running:
+                self.run_measurement()
+                sleep(self.current_sequence.experiment.memory_measure_interval)
 
-        process.join()
+            self.finish_measurements()
+
+        self.experiment_process.join()
 
     def start_measurements(self):
+        # Wait until setup is finished
+        with self.current_sequence.experiment.setup_lock:
+            self.current_sequence.experiment.setup_lock.wait()
         # Setup is finished, start monitoring
-        if self.current_sequence.state.measurement_type in (MeasurementType.cpu, MeasurementType.memory):
-            self.psutil_process = psutil.Process(self.current_sequence.experiment.pid)
+        if self.current_sequence.experiment.state.measurement_type in (MeasurementType.cpu, MeasurementType.memory):
+            self.psutil_process = psutil.Process(self.experiment_process.pid)
             self.psutil_process.cpu_percent()
+
+    def run_measurement(self):
+        if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
+            self.memory_usages.append(self.psutil_process.memory_full_info())
+
+    def finish_measurements(self):
+        print("runner state", self.current_sequence.experiment.state)
+        if self.current_sequence.experiment.state.measurement_type == MeasurementType.cpu:
+            print(self.psutil_process.cpu_percent())
+            self.current_sequence.experiment.output.output_cpu_usage(self.psutil_process.cpu_percent())
+        if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
+            self.current_sequence.experiment.output.output_cpu_usage(self.memory_usages)
 
     # @staticmethod
     # def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,

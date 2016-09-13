@@ -1,11 +1,12 @@
-import cProfile
 import os
 import shutil
 from cProfile import Profile
 from multiprocessing import Condition  # type: ignore
-from multiprocessing import Process
 from os.path import join
+from time import time
 from typing import List, Dict, Any
+
+from os import path
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
@@ -82,7 +83,7 @@ class BaseExperiment():
         self.cases = cases  # type: List[ExperimentCase]
 
         self.setup_lock = Condition()
-        self.profiler = None # type: Profile
+        self.profiler = None  # type: Profile
 
     @property
     def sequence_state(self):
@@ -300,6 +301,8 @@ class BaseExperiment():
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self):
+        self.state.progress = ExperimentProgress.setup
+
         self.setup()
 
         if self.run_descriptions['setup_authsetup'] == 'once':
@@ -309,18 +312,19 @@ class BaseExperiment():
             self.run_register()
             self.run_keygen()
 
-        self.setup_lock.acquire()
-        self.setup_lock.notify()
-        self.setup_lock.release()
-
         for case in self.cases:
+            self.state.case = case
             for measurement_type in MeasurementType:  # type: ignore
-                self.state.case = case
                 self.state.measurement_type = measurement_type
+                print(time(), case, measurement_type)
+
+                print("Starting")
 
                 self.clear_insurance_storage()
-
+                print("Starting")
                 self.start_measurements()
+
+                print("Starting")
 
                 if self.run_descriptions['setup_authsetup'] == 'always':
                     self.run_setup()
@@ -331,10 +335,15 @@ class BaseExperiment():
                 self.run_encrypt()
                 self.run_decrypt()
 
+                print("Stopping")
+
                 self.stop_measurements()
 
-                for authority in self.attribute_authorities:
-                    authority.save_attribute_keys()
+                if measurement_type == MeasurementType.storage_and_network:
+                    for authority in self.attribute_authorities:
+                        authority.save_attribute_keys()
+
+                print("Finishing")
 
                 self.finish_measurements()
 
@@ -345,15 +354,39 @@ class BaseExperiment():
             self.profiler = Profile()
             self.profiler.enable()
 
+        self.state.progress = ExperimentProgress.running
+        with self.setup_lock:
+            self.setup_lock.notify_all()
+        # self.setup_lock.acquire()
+        # self.setup_lock.notify()
+        # self.setup_lock.release()
+
     def stop_measurements(self):
+        self.state.progress = ExperimentProgress.setup
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler.disable()
 
     def finish_measurements(self):
+        print("experiment state", self.state)
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
         if self.state.measurement_type == MeasurementType.storage_and_network:
             self.output.output_connections(self.get_connections())
+            self.output.output_storage_space([
+                {
+                    'path': self.get_insurance_storage_path(),
+                    'filename_mapper': lambda file: path.splitext(file)[1]
+                },
+                {
+                    'path': self.get_user_client_storage_path()
+                },
+                {
+                    'path': self.get_attribute_authority_storage_path()
+                },
+                {
+                    'path': self.get_central_authority_storage_path()
+                }
+            ])
 
     def get_connections(self) -> List[BaseConnection]:
         """
