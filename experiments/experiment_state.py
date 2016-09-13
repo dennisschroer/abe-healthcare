@@ -1,7 +1,5 @@
 from enum import Enum
-from multiprocessing import Value
-
-from multiprocessing import Manager
+from multiprocessing import Manager  # type: ignore
 
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
@@ -19,7 +17,7 @@ class ExperimentState(object):
         self._dict = manager.dict()
         self.case = None  # type: ExperimentCase
         self.measurement_type = None  # type: MeasurementType
-        self.progress = None
+        self.progress = None  # type: ExperimentProgress
 
     @property
     def case(self):
@@ -33,17 +31,18 @@ class ExperimentState(object):
     def progress(self):
         return self._dict['progress']
 
-    @case.setter
+    @case.setter  # type: ignore
     def case(self, value):
         self._dict['case'] = value
 
-    @measurement_type.setter
+    @measurement_type.setter  # type: ignore
     def measurement_type(self, value):
         self._dict['measurement_type'] = value
 
-    @progress.setter
+    @progress.setter  # type: ignore
     def progress(self, value):
         self._dict['progress'] = value
 
     def __repr__(self):
-        return "ExperimentState[case=%s, measurement_type=%s, progress=%s]" % (self.case, self.measurement_type, self.progress)
+        return "ExperimentState[case=%s, measurement_type=%s, progress=%s]" % (
+            self.case, self.measurement_type, self.progress)
