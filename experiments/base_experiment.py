@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from cProfile import Profile
@@ -83,6 +84,8 @@ class BaseExperiment():
         self.cases = cases  # type: List[ExperimentCase]
 
         self.setup_lock = Condition()
+        self.output_finished_lock = Condition()
+        self.next_case_lock = Condition()
         self.profiler = None  # type: Profile
 
     @property
@@ -316,15 +319,11 @@ class BaseExperiment():
             self.state.case = case
             for measurement_type in MeasurementType:  # type: ignore
                 self.state.measurement_type = measurement_type
-                print(time(), case, measurement_type)
 
-                print("Starting")
+                self.sync_next_case()
 
                 self.clear_insurance_storage()
-                print("Starting")
                 self.start_measurements()
-
-                print("Starting")
 
                 if self.run_descriptions['setup_authsetup'] == 'always':
                     self.run_setup()
@@ -335,39 +334,40 @@ class BaseExperiment():
                 self.run_encrypt()
                 self.run_decrypt()
 
-                print("Stopping")
-
                 self.stop_measurements()
 
                 if measurement_type == MeasurementType.storage_and_network:
                     for authority in self.attribute_authorities:
                         authority.save_attribute_keys()
 
-                print("Finishing")
-
                 self.finish_measurements()
 
         self.state.progress = ExperimentProgress.stopping
+        self.sync_next_case()
 
     def start_measurements(self):
+        logging.debug("Experiment.start")
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler = Profile()
             self.profiler.enable()
 
         self.state.progress = ExperimentProgress.running
+        logging.debug("Experiment acquiring lock")
         with self.setup_lock:
+            logging.debug("Notifying")
             self.setup_lock.notify_all()
         # self.setup_lock.acquire()
         # self.setup_lock.notify()
         # self.setup_lock.release()
 
     def stop_measurements(self):
+        logging.debug("Experiment.stop")
         self.state.progress = ExperimentProgress.setup
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler.disable()
 
     def finish_measurements(self):
-        print("experiment state", self.state)
+        logging.debug("Experiment.finish")
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
         if self.state.measurement_type == MeasurementType.storage_and_network:
@@ -387,6 +387,28 @@ class BaseExperiment():
                     'path': self.get_central_authority_storage_path()
                 }
             ])
+        self.sync_output_finished()
+        # Now sync with the other process
+
+    def sync_next_case(self):
+        """
+        Executed when the experiment is done and set the state for the next run. This can be either a new run
+        of the experiment, or a state indicating that we are done with this experiment.
+        :return:
+        """
+        logging.debug("Experiment.next_case")
+        with self.next_case_lock:
+            self.next_case_lock.notify_all()
+
+    def sync_output_finished(self):
+        """
+        Executed when the experiment is done and set the state for the next run. This can be either a new run
+        of the experiment, or a state indicating that we are done with this experiment.
+        :return:
+        """
+        logging.debug("Experiment.output_finished")
+        with self.output_finished_lock:
+            self.output_finished_lock.notify_all()
 
     def get_connections(self) -> List[BaseConnection]:
         """

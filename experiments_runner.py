@@ -116,6 +116,8 @@ class ExperimentsRunner(object):
         self.current_sequence.experiment.sequence_state = self.current_sequence.state
 
         self.current_sequence.experiment.setup_lock.acquire()
+        self.current_sequence.experiment.next_case_lock.acquire()
+        self.current_sequence.experiment.output_finished_lock.acquire()
 
         self.experiment_process = Process(name=self.current_sequence.experiment.get_name(),
                                           target=self.current_sequence.experiment.run)
@@ -123,6 +125,9 @@ class ExperimentsRunner(object):
 
         # Initialize variables
         self.memory_usages = list()
+
+        # Wait untill the state of the experiment is correct
+        self.sync_next_case()
 
         # Setup is finished
         while self.current_sequence.experiment.state.progress != ExperimentProgress.stopping:
@@ -133,29 +138,52 @@ class ExperimentsRunner(object):
                 sleep(self.current_sequence.experiment.memory_measure_interval)
 
             self.finish_measurements()
+            self.sync_next_case()
 
         self.experiment_process.join()
 
     def start_measurements(self):
         # Wait until setup is finished
-        with self.current_sequence.experiment.setup_lock:
-            self.current_sequence.experiment.setup_lock.wait()
+        #with self.current_sequence.experiment.setup_lock:
+        logging.debug("Runner.start about to wait")
+        self.current_sequence.experiment.setup_lock.wait()
+        self.current_sequence.experiment.setup_lock.acquire()
         # Setup is finished, start monitoring
         if self.current_sequence.experiment.state.measurement_type in (MeasurementType.cpu, MeasurementType.memory):
             self.psutil_process = psutil.Process(self.experiment_process.pid)
             self.psutil_process.cpu_percent()
 
     def run_measurement(self):
+        logging.debug("Runner.run")
         if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
             self.memory_usages.append(self.psutil_process.memory_full_info())
 
     def finish_measurements(self):
-        print("runner state", self.current_sequence.experiment.state)
+        logging.debug("Runner.finish")
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.cpu:
-            print(self.psutil_process.cpu_percent())
             self.current_sequence.experiment.output.output_cpu_usage(self.psutil_process.cpu_percent())
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
-            self.current_sequence.experiment.output.output_cpu_usage(self.memory_usages)
+            self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
+        self.sync_output_finished()
+        logging.debug("Runner.finish done")
+
+    def sync_next_case(self):
+        """
+        Executed at the moment we are ready for the next case. After synchronisation, the experiment has the correct
+        state for the next run
+        """
+        logging.debug("Runner.next_case")
+        self.current_sequence.experiment.next_case_lock.wait()
+        self.current_sequence.experiment.next_case_lock.acquire()
+
+    def sync_output_finished(self):
+        """
+        Executed at the moment we are ready for the next case. After synchronisation, the experiment has the correct
+        state for the next run
+        """
+        logging.debug("Runner.output_finished")
+        self.current_sequence.experiment.output_finished_lock.wait()
+        self.current_sequence.experiment.output_finished_lock.acquire()
 
     # @staticmethod
     # def run_experiment_case_synchronously(experiments_sequence: ExperimentsSequence, lock: Condition,
