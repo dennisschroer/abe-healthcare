@@ -239,12 +239,6 @@ class BaseExperiment():
         self.central_authority.save_global_parameters()
         self.setup_insurance()
 
-    def load_setup(self):
-        self.central_authority = self.sequence_state.implementation.create_central_authority(
-            storage_path=self.get_central_authority_storage_path())
-        self.central_authority.load_global_parameters()
-        self.setup_insurance()
-
     def setup_insurance(self):
         # Create insurance service
         self.insurance = InsuranceService(self.sequence_state.implementation.serializer,
@@ -260,23 +254,11 @@ class BaseExperiment():
             self.insurance.add_authority(authority)
             authority.save_attribute_keys()
 
-    def load_authsetup(self):
-        self.attribute_authorities = self.load_attribute_authorities(self.central_authority,
-                                                                     self.sequence_state.implementation)
-        for authority in self.attribute_authorities:
-            self.insurance.add_authority(authority)
-
     def run_register(self):
         # Create user clients
         self.user_clients = self.create_user_clients(self.sequence_state.implementation,
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
-
-    def load_register(self):
-        self.user_clients = self.create_user_clients(self.sequence_state.implementation,
-                                                     self.insurance)  # type: List[UserClient]
-        for user_client in self.user_clients:
-            user_client.load_registration_data()
 
     def run_keygen(self):
         """
@@ -289,11 +271,6 @@ class BaseExperiment():
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
-
-    def load_keygen(self):
-        for user_description in self.user_descriptions:
-            user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            user_client.load_user_secret_keys()
 
     def run_encrypt(self):
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
