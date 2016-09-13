@@ -23,6 +23,7 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class BaseExperiment(object):
+    memory_measure_interval = 0.05
     run_descriptions = {
         # Can be 'always' or 'once'
         # When 'always', it is run in the run() method
@@ -70,8 +71,10 @@ class BaseExperiment(object):
         self.state = ExperimentState()  # type:ExperimentState
         self.output = None  # type: ExperimentOutput
         self._sequence_state = None  # type: ExperimentsSequenceState
-        self.memory_measure_interval = 0.05
         self.file_name = None  # type: str
+        """File name of the file to encrypt. Is set during the experiment"""
+        self.location = None  # type: str
+        """Location of the encrypted data. Is set during the experiment"""
 
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
