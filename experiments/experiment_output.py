@@ -46,7 +46,8 @@ class ExperimentOutput(object):
         return path.join(
             self.experiment_results_directory(),
             self.sequence_state.implementation.get_name(),
-            self.state.case.name
+            self.state.case.name,
+            str(self.sequence_state.iteration)
         )
 
     def output_cpu_usage(self, cpu_usage: float) -> None:
@@ -109,7 +110,7 @@ class ExperimentOutput(object):
         self.output_case_results('memory', values, skip_categories=True)
 
         if OUTPUT_DETAILED:
-            directory = self.experiment_results_directory()
+            directory = self.experiment_case_iteration_results_directory()
             with open(path.join(directory, 'memory.csv'), 'w') as file:
                 writer = csv.DictWriter(file, fieldnames=[
                     'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'

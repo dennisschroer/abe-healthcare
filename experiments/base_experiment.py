@@ -11,7 +11,7 @@ from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
-from experiments.experiment_output import ExperimentOutput
+from experiments.experiment_output import ExperimentOutput, OUTPUT_DETAILED
 from experiments.experiment_state import ExperimentState, ExperimentProgress
 from experiments.experiments_sequence_state import ExperimentsSequenceState
 from service.central_authority import CentralAuthority
@@ -272,10 +272,13 @@ class BaseExperiment(object):
                 try:
                     self.state.measurement_type = measurement_type
 
-                    self.sync(self.state_sync) # 1
+                    self.sync(self.state_sync)  # 1
 
+                    if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
+                        os.makedirs(self.output.experiment_case_iteration_results_directory())
                     self.clear_insurance_storage()
-                    self.start_measurements() #2
+
+                    self.start_measurements()  # 2
 
                     if self.run_descriptions['setup_authsetup'] == 'always':
                         self.run_setup()
@@ -292,7 +295,7 @@ class BaseExperiment(object):
                         for authority in self.attribute_authorities:
                             authority.save_attribute_keys()
 
-                    self.finish_measurements() # 0
+                    self.finish_measurements()  # 0
                 except:
                     self.output.output_error()
                     self.state.progress = ExperimentProgress.setup

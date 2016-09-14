@@ -9,7 +9,7 @@ import psutil
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY
+from experiments.experiment_output import OUTPUT_DIRECTORY, OUTPUT_DETAILED
 from experiments.experiment_state import ExperimentProgress
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
@@ -33,13 +33,13 @@ class ExperimentsRunner(object):
         self.memory_usages = None  # type: List[dict]
 
     def run_base_experiments(self) -> None:
-        self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 20))
+        self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 100))
 
     def run_file_size_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(FileSizeExperiment(), 1))
 
     def run_policy_size_experiments(self) -> None:
-        self.run_experiments_sequence(ExperimentsSequence(PolicySizeExperiment(), 10))
+        self.run_experiments_sequence(ExperimentsSequence(PolicySizeExperiment(), 100))
 
     def run_experiments_sequence(self, experiments_sequence: ExperimentsSequence) -> None:
         """
@@ -188,5 +188,5 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    # runner.run_base_experiments()
+    runner.run_base_experiments()
     runner.run_policy_size_experiments()
