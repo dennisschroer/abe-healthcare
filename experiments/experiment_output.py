@@ -176,8 +176,13 @@ class ExperimentOutput(object):
 
         self.output_case_results('timings', step_timings, skip_categories_in_case_files=['total'])
 
-    def output_case_results(self, name: str, values: Dict[str, Any],
-                            skip_categories=False, skip_categories_in_case_files: List[str] = list()) -> None:
+    def output_case_results(self,
+                            name: str,
+                            values: Dict[str, Any],
+                            skip_categories=False,
+                            skip_categories_in_case_files: List[str] = list(),
+                            variables: List[str] = None
+                            ) -> None:
         """
         Output the results of a single case to the different files (one file for the current case, one file
         for each category)
@@ -187,9 +192,19 @@ class ExperimentOutput(object):
         :param skip_categories: If true, skip appending to the category specific files
         :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
         example be used to create a file containing totals, without having a total category in the case file.
+        :param variables: A list of variables. By default, only one value per implementation is used. Using this list,
+        multiple variables can be exported per implementation (for example min and max values).
         """
-        headers = ['case/step'] + list(map(lambda i: i.get_name(), implementations))  # type: ignore
+
         implementation_index = self.determine_implementation_index()
+        variables_amount = len(variables) if variables is not None else 1
+        headers = ['case/step']
+        for implementation in implementations:
+            if variables is not None:
+                for variable in variables:
+                    headers.append("%s %s" % (implementation.get_name(), variable))
+            else:
+                headers.append(implementation.get_name())
 
         case_output_file_path = path.join(self.experiment_results_directory(),
                                           '%s-case-%s.csv' % (name, self.state.case.name))
@@ -197,11 +212,11 @@ class ExperimentOutput(object):
         case_rows = list()
         for category, value in values.items():
             if category not in skip_categories_in_case_files:
-                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
+                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index, variables_amount))
 
             if not skip_categories:
                 category_row = ExperimentOutput.create_row(self.state.case.name, value,
-                                                           implementation_index)
+                                                           implementation_index, variables_amount)
                 category_output_file_path = path.join(
                     self.experiment_results_directory(),
                     '%s-category-%s.csv' % (name, category))
@@ -218,10 +233,15 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
-    def create_row(category: str, value: float, implementation_index):
-        row = [None] * 5  # type: List[Union[str, Any]]
+    def create_row(category: str, value: Union[List[float], float], implementation_index: int, variables_amount: int = 1):
+        row = [None] * (1 + 4 * variables_amount)  # type: List[Union[str, Any]]
         row[0] = category
-        row[implementation_index + 1] = value
+        if variables_amount == 1:
+            row[implementation_index + 1] = value
+        else:
+            for i in range(variables_amount):
+                row[implementation_index * variables_amount + i + 1] = value[i]
+
         return row
 
     def determine_implementation_index(self):
