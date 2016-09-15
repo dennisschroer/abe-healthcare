@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from cProfile import Profile
-from multiprocessing import Condition  # type: ignore
+from multiprocessing import Condition, Event  # type: ignore
 from os import path
 from os.path import join
 from typing import List, Dict, Any
@@ -90,6 +90,9 @@ class BaseExperiment(object):
         self.setup_done_sync = Condition()
         # - When the results are saved and before the state is updated for the next experiment
         self.results_saved_sync = Condition()
+        # Event used when the state changes to make the main thread do measurements at the start of each state
+        self.state_change_event = Event()
+
         self.sync_count = 0
         self.profiler = None  # type: Profile
 
@@ -208,6 +211,7 @@ class BaseExperiment(object):
         return client
 
     def run_setup(self):
+        self.set_progress(ExperimentProgress.setup)
         # Create central authority
         self.central_authority = self.sequence_state.implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
@@ -223,6 +227,7 @@ class BaseExperiment(object):
                                           storage_path=self.get_insurance_storage_path())
 
     def run_authsetup(self):
+        self.set_progress(ExperimentProgress.authsetup)
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.sequence_state.implementation)
@@ -231,6 +236,7 @@ class BaseExperiment(object):
             authority.save_attribute_keys()
 
     def run_register(self):
+        self.state.progress = ExperimentProgress.register
         # Create user clients
         self.user_clients = self.create_user_clients(self.sequence_state.implementation,
                                                      self.insurance)  # type: List[UserClient]
@@ -243,19 +249,22 @@ class BaseExperiment(object):
         descriptions (self.user_descriptions)
         :requires: self.user_clients is not None
         """
+        self.set_progress(ExperimentProgress.keygen)
         for user_description in self.user_descriptions:
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
 
     def run_encrypt(self):
+        self.set_progress(ExperimentProgress.encrypt)
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
     def run_decrypt(self):
+        self.set_progress(ExperimentProgress.decrypt)
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self):
-        self.state.progress = ExperimentProgress.setup
+        self.state.progress = ExperimentProgress.experiment_setup
 
         self.setup()
 
@@ -298,7 +307,7 @@ class BaseExperiment(object):
                     self.finish_measurements()  # 0
                 except:
                     self.output.output_error()
-                    self.state.progress = ExperimentProgress.setup
+                    self.state.progress = ExperimentProgress.experiment_setup
                     self.remaining_syncs()
 
         self.state.progress = ExperimentProgress.stopping
@@ -310,8 +319,7 @@ class BaseExperiment(object):
             self.profiler = Profile()
             self.profiler.enable()
 
-        self.state.progress = ExperimentProgress.running
-        logging.debug("Experiment acquiring lock")
+        self.state.progress = ExperimentProgress.experiment_starting
         self.sync(self.setup_done_sync)
         # self.setup_lock.acquire()
         # self.setup_lock.notify()
@@ -319,7 +327,7 @@ class BaseExperiment(object):
 
     def stop_measurements(self):
         logging.debug("Experiment.stop")
-        self.state.progress = ExperimentProgress.setup
+        self.state.progress = ExperimentProgress.experiment_setup
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler.disable()
 
@@ -346,6 +354,9 @@ class BaseExperiment(object):
             ])
         self.sync(self.results_saved_sync)
         # Now sync with the other process
+
+    def set_progress(self, value: ExperimentProgress):
+        self.state.progress = value
 
     def sync(self, condition):
         """

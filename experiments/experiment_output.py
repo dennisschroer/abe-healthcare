@@ -4,11 +4,11 @@ import sys
 import traceback
 from cProfile import Profile
 from os import path, listdir
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Tuple
 from typing import Union
 
 from experiments.enum.implementations import implementations
-from experiments.experiment_state import ExperimentState
+from experiments.experiment_state import ExperimentState, ExperimentProgress
 from experiments.experiments_sequence_state import ExperimentsSequenceState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
@@ -95,19 +95,28 @@ class ExperimentOutput(object):
 
         self.output_case_results('network', values)
 
-    def output_memory_usages(self, memory_usages: List[Any]) -> None:
+    def output_memory_usages(self, memory_usages: List[Tuple[ExperimentProgress, dict]]) -> None:
         """
         Output the memory usages.
         :param memory_usages: The list of memory usages.
         :return:
         """
-        values = dict()
-        i = 0
-        for row in memory_usages:
-            values[str(i)] = row.rss + row.swap
-            i += 1
+        min_max_usages = dict()  # type: Dict[str, List[float]]
+        for usage_tuple in memory_usages:
+            # Extract tuple
+            step, usages = usage_tuple
+            step_name = step.name
+            value = usages.rss + usages.swap  # type: ignore
 
-        self.output_case_results('memory', values, skip_categories=True)
+            # Set minimum and maximum values
+            if step not in min_max_usages:
+                min_max_usages[step_name] = [-1, -1]
+            if min_max_usages[step_name][0] == -1 or value < min_max_usages[step_name][0]:
+                min_max_usages[step_name][0] = value
+            if min_max_usages[step_name][1] == -1 or value > min_max_usages[step_name][1]:
+                min_max_usages[step_name][1] = value
+
+        self.output_case_results('memory', min_max_usages, variables=['min', 'max'])
 
         if OUTPUT_DETAILED:
             directory = self.experiment_case_iteration_results_directory()
@@ -116,8 +125,8 @@ class ExperimentOutput(object):
                     'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
                 ])
                 writer.writeheader()
-                for row in memory_usages:
-                    writer.writerow(row._asdict())
+                for _, row in memory_usages:
+                    writer.writerow(row._asdict()) # type: ignore
 
     def output_storage_space(self, directories: List[dict]) -> None:
         """
@@ -134,8 +143,10 @@ class ExperimentOutput(object):
 
         for directory_options in directories:
             directory_path = directory_options['path']
-            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda \
-                x: x
+            filename_mapper = \
+                directory_options['filename_mapper'] \
+                    if 'filename_mapper' in directory_options \
+                    else lambda x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
@@ -176,8 +187,13 @@ class ExperimentOutput(object):
 
         self.output_case_results('timings', step_timings, skip_categories_in_case_files=['total'])
 
-    def output_case_results(self, name: str, values: Dict[str, Any],
-                            skip_categories=False, skip_categories_in_case_files: List[str] = list()) -> None:
+    def output_case_results(self,
+                            name: str,
+                            values: Dict[str, Any],
+                            skip_categories=False,
+                            skip_categories_in_case_files: List[str] = list(),
+                            variables: List[str] = None
+                            ) -> None:
         """
         Output the results of a single case to the different files (one file for the current case, one file
         for each category)
@@ -187,9 +203,19 @@ class ExperimentOutput(object):
         :param skip_categories: If true, skip appending to the category specific files
         :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
         example be used to create a file containing totals, without having a total category in the case file.
+        :param variables: A list of variables. By default, only one value per implementation is used. Using this list,
+        multiple variables can be exported per implementation (for example min and max values).
         """
-        headers = ['case/step'] + list(map(lambda i: i.get_name(), implementations))  # type: ignore
+
         implementation_index = self.determine_implementation_index()
+        variables_amount = len(variables) if variables is not None else 1
+        headers = ['case/step']
+        for implementation in implementations:
+            if variables is not None:
+                for variable in variables:
+                    headers.append("%s %s" % (implementation.get_name(), variable))
+            else:
+                headers.append(implementation.get_name())
 
         case_output_file_path = path.join(self.experiment_results_directory(),
                                           '%s-case-%s.csv' % (name, self.state.case.name))
@@ -197,11 +223,11 @@ class ExperimentOutput(object):
         case_rows = list()
         for category, value in values.items():
             if category not in skip_categories_in_case_files:
-                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index))
+                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index, variables_amount))
 
             if not skip_categories:
                 category_row = ExperimentOutput.create_row(self.state.case.name, value,
-                                                           implementation_index)
+                                                           implementation_index, variables_amount)
                 category_output_file_path = path.join(
                     self.experiment_results_directory(),
                     '%s-category-%s.csv' % (name, category))
@@ -218,10 +244,15 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
-    def create_row(category: str, value: float, implementation_index):
-        row = [None] * 5  # type: List[Union[str, Any]]
+    def create_row(category: str, value: Union[List[float], float], implementation_index: int, variables_amount: int = 1):
+        row = [None] * (1 + 4 * variables_amount)  # type: List[Union[str, Any]]
         row[0] = category
-        row[implementation_index + 1] = value
+        if variables_amount == 1:
+            row[implementation_index + 1] = value
+        else:
+            for i in range(variables_amount):
+                row[implementation_index * variables_amount + i + 1] = value[i] # type: ignore
+
         return row
 
     def determine_implementation_index(self):

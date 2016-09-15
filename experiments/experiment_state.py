@@ -6,9 +6,16 @@ from experiments.experiment_case import ExperimentCase
 
 
 class ExperimentProgress(Enum):
-    setup = 0
-    running = 1
-    stopping = 2
+    experiment_setup = 0
+    experiment_starting = 1
+    setup = 2
+    authsetup = 3
+    register = 4
+    keygen = 5
+    encrypt = 6
+    decryption_keys = 7
+    decrypt = 8
+    stopping = 10
 
 
 class ExperimentState(object):
