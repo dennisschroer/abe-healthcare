@@ -30,7 +30,7 @@ class ExperimentsRunner(object):
         self.current_sequence = None  # type: ExperimentsSequence
         self.psutil_process = None  # type: psutil.Process
         self.experiment_process = None  # type: Process
-        self.memory_usages = None  # type: List[dict]
+        self.memory_usages = None  # type: List[Tuple[ExperimentProgress, dict]]
 
     def run_base_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 100))
@@ -134,7 +134,7 @@ class ExperimentsRunner(object):
         while self.current_sequence.experiment.state.progress != ExperimentProgress.stopping:
             self.start_measurements()
 
-            while self.current_sequence.experiment.state.progress == ExperimentProgress.running:
+            while self.current_sequence.experiment.state.progress != ExperimentProgress.experiment_setup:
                 self.run_measurement()
                 sleep(self.current_sequence.experiment.memory_measure_interval)
 
@@ -155,7 +155,7 @@ class ExperimentsRunner(object):
 
     def run_measurement(self):
         if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
-            self.memory_usages.append(self.psutil_process.memory_full_info())
+            self.memory_usages.append((self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
 
     def finish_measurements(self):
         logging.debug("Runner.finish")
