@@ -7,6 +7,8 @@ from os import path
 from os.path import join
 from typing import List, Dict, Any
 
+from memory_profiler import memory_usage
+
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from experiments.enum.measurement_type import MeasurementType
@@ -94,6 +96,7 @@ class BaseExperiment(object):
         self.state_change_event = Event()
 
         self.sync_count = 0
+        self.memory_usages = None
         self.profiler = None  # type: Profile
 
     @property
@@ -289,14 +292,31 @@ class BaseExperiment(object):
 
                     self.start_measurements()  # 2
 
-                    if self.run_descriptions['setup_authsetup'] == 'always':
-                        self.run_setup()
-                        self.run_authsetup()
-                    if self.run_descriptions['register_keygen'] == 'always':
-                        self.run_register()
-                        self.run_keygen()
-                    self.run_encrypt()
-                    self.run_decrypt()
+                    if self.state.measurement_type == MeasurementType.memory:
+                        if self.run_descriptions['setup_authsetup'] == 'always':
+                            u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['setup'] = [min(u), max(u), len(u)]
+                            u = memory_usage((self.run_authsetup, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
+                        if self.run_descriptions['register_keygen'] == 'always':
+                            u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['register'] = [min(u), max(u), len(u)]
+                            u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['keygen'] = [min(u), max(u), len(u)]
+
+                        u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
+                        self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
+                        u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
+                        self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
+                    else:
+                        if self.run_descriptions['setup_authsetup'] == 'always':
+                            self.run_setup()
+                            self.run_authsetup()
+                        if self.run_descriptions['register_keygen'] == 'always':
+                            self.run_register()
+                            self.run_keygen()
+                        self.run_encrypt()
+                        self.run_decrypt()
 
                     self.stop_measurements()
 
@@ -318,6 +338,7 @@ class BaseExperiment(object):
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler = Profile()
             self.profiler.enable()
+        self.memory_usages = dict()
 
         self.state.progress = ExperimentProgress.experiment_starting
         self.sync(self.setup_done_sync)
@@ -335,6 +356,8 @@ class BaseExperiment(object):
         logging.debug("Experiment.finish")
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
+        if self.state.measurement_type == MeasurementType.memory:
+            self.output.output_case_results('memory', self.memory_usages, variables=['min', 'max', 'amount'])
         if self.state.measurement_type == MeasurementType.storage_and_network:
             self.output.output_connections(self.get_connections())
             self.output.output_storage_space([

@@ -156,16 +156,17 @@ class ExperimentsRunner(object):
             self.psutil_process.cpu_percent()
 
     def run_measurement(self):
-        if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
-            self.memory_usages.append(
-                (self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
+        pass
+        # if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
+        #     self.memory_usages.append(
+        #         (self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
 
     def finish_measurements(self):
         logging.debug("Runner.finish")
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.cpu:
             self.current_sequence.experiment.output.output_cpu_usage(self.psutil_process.cpu_percent())
-        if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
-            self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
+        # if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
+        #    self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
         # Wait for the experiment to output the result
         self.sync(self.current_sequence.experiment.results_saved_sync)
 
