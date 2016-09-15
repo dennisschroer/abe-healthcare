@@ -2,12 +2,10 @@ import logging
 import os
 import shutil
 from cProfile import Profile
-from multiprocessing import Condition  # type: ignore
+from multiprocessing import Condition, Event  # type: ignore
 from os import path
 from os.path import join
 from typing import List, Dict, Any
-
-from multiprocessing import Event
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient

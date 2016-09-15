@@ -2,6 +2,7 @@ import logging
 from multiprocessing import Process
 from os import makedirs
 from os import path
+from typing import Tuple
 
 import psutil
 
