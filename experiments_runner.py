@@ -2,14 +2,14 @@ import logging
 from multiprocessing import Process
 from os import makedirs
 from os import path
-from time import sleep
+from typing import Tuple
 
 import psutil
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY, OUTPUT_DETAILED
+from experiments.experiment_output import OUTPUT_DIRECTORY
 from experiments.experiment_state import ExperimentProgress
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
@@ -30,7 +30,7 @@ class ExperimentsRunner(object):
         self.current_sequence = None  # type: ExperimentsSequence
         self.psutil_process = None  # type: psutil.Process
         self.experiment_process = None  # type: Process
-        self.memory_usages = None  # type: List[dict]
+        self.memory_usages = None  # type: List[Tuple[ExperimentProgress, dict]]
 
     def run_base_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(BaseExperiment(), 100))
@@ -134,9 +134,11 @@ class ExperimentsRunner(object):
         while self.current_sequence.experiment.state.progress != ExperimentProgress.stopping:
             self.start_measurements()
 
-            while self.current_sequence.experiment.state.progress == ExperimentProgress.running:
+            while self.current_sequence.experiment.state.progress != ExperimentProgress.experiment_setup:
                 self.run_measurement()
-                sleep(self.current_sequence.experiment.memory_measure_interval)
+                if self.current_sequence.experiment.state_change_event.wait(
+                        self.current_sequence.experiment.memory_measure_interval):
+                    self.current_sequence.experiment.state_change_event.clear()
 
             self.finish_measurements()
             # Wait for the state to be updated
@@ -154,15 +156,17 @@ class ExperimentsRunner(object):
             self.psutil_process.cpu_percent()
 
     def run_measurement(self):
-        if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
-            self.memory_usages.append(self.psutil_process.memory_full_info())
+        pass
+        # if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
+        #     self.memory_usages.append(
+        #         (self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
 
     def finish_measurements(self):
         logging.debug("Runner.finish")
         if self.current_sequence.experiment.state.measurement_type == MeasurementType.cpu:
             self.current_sequence.experiment.output.output_cpu_usage(self.psutil_process.cpu_percent())
-        if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
-            self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
+        # if self.current_sequence.experiment.state.measurement_type == MeasurementType.memory:
+        #    self.current_sequence.experiment.output.output_memory_usages(self.memory_usages)
         # Wait for the experiment to output the result
         self.sync(self.current_sequence.experiment.results_saved_sync)
 
