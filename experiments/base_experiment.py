@@ -96,7 +96,7 @@ class BaseExperiment(object):
         self.state_change_event = Event()
 
         self.sync_count = 0
-        self.memory_usages = None
+        self.memory_usages = None  # type: Dict[str, List[float]]
         self.profiler = None  # type: Profile
 
     @property
