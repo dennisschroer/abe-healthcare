@@ -2,14 +2,13 @@ import logging
 from multiprocessing import Process
 from os import makedirs
 from os import path
-from time import sleep
 
 import psutil
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_output import OUTPUT_DIRECTORY, OUTPUT_DETAILED
+from experiments.experiment_output import OUTPUT_DIRECTORY
 from experiments.experiment_state import ExperimentProgress
 from experiments.experiments_sequence import ExperimentsSequence
 from experiments.file_size_experiment import FileSizeExperiment
@@ -136,7 +135,9 @@ class ExperimentsRunner(object):
 
             while self.current_sequence.experiment.state.progress != ExperimentProgress.experiment_setup:
                 self.run_measurement()
-                sleep(self.current_sequence.experiment.memory_measure_interval)
+                if self.current_sequence.experiment.state_change_event.wait(
+                        self.current_sequence.experiment.memory_measure_interval):
+                    self.current_sequence.experiment.state_change_event.clear()
 
             self.finish_measurements()
             # Wait for the state to be updated
@@ -155,7 +156,8 @@ class ExperimentsRunner(object):
 
     def run_measurement(self):
         if self.current_sequence.experiment.state.measurement_type is MeasurementType.memory:
-            self.memory_usages.append((self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
+            self.memory_usages.append(
+                (self.current_sequence.experiment.state.progress, self.psutil_process.memory_full_info()))
 
     def finish_measurements(self):
         logging.debug("Runner.finish")

@@ -7,6 +7,8 @@ from os import path
 from os.path import join
 from typing import List, Dict, Any
 
+from multiprocessing import Event
+
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
 from experiments.enum.measurement_type import MeasurementType
@@ -90,6 +92,9 @@ class BaseExperiment(object):
         self.setup_done_sync = Condition()
         # - When the results are saved and before the state is updated for the next experiment
         self.results_saved_sync = Condition()
+        # Event used when the state changes to make the main thread do measurements at the start of each state
+        self.state_change_event = Event()
+
         self.sync_count = 0
         self.profiler = None  # type: Profile
 
@@ -208,7 +213,7 @@ class BaseExperiment(object):
         return client
 
     def run_setup(self):
-        self.state.progress = ExperimentProgress.setup
+        self.set_progress(ExperimentProgress.setup)
         # Create central authority
         self.central_authority = self.sequence_state.implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
@@ -224,7 +229,7 @@ class BaseExperiment(object):
                                           storage_path=self.get_insurance_storage_path())
 
     def run_authsetup(self):
-        self.state.progress = ExperimentProgress.authsetup
+        self.set_progress(ExperimentProgress.authsetup)
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.sequence_state.implementation)
@@ -246,18 +251,18 @@ class BaseExperiment(object):
         descriptions (self.user_descriptions)
         :requires: self.user_clients is not None
         """
-        self.state.progress = ExperimentProgress.keygen
+        self.set_progress(ExperimentProgress.keygen)
         for user_description in self.user_descriptions:
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
 
     def run_encrypt(self):
-        self.state.progress = ExperimentProgress.encrypt
+        self.set_progress(ExperimentProgress.encrypt)
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
     def run_decrypt(self):
-        self.state.progress = ExperimentProgress.decrypt
+        self.set_progress(ExperimentProgress.decrypt)
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self):
@@ -351,6 +356,9 @@ class BaseExperiment(object):
             ])
         self.sync(self.results_saved_sync)
         # Now sync with the other process
+
+    def set_progress(self, value: ExperimentProgress):
+        self.state.progress = value
 
     def sync(self, condition):
         """
