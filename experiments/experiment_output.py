@@ -4,11 +4,11 @@ import sys
 import traceback
 from cProfile import Profile
 from os import path, listdir
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Tuple
 from typing import Union
 
 from experiments.enum.implementations import implementations
-from experiments.experiment_state import ExperimentState
+from experiments.experiment_state import ExperimentState, ExperimentProgress
 from experiments.experiments_sequence_state import ExperimentsSequenceState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
@@ -95,19 +95,28 @@ class ExperimentOutput(object):
 
         self.output_case_results('network', values)
 
-    def output_memory_usages(self, memory_usages: List[Any]) -> None:
+    def output_memory_usages(self, memory_usages: List[Tuple[ExperimentProgress, dict]]) -> None:
         """
         Output the memory usages.
         :param memory_usages: The list of memory usages.
         :return:
         """
-        values = dict()
-        i = 0
-        for row in memory_usages:
-            values[str(i)] = row.rss + row.swap
-            i += 1
+        min_max_usages = dict()  # type: Dict[str, dict]
+        for usage_tuple in memory_usages:
+            # Extract tuple
+            step, usages = usage_tuple
+            step = step.name
+            value = usages.rss + usages.swap
 
-        self.output_case_results('memory', values, skip_categories=True)
+            # Set minimum and maximum values
+            if step not in min_max_usages:
+                min_max_usages[step] = [-1, -1] # type: List[float]
+            if min_max_usages[step][0] == -1 or value < min_max_usages[step][0]:
+                min_max_usages[step][0] = value
+            if min_max_usages[step][1] == -1 or value > min_max_usages[step][1]:
+                min_max_usages[step][1] = value
+
+        self.output_case_results('memory', min_max_usages, variables=['min', 'max'])
 
         if OUTPUT_DETAILED:
             directory = self.experiment_case_iteration_results_directory()
@@ -135,7 +144,7 @@ class ExperimentOutput(object):
         for directory_options in directories:
             directory_path = directory_options['path']
             filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda \
-                x: x
+                    x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
