@@ -101,20 +101,20 @@ class ExperimentOutput(object):
         :param memory_usages: The list of memory usages.
         :return:
         """
-        min_max_usages = dict()  # type: Dict[str, dict]
+        min_max_usages = dict()  # type: Dict[str, List[float]]
         for usage_tuple in memory_usages:
             # Extract tuple
             step, usages = usage_tuple
-            step = step.name
-            value = usages.rss + usages.swap
+            step_name = step.name
+            value = usages.rss + usages.swap  # type: ignore
 
             # Set minimum and maximum values
             if step not in min_max_usages:
-                min_max_usages[step] = [-1, -1] # type: List[float]
-            if min_max_usages[step][0] == -1 or value < min_max_usages[step][0]:
-                min_max_usages[step][0] = value
-            if min_max_usages[step][1] == -1 or value > min_max_usages[step][1]:
-                min_max_usages[step][1] = value
+                min_max_usages[step_name] = [-1, -1]
+            if min_max_usages[step_name][0] == -1 or value < min_max_usages[step_name][0]:
+                min_max_usages[step_name][0] = value
+            if min_max_usages[step_name][1] == -1 or value > min_max_usages[step_name][1]:
+                min_max_usages[step_name][1] = value
 
         self.output_case_results('memory', min_max_usages, variables=['min', 'max'])
 
@@ -125,8 +125,8 @@ class ExperimentOutput(object):
                     'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
                 ])
                 writer.writeheader()
-                for row in memory_usages:
-                    writer.writerow(row._asdict())
+                for _, row in memory_usages:
+                    writer.writerow(row._asdict()) # type: ignore
 
     def output_storage_space(self, directories: List[dict]) -> None:
         """
@@ -143,8 +143,10 @@ class ExperimentOutput(object):
 
         for directory_options in directories:
             directory_path = directory_options['path']
-            filename_mapper = directory_options['filename_mapper'] if 'filename_mapper' in directory_options else lambda \
-                    x: x
+            filename_mapper = \
+                directory_options['filename_mapper'] \
+                    if 'filename_mapper' in directory_options \
+                    else lambda x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
@@ -249,7 +251,7 @@ class ExperimentOutput(object):
             row[implementation_index + 1] = value
         else:
             for i in range(variables_amount):
-                row[implementation_index * variables_amount + i + 1] = value[i]
+                row[implementation_index * variables_amount + i + 1] = value[i] # type: ignore
 
         return row
 
