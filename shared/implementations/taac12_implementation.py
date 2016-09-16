@@ -103,7 +103,7 @@ class TAAC12CentralAuthority(CentralAuthority):
 class TAAC12AttributeAuthority(AttributeAuthority):
     def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
         super().__init__(name, serializer, storage_path=storage_path)
-        self.update_keys = {}  # type: dict
+        self._update_keys = {}  # type: dict
 
     def setup(self, central_authority, attributes):
         self.global_parameters = central_authority.global_parameters
@@ -127,14 +127,14 @@ class TAAC12AttributeAuthority(AttributeAuthority):
                            attributes)
 
     def update_keys(self, time_period: int) -> Any:
-        if time_period not in self.update_keys:
+        if time_period not in self._update_keys:
             self.generate_update_keys(time_period)
-        return self.update_keys[time_period]
+        return self._update_keys[time_period]
 
     def generate_update_keys(self, time_period: int) -> dict:
         taac = Taac(self.global_parameters.group)
         revocation_list = self.revocation_list_for_time_period(time_period)
-        self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
+        self._update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
                                                                   self.public_keys(time_period),
                                                                   self.secret_keys(time_period),
                                                                   self.states, revocation_list,
