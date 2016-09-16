@@ -31,3 +31,10 @@ class UserAttributeAuthorityConnection(BaseConnection):
             self.add_benchmark('out keygen', len(self.serializer.serialize_keygen_request(request)))
             self.add_benchmark('in keygen', len(self.serializer.serialize_user_secret_keys(response)))
         return response
+
+    def update_keys(self, time_period):
+        response = self.attribute_authority.update_keys(time_period)
+        if self.benchmark:
+            self.add_benchmark('out update_keys', (time_period.bit_length() + 7) // 8)
+            self.add_benchmark('in update_keys', len(self.serializer.serialize_authority_update_keys(response)))
+        return response

@@ -38,7 +38,7 @@ class AttributeAuthority(object):
         :param central_authority: The central authority to get the global parameters from.
         :param attributes: The attributes managed by this authority.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def public_keys(self, time_period: int) -> Any:
         """
@@ -55,6 +55,14 @@ class AttributeAuthority(object):
         :return: The secret keys for the given time period.
         """
         return self._secret_keys
+
+    def update_keys(self, time_period: int) -> Any:
+        """
+        Gets the update keys required for a given time period
+        :param time_period:
+        :return:
+        """
+        raise NotImplementedError()
 
     def revoke_attribute_indirect(self, gid: str, attribute: str, time_period: int) -> None:
         """

@@ -245,6 +245,12 @@ class BaseSerializer(object):
     def deserialize_authority_secret_keys(self, data: bytes) -> AuthoritySecretKeysStore:
         return self.loads(data)
 
+    def serialize_authority_update_keys(self, update_keys: Any) -> bytes:
+        return self.dumps(update_keys)
+
+    def deserialize_authority_update_keys(self, data: bytes) -> Any:
+        return self.loads(data)
+
     def serialize_keygen_request(self, request) -> bytes:
         return self.dumps(request)
 
