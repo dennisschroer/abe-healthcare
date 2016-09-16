@@ -4,6 +4,7 @@ from authority.attribute_authority import AttributeAuthority
 from charm.core.math.pairing import GT
 from charm.toolbox.pairinggroup import PairingGroup
 from service.central_authority import CentralAuthority
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.implementations.public_key.base_public_key import BasePublicKey
 from shared.implementations.public_key.rsa_public_key import RSAPublicKey
 from shared.implementations.serializer.base_serializer import BaseSerializer
@@ -152,7 +153,7 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, AttributeAuthority],
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, UserAttributeAuthorityConnection],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         """

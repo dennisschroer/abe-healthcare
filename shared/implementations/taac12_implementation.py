@@ -1,12 +1,11 @@
-import os
 from typing import Dict, Any
 
-from authority.attribute_authority import AttributeAuthority, ATTRIBUTE_PUBLIC_KEYS_FILENAME, \
-    ATTRIBUTE_SECRET_KEYS_FILENAME
+from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_taac_ylcwr12 import Taac
-from charm.toolbox.secretutil import SecretUtil
 from charm.toolbox.pairinggroup import G1, PairingGroup
+from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from shared.implementations.serializer.base_serializer import BaseSerializer
@@ -52,13 +51,14 @@ class TAAC12Implementation(BaseImplementation):
         taac = Taac(self.group)
         return taac.encrypt(global_parameters.scheme_parameters, public_keys, message, policy, time_period)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, Any],
+    def decryption_keys(self, global_parameters: GlobalParameters,
+                        authorities: Dict[str, UserAttributeAuthorityConnection],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         update_keys = []
         taac = Taac(self.group)
         for authority_name in authorities:
-            update_keys.append(authorities[authority_name].generate_update_keys(time_period))
+            update_keys.append(authorities[authority_name].update_keys(time_period))
         merged_update_keys = Taac.merge_timed_keys(*update_keys)
         return taac.decryption_keys_computation(secret_keys, merged_update_keys)
 
@@ -126,16 +126,19 @@ class TAAC12AttributeAuthority(AttributeAuthority):
                            self.states, gid,
                            attributes)
 
-    def generate_update_keys(self, time_period: int) -> dict:
+    def update_keys(self, time_period: int) -> Any:
         if time_period not in self.update_keys:
-            taac = Taac(self.global_parameters.group)
-            revocation_list = self.revocation_list_for_time_period(time_period)
-            self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
-                                                                      self.public_keys(time_period),
-                                                                      self.secret_keys(time_period),
-                                                                      self.states, revocation_list,
-                                                                      time_period, self.attributes)
+            self.generate_update_keys(time_period)
         return self.update_keys[time_period]
+
+    def generate_update_keys(self, time_period: int) -> dict:
+        taac = Taac(self.global_parameters.group)
+        revocation_list = self.revocation_list_for_time_period(time_period)
+        self.update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
+                                                                  self.public_keys(time_period),
+                                                                  self.secret_keys(time_period),
+                                                                  self.states, revocation_list,
+                                                                  time_period, self.attributes)
 
 
 class TAAC12Serializer(BaseSerializer):

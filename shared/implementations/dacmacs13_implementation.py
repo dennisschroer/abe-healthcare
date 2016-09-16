@@ -4,6 +4,7 @@ from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.abenc_dacmacs_yj14 import DACMACS
 from charm.toolbox.pairinggroup import G1, PairingGroup
 from service.central_authority import CentralAuthority
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation, SecretKeyStore, AbeEncryption
 from shared.implementations.serializer.base_serializer import BaseSerializer
@@ -48,11 +49,14 @@ class DACMACS13Implementation(BaseImplementation):
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return dacmacs.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, Any],
+    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, UserAttributeAuthorityConnection],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         dacmacs = DACMACS(self.group)
         try:
+            # This token generation is done internally at the client, so no network traffic is happening
+            # This can only be the case when decryption is outsourced, in this case this token generation is performed
+            # in the cloud.
             return dacmacs.generate_token(global_parameters.scheme_parameters, ciphertext, registration_data['public'],
                                           secret_keys)
         except Exception:
