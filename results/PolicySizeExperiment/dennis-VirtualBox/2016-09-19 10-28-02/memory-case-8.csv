@@ -1,0 +1,7 @@
+case/step,DAC-MACS min,DAC-MACS max,DAC-MACS amount,RD-DABE min,RD-DABE max,RD-DABE amount,RW-ABE min,RW-ABE max,RW-ABE amount,TAAC min,TAAC max,TAAC amount
+encrypt,25.24609375,25.24609375,11,,,,,,,,,
+decrypt,25.24609375,25.24609375,5,,,,,,,,,
+encrypt,,,,24.87890625,24.87890625,8,,,,,,
+decrypt,,,,24.87890625,24.87890625,6,,,,,,
+encrypt,,,,,,,25.5859375,25.58984375,15,,,
+decrypt,,,,,,,25.58984375,25.58984375,9,,,
