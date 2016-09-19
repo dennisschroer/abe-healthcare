@@ -73,7 +73,7 @@ class RW15CentralAuthority(CentralAuthority):
 
 
 class RW15AttributeAuthority(AttributeAuthority):
-    def setup(self, central_authority, attributes):
+    def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         maabe = MaabeRW15(self.global_parameters.group)
