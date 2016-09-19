@@ -3,7 +3,17 @@
 Master: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=master)](https://travis-ci.com/denniss17/abe-healthcare)
 Develop: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=develop)](https://travis-ci.com/denniss17/abe-healthcare)
 
+This repository contains the experiments framework as used in my master's thesis 
+about end-to-end encryption using ABE (Attribute Based Encryption) in Health Care. 
+The framework allows to run experiments using different implementations of ABE, in order to compare these implementations.
+The experiments are tayored for a specific use case, which is displayed in the following image.
+
 ![Overview](detailed-use-case.png)
+
+_Bob, an insured, submits an encrypted photo to an insurance company to be checked by a doctor in order to qualify for compensation.
+Only qualified doctors which act as reviewers are allowed to decrypt the ciphertext._
+
+The 
 
 ## Requirements
 
@@ -18,28 +28,37 @@ for more info.
 
 ## Experiments
 
-The different experiments can be found in `experiments`. All experiments should extend the `BaseExperiment`, and 
+The different experiments can be found in `experiments`. All experiments should extend `BaseExperiment`, and 
 should define one or more cases of type `ExperimentCase`. 
 
-The `ExperimentRunner` in `experiments.py` runs all experiments for all implementations for each case.
+The `ExperimentRunner` in `experiments_runner.py` runs all experiments for all implementations for each case.
 
 ### Execution
 
-Run `experiments.py` to run all experiments
+The experiments can be started with:
+
+    python experiments_runner.py
 
 ### Output
 
-The output of the experiments can be found in `data/experiments/output/{experiment_name}/{implementation}`.
-For each case, several files are created.
+The experiments use a (temporal) location for data storage. 
+This data can be found in `data/experiments/{experiment_name}`.
+
+The results of the experiments can be found in the `results/{experiment_name}/{device_name}/{datetime}` directory.
+The `experiments.experiment_output.ExperimentOutput` class is responsible for the output of the results.
 
 #### CPU
 Percentage of CPU during entire experiment
 
 #### Timings
+`outdated`
+
 The `.txt` file is the result of a dump of [pstats.Stats](https://docs.python.org/3.5/library/profile.html#pstats.Stats). 
+
 The `.csv` file is this result converted to CSV.
 
 #### Memory
+`outdated`
 
 rss is what is used, in total, and almost equal to uss,
 
