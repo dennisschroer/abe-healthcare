@@ -37,7 +37,7 @@ class CentralAuthority(object):
         :param gid: The global identifier of the user to register
         :return: Additional data to store on the user
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def save_global_parameters(self):
         save_file_path = os.path.join(self.storage_path, GLOBAL_PARAMETERS_FILENAME)
