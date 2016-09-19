@@ -81,8 +81,8 @@ class ABEHealthCare(object):
         """
         self.insurance_company = self.implementation.create_attribute_authority(self.insurance_name)
         self.national_database = self.implementation.create_attribute_authority(self.national_name)
-        self.insurance_company.setup(self.central_authority, self.insurance_attributes)
-        self.national_database.setup(self.central_authority, self.national_attributes)
+        self.insurance_company.setup(self.central_authority, self.insurance_attributes, 1)
+        self.national_database.setup(self.central_authority, self.national_attributes, 1)
 
     def setup_service(self):
         """

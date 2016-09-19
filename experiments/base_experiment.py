@@ -118,17 +118,6 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
-    def implementation_setup(self) -> None:
-        """
-        Setup implementation specific things, which only have to run once per implementation
-        """
-        if self.run_descriptions['setup_authsetup'] == 'once':
-            self.run_setup()
-            self.run_authsetup()
-        if self.run_descriptions['register_keygen'] == 'once':
-            self.run_register()
-            self.run_keygen()
-
     def setup(self) -> None:
         """
         Setup this experiment for a single implementation and a single case in a single run.
@@ -184,7 +173,7 @@ class BaseExperiment(object):
         """
         attribute_authority = implementation.create_attribute_authority(authority_description['name'],
                                                                         storage_path=self.get_attribute_authority_storage_path())
-        attribute_authority.setup(central_authority, authority_description['attributes'])
+        attribute_authority.setup(central_authority, authority_description['attributes'], 1)
         return attribute_authority
 
     def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:

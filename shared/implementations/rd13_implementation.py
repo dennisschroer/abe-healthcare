@@ -1,3 +1,5 @@
+import inspect
+import logging
 from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
@@ -82,21 +84,32 @@ class RD13CentralAuthority(CentralAuthority):
 
 
 class RD13AttributeAuthority(AttributeAuthority):
-    def setup(self, central_authority, attributes):
+    def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         dabe = DabeRD13(self.global_parameters.group)
         # Setting up keys here is useless, as a time period is required
         self._public_keys = {}
         self._secret_keys = {}
+        self.generate_keys_for_time_period(time_period)
 
     def public_keys(self, time_period: int) -> Any:
         if time_period not in self._public_keys:
+            logging.error("UGH, this should not happen in an experiment as it messes the timings up.")
+            logging.error("RD13 generating authority (%s) public keys for time period %d" % (self.name, time_period))
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
+            logging.error('caller name:', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return self._public_keys[time_period]
 
     def secret_keys(self, time_period: int) -> Any:
         if time_period not in self._secret_keys:
+            logging.error("UGH, this should not happen in an experiment as it messes the timings up.")
+            logging.error("RD13 generating authority (%s) secret keys for time period %d" % (self.name, time_period))
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
+            logging.error('caller name:', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return self._secret_keys[time_period]
 
