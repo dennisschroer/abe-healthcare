@@ -153,7 +153,8 @@ class BaseImplementation(object):
         encrypted_key = self.abe_encrypt(global_parameters, public_keys, key, policy, time_period)
         return encrypted_key, ciphertext
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, UserAttributeAuthorityConnection],
+    def decryption_keys(self, global_parameters: GlobalParameters,
+                        authorities: Dict[str, UserAttributeAuthorityConnection],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         """
