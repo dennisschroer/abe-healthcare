@@ -440,7 +440,7 @@ class BaseExperiment(object):
         Gets the base path of the location to be used for storage in this experiment.
         """
         return os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            '../data/experiments/%s' % self.get_name())
+                            '../results/%s' % self.get_name())
 
     def get_experiment_input_path(self) -> str:
         """
