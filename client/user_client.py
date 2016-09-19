@@ -185,7 +185,7 @@ class UserClient(object):
         :return: The plaintext
         """
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.authorities,
+                                                              self.authority_connections,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               ciphertext,
