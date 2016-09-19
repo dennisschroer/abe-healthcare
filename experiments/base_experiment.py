@@ -118,17 +118,6 @@ class BaseExperiment(object):
         input_path = self.get_experiment_input_path()
         file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
 
-    def implementation_setup(self) -> None:
-        """
-        Setup implementation specific things, which only have to run once per implementation
-        """
-        if self.run_descriptions['setup_authsetup'] == 'once':
-            self.run_setup()
-            self.run_authsetup()
-        if self.run_descriptions['register_keygen'] == 'once':
-            self.run_register()
-            self.run_keygen()
-
     def setup(self) -> None:
         """
         Setup this experiment for a single implementation and a single case in a single run.

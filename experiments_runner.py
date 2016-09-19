@@ -69,7 +69,6 @@ class ExperimentsRunner(object):
                 if i == 0:
                     # We need to do some cleanup first
                     experiments_sequence.experiment.setup_directories()
-                    experiments_sequence.experiment.implementation_setup()
 
                 self.run_current_experiment_with_current_state()
 
@@ -192,5 +191,5 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    # runner.run_base_experiments()
+    runner.run_base_experiments()
     runner.run_policy_size_experiments()
