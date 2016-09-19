@@ -13,7 +13,7 @@ from experiments.experiments_sequence_state import ExperimentsSequenceState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
-OUTPUT_DIRECTORY = 'data/experiments/results'
+OUTPUT_DIRECTORY = 'results'
 
 OUTPUT_DETAILED = False
 
