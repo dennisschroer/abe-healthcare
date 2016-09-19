@@ -18,8 +18,8 @@ class BaseImplementationTestCase(unittest.TestCase):
         self.ma1 = self.subject.create_attribute_authority('A1')
         self.ma2 = self.subject.create_attribute_authority('A2')
         self.global_parameters = self.ca.central_setup()
-        self.ma1.setup(self.ca, ['ONE@A1', 'TWO@A1'])
-        self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'])
+        self.ma1.setup(self.ca, ['ONE@A1', 'TWO@A1'], 1)
+        self.ma2.setup(self.ca, ['THREE@A2', 'FOUR@A2'], 1)
 
         self.registration_data = self.ca.register_user('alice')
 

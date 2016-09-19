@@ -126,7 +126,7 @@ class ExperimentOutput(object):
                 ])
                 writer.writeheader()
                 for _, row in memory_usages:
-                    writer.writerow(row._asdict()) # type: ignore
+                    writer.writerow(row._asdict())  # type: ignore
 
     def output_storage_space(self, directories: List[dict]) -> None:
         """
@@ -244,14 +244,15 @@ class ExperimentOutput(object):
         )
 
     @staticmethod
-    def create_row(category: str, value: Union[List[float], float], implementation_index: int, variables_amount: int = 1):
+    def create_row(category: str, value: Union[List[float], float], implementation_index: int,
+                   variables_amount: int = 1):
         row = [None] * (1 + 4 * variables_amount)  # type: List[Union[str, Any]]
         row[0] = category
         if variables_amount == 1:
             row[implementation_index + 1] = value
         else:
             for i in range(variables_amount):
-                row[implementation_index * variables_amount + i + 1] = value[i] # type: ignore
+                row[implementation_index * variables_amount + i + 1] = value[i]  # type: ignore
 
         return row
 

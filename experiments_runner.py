@@ -69,7 +69,6 @@ class ExperimentsRunner(object):
                 if i == 0:
                     # We need to do some cleanup first
                     experiments_sequence.experiment.setup_directories()
-                    experiments_sequence.experiment.implementation_setup()
 
                 self.run_current_experiment_with_current_state()
 

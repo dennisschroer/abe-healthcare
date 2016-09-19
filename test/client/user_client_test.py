@@ -19,7 +19,7 @@ class UserClientTestCase(unittest.TestCase):
         attributes = ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST']
         user_attributes = ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']
         attribute_authority = implementation.create_attribute_authority('TEST')
-        attribute_authority.setup(central_authority, attributes)
+        attribute_authority.setup(central_authority, attributes, 1)
         for attribute in user_attributes:
             attribute_authority.revoke_attribute_indirect('bob', attribute, 2)
         insurance_service = InsuranceService(implementation.serializer, central_authority.global_parameters,

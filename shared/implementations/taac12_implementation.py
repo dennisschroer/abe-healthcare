@@ -105,7 +105,7 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         super().__init__(name, serializer, storage_path=storage_path)
         self._update_keys = {}  # type: dict
 
-    def setup(self, central_authority, attributes):
+    def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
         taac = Taac(self.global_parameters.group)

@@ -1,4 +1,3 @@
-import logging
 from typing import List
 
 from experiments.base_experiment import BaseExperiment
@@ -21,7 +20,8 @@ class PolicySizeExperiment(BaseExperiment):
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
             cases = list(map(
-                lambda size: ExperimentCase("size %d" % (size + 1), {'policy': ' AND '.join(attribute_pairs[:size + 1])}),
+                lambda size: ExperimentCase("size %d" % (size + 1),
+                                            {'policy': ' AND '.join(attribute_pairs[:size + 1])}),
                 range(10)
             ))
             # for case in cases:
