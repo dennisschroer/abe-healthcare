@@ -70,7 +70,7 @@ class BaseSerializerTestCase(unittest.TestCase):
         self.central_authority = implementation.create_central_authority()
         self.global_parameters = self.central_authority.central_setup()  # type: GlobalParameters
         self.attribute_authority = implementation.create_attribute_authority('A')
-        self.attribute_authority.setup(self.central_authority, ['A@A', 'B@A'])
+        self.attribute_authority.setup(self.central_authority, ['A@A', 'B@A'], 1)
         self.public_keys = implementation.merge_public_keys(
             {'A': self.attribute_authority.public_keys(self.time_period)})
 

@@ -184,7 +184,7 @@ class BaseExperiment(object):
         """
         attribute_authority = implementation.create_attribute_authority(authority_description['name'],
                                                                         storage_path=self.get_attribute_authority_storage_path())
-        attribute_authority.setup(central_authority, authority_description['attributes'])
+        attribute_authority.setup(central_authority, authority_description['attributes'], 1)
         return attribute_authority
 
     def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:

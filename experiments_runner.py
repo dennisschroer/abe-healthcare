@@ -192,5 +192,5 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_base_experiments()
+    # runner.run_base_experiments()
     runner.run_policy_size_experiments()
