@@ -63,7 +63,7 @@ class AttributeAuthority(object):
         :param time_period:
         :return:
         """
-        raise NotImplementedError()
+        pass
 
     def revoke_attribute_indirect(self, gid: str, attribute: str, time_period: int) -> None:
         """
