@@ -37,8 +37,6 @@ function_step_mapping = {
     'setup': 'authsetup',
     'central_setup': 'setup',
     'keygen': 'keygen',
-    'secret_keys': 'authsetup',
-    'public_keys': 'authsetup',
     'register_user': 'register',
     'create_record': 'encrypt',
     'decrypt_record': 'decrypt',

@@ -84,9 +84,6 @@ class RD13CentralAuthority(CentralAuthority):
 
 
 class RD13AttributeAuthority(AttributeAuthority):
-    def update_keys(self, time_period: int) -> Any:
-        pass
-
     def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
