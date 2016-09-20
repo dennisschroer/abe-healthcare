@@ -61,17 +61,16 @@ class ExperimentsRunner(object):
         self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
 
-        for i in range(0, current_state.amount):
-            current_state.iteration = i
+        for implementation in implementations:
+            current_state.implementation = implementation
 
-            for implementation in implementations:
-                current_state.implementation = implementation
 
-                if i == 0:
+
+                # if i == 0:
                     # We need to do some cleanup first
-                    experiments_sequence.experiment.setup_directories()
+            experiments_sequence.experiment.setup_directories()
 
-                self.run_current_experiment_with_current_state()
+            self.run_current_experiment_with_current_state()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
             current_state.device_name,
