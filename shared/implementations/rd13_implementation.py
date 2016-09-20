@@ -84,10 +84,12 @@ class RD13CentralAuthority(CentralAuthority):
 
 
 class RD13AttributeAuthority(AttributeAuthority):
+    def update_keys(self, time_period: int) -> Any:
+        pass
+
     def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
-        dabe = DabeRD13(self.global_parameters.group)
         # Setting up keys here is useless, as a time period is required
         self._public_keys = {}
         self._secret_keys = {}
