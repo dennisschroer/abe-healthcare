@@ -95,6 +95,7 @@ class ExperimentsRunner(object):
         logging.info("Read policy: %s" % str(self.current_sequence.experiment.read_policy))
         logging.info("Write policy: %s" % str(self.current_sequence.experiment.write_policy))
         logging.info("Cases: %s" % str(self.current_sequence.experiment.cases))
+        logging.info("Measurements: %s" % str(self.current_sequence.experiment.measurement_types))
 
     def log_current_experiment(self):
         logging.info("=> Run %d/%d of %s, implementation=%s (%d/%d)" % (
