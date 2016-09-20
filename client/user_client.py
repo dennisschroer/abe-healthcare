@@ -280,7 +280,8 @@ class UserClient(object):
         pke = self.implementation.public_key_scheme
         ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
-        key = self._decrypt_abe(record.encryption_key_read, record.time_period)
+        decryption_keys = self._decryption_keys_for_read_key(record)
+        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
         # Find the correct owner key
