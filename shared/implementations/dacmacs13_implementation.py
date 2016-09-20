@@ -118,7 +118,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
             logging.error("DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
-            logging.error('caller name:', calframe[1][3])
+            logging.error('caller name: %s', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return {
             'e(g,g)^alpha': self._public_keys['main']['e(g,g)^alpha'],
@@ -133,7 +133,7 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
             logging.error("DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
-            logging.error('caller name:', calframe[1][3])
+            logging.error('caller name: %s', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return {
             'alpha': self._secret_keys['main']['alpha'],
