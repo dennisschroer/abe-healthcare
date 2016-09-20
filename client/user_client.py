@@ -388,7 +388,8 @@ class UserClient(object):
         """
         self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
-    def set_registration_data(self, registration_data):
+    def register(self):
+        registration_data = self.insurance_connection.register_user(self.user.gid)
         self.user.registration_data = registration_data
         self.save_registration_data()
 

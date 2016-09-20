@@ -22,13 +22,13 @@ class UserClientTestCase(unittest.TestCase):
         attribute_authority.setup(central_authority, attributes, 1)
         for attribute in user_attributes:
             attribute_authority.revoke_attribute_indirect('bob', attribute, 2)
-        insurance_service = InsuranceService(implementation.serializer, central_authority.global_parameters,
+        insurance_service = InsuranceService(implementation.serializer, central_authority,
                                              implementation.public_key_scheme)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
 
         self.subject = UserClient(user, insurance_service, implementation)
-        self.subject.set_registration_data(central_authority.register_user(user.gid))
+        self.subject.register()
         self.subject.request_secret_keys(attribute_authority.name, user_attributes, 1)
 
     def test_create_record_dacmacs13(self):
