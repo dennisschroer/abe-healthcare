@@ -196,7 +196,7 @@ class UserClient(object):
         return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext,
                                                self.user.registration_data)
 
-    def decrypt_record(self, record: DataRecord, decryption_keys: DecryptionKeys) -> Tuple[dict, bytes]:
+    def decrypt_record(self, record: DataRecord, decryption_keys: DecryptionKeys = None) -> Tuple[dict, bytes]:
         """
         Decrypt a data record if possible.
         :param record: The data record to decrypt
@@ -206,13 +206,10 @@ class UserClient(object):
         """
         ske = self.implementation.symmetric_key_scheme
         # Check if we need to fetch update keys first
+        decryption_keys = decryption_keys if decryption_keys is not None else self._decryption_keys_for_read_key(record)
         key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                                       ske.ske_key_size())
-        return pickle.loads(
-            ske.ske_decrypt(record.info, symmetric_key)), ske.ske_decrypt(
-            record.data,
-            symmetric_key)
+        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, ske.ske_key_size())
+        return pickle.loads(ske.ske_decrypt(record.info, symmetric_key)), ske.ske_decrypt(record.data, symmetric_key)
 
     def update_file(self, location: str, message: bytes = b'updated content'):
         """
