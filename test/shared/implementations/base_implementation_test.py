@@ -1,6 +1,7 @@
 import unittest
 
 from charm.core.math.pairing import GT
+from shared.connection.user_attribute_authority_connection import UserAttributeAuthorityConnection
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation
 from test.data import lorem
@@ -81,7 +82,8 @@ class BaseImplementationTestCase(unittest.TestCase):
         # Attempt to decrypt
         for secret_keys in self.valid_secret_keys:
             decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                           {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                           {self.ma1.name: UserAttributeAuthorityConnection(self.ma1),
+                                                            self.ma2.name: UserAttributeAuthorityConnection(self.ma2)},
                                                            secret_keys, self.registration_data, ciphertext, 1
                                                            )
             decrypted = self.subject.abe_decrypt(self.global_parameters,
@@ -92,7 +94,10 @@ class BaseImplementationTestCase(unittest.TestCase):
         for secret_keys in self.invalid_secret_keys:
             try:
                 decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               {self.ma1.name: UserAttributeAuthorityConnection(
+                                                                   self.ma1),
+                                                                self.ma2.name: UserAttributeAuthorityConnection(
+                                                                    self.ma2)},
                                                                secret_keys, self.registration_data, ciphertext, 1
                                                                )
                 self.subject.abe_decrypt(self.global_parameters, decryption_keys,
@@ -103,7 +108,8 @@ class BaseImplementationTestCase(unittest.TestCase):
 
         try:
             decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                           {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                           {self.ma1.name: UserAttributeAuthorityConnection(self.ma1),
+                                                            self.ma2.name: UserAttributeAuthorityConnection(self.ma2)},
                                                            self.invalid_time_keys, self.registration_data, ciphertext, 2
                                                            )
             self.subject.abe_decrypt(self.global_parameters, decryption_keys,
@@ -124,7 +130,10 @@ class BaseImplementationTestCase(unittest.TestCase):
             # Attempt to decrypt the messages
             for secret_keys in self.valid_secret_keys:
                 decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               {self.ma1.name: UserAttributeAuthorityConnection(
+                                                                   self.ma1),
+                                                                self.ma2.name: UserAttributeAuthorityConnection(
+                                                                    self.ma2)},
                                                                secret_keys, self.registration_data,
                                                                key, 1
                                                                )
@@ -136,7 +145,10 @@ class BaseImplementationTestCase(unittest.TestCase):
             for secret_keys in self.invalid_secret_keys:
                 try:
                     decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                                   {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                                   {self.ma1.name: UserAttributeAuthorityConnection(
+                                                                       self.ma1),
+                                                                    self.ma2.name: UserAttributeAuthorityConnection(
+                                                                        self.ma2)},
                                                                    secret_keys, self.registration_data,
                                                                    key, 1
                                                                    )
@@ -149,7 +161,10 @@ class BaseImplementationTestCase(unittest.TestCase):
 
             try:
                 decryption_keys = self.subject.decryption_keys(self.global_parameters,
-                                                               {self.ma1.name: self.ma1, self.ma2.name: self.ma2},
+                                                               {self.ma1.name: UserAttributeAuthorityConnection(
+                                                                   self.ma1),
+                                                                self.ma2.name: UserAttributeAuthorityConnection(
+                                                                    self.ma2)},
                                                                self.invalid_time_keys, self.registration_data,
                                                                key, 2
                                                                )

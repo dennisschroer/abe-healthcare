@@ -40,6 +40,7 @@ class BaseImplementation(object):
     def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
         """
         Create a new attribute authority.
+        :param storage_path: The path to the directory to use as storage for the authority.
         :param name: The name of the authority.
         :return: An attribute authority of this implementation
         """
@@ -211,6 +212,24 @@ class MockImplementation(BaseImplementation):
     """
     Mock implementation for testing purposes
     """
+
+    @property
+    def serializer(self) -> BaseSerializer:
+        return None
+
+    def abe_decrypt(self, global_parameters: GlobalParameters, decryption_keys: DecryptionKeys, gid: str,
+                    ciphertext: AbeEncryption, registration_data: RegistrationData) -> bytes:
+        pass
+
+    def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes, policy: str,
+                    time_period: int) -> AbeEncryption:
+        pass
+
+    def create_central_authority(self, storage_path: str = None) -> CentralAuthority:
+        pass
+
+    def create_attribute_authority(self, name: str, storage_path: str = None) -> AttributeAuthority:
+        pass
 
     def update_secret_keys(self, base: SecretKeyStore, secret_keys: SecretKeys) -> None:
         base.update(secret_keys)

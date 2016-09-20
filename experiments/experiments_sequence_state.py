@@ -17,7 +17,7 @@ class ExperimentsSequenceState(object):
 
     def __repr__(self):
         return "ExperimentsSequenceState[implementation=%s, amount=%s, iteration=%s]" % (
-        self.implementation.get_name(), self.amount, self.iteration)
+            self.implementation.get_name(), self.amount, self.iteration)
 
     @property
     def device_name(self) -> str:

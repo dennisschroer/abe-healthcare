@@ -75,7 +75,8 @@ class BaseSerializer(object):
             self.deserialize_global_scheme_parameters(unpickled['scheme'])
         )
 
-    def replace_attributes(self, dict: dict, keyword: str) -> int:
+    @staticmethod
+    def replace_attributes(dict: dict, keyword: str) -> int:
         """
         Determine a shorter identifier for the given keyword, and store it in the dict. If a keyword is already
         in the dictionary, the existing replacement identifier is used.
@@ -83,11 +84,10 @@ class BaseSerializer(object):
         :param keyword: The keyword to replace.
         :return: int The replacement keyword. The dict is also updated.
 
-        >>> i = BaseSerializer(None, None)
         >>> d = dict()
-        >>> a = i.replace_attributes(d, 'TEST123')
-        >>> b = i.replace_attributes(d, 'TEST123')
-        >>> c = i.replace_attributes(d, 'TEST')
+        >>> a = BaseSerializer.replace_attributes(d, 'TEST123')
+        >>> b = BaseSerializer.replace_attributes(d, 'TEST123')
+        >>> c = BaseSerializer.replace_attributes(d, 'TEST')
         >>> a == b
         True
         >>> b == c
@@ -108,22 +108,22 @@ class BaseSerializer(object):
         dict[key] = keyword
         return key
 
-    def undo_attribute_replacement(self, dict: dict, replacement: int) -> str:
+    @staticmethod
+    def undo_attribute_replacement(dict: dict, replacement: int) -> str:
         """
         Undo the attribute replacement as result from the attribute replacement.
         :param dict: The dictionary with the replacements.
         :param replacement: The replacement to revert to the original keyword.
         :return: The original keyword.
 
-        >>> i = BaseSerializer(None, None)
         >>> d = dict()
-        >>> a = i.replace_attributes(d, 'TEST123')
-        >>> b = i.replace_attributes(d, 'TEST')
-        >>> i.undo_attribute_replacement(d, a) == 'TEST123'
+        >>> a = BaseSerializer.replace_attributes(d, 'TEST123')
+        >>> b = BaseSerializer.replace_attributes(d, 'TEST')
+        >>> BaseSerializer.undo_attribute_replacement(d, a) == 'TEST123'
         True
-        >>> i.undo_attribute_replacement(d, b) == 'TEST'
+        >>> BaseSerializer.undo_attribute_replacement(d, b) == 'TEST'
         True
-        >>> i.undo_attribute_replacement(d, 123)
+        >>> BaseSerializer.undo_attribute_replacement(d, 123)
         Traceback (most recent call last):
         ...
         KeyError: 123
@@ -136,6 +136,7 @@ class BaseSerializer(object):
             'data': data_record.data
         })
 
+    # noinspection PyMethodMayBeStatic
     def serialize_authorities(self, response: Dict[str, Any]) -> bytes:
         return pickle.dumps({
                                 n: {'name': a.name, 'attributes': a.attributes} for n, a in response.items()

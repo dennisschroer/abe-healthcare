@@ -1,8 +1,8 @@
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 
 class ExperimentCase(object):
-    def __init__(self, name: str, arguments: Dict[str, Any]) -> None:
+    def __init__(self, name: str, arguments: Union[None, Dict[str, Any]]) -> None:
         self.name = name
         self.arguments = arguments
 

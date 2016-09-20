@@ -4,8 +4,8 @@ from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.dabe_rd13 import DabeRD13
-from charm.toolbox.secretutil import SecretUtil
 from charm.toolbox.pairinggroup import G1, PairingGroup
+from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation
@@ -84,10 +84,12 @@ class RD13CentralAuthority(CentralAuthority):
 
 
 class RD13AttributeAuthority(AttributeAuthority):
+    def update_keys(self, time_period: int) -> Any:
+        pass
+
     def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes
-        dabe = DabeRD13(self.global_parameters.group)
         # Setting up keys here is useless, as a time period is required
         self._public_keys = {}
         self._secret_keys = {}
