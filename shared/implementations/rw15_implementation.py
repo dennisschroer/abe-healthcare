@@ -50,12 +50,6 @@ class RW15Implementation(BaseImplementation):
     def abe_decrypt(self, global_parameters: GlobalParameters, secret_keys: SecretKeyStore, gid: str,
                     ciphertext: AbeEncryption, registration_data) -> bytes:
         maabe = MaabeRW15(self.group)
-
-        util = SecretUtil(self.group)
-        policy = util.createPolicy(ciphertext['policy'])
-        coefficients = util.getCoefficients(policy)
-        pruned_list = util.prune(policy, secret_keys.keys())
-
         try:
             return maabe.decrypt(global_parameters.scheme_parameters, {'GID': gid, 'keys': secret_keys}, ciphertext)
         except Exception:
@@ -73,6 +67,9 @@ class RW15CentralAuthority(CentralAuthority):
 
 
 class RW15AttributeAuthority(AttributeAuthority):
+    def update_keys(self, time_period: int) -> Any:
+        pass
+
     def setup(self, central_authority, attributes, time_period):
         self.global_parameters = central_authority.global_parameters
         self.attributes = attributes

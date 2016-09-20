@@ -212,6 +212,7 @@ class ExperimentOutput(object):
         headers = ['case/step']
         for implementation in implementations:
             if variables is not None:
+                # noinspection PyTypeChecker
                 for variable in variables:
                     headers.append("%s %s" % (implementation.get_name(), variable))
             else:

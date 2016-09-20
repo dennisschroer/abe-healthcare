@@ -96,6 +96,9 @@ class DACMACS13CentralAuthority(CentralAuthority):
 
 
 class DACMACS13AttributeAuthority(AttributeAuthority):
+    def update_keys(self, time_period: int) -> Any:
+        pass
+
     def __init__(self, name: str, serializer: BaseSerializer, storage_path: str = None) -> None:
         super().__init__(name, serializer, storage_path=storage_path)
         self._public_keys = dict()

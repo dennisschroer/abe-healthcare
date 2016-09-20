@@ -242,7 +242,7 @@ class UserClient(object):
                                                        ske.ske_key_size())
         # Retrieve the write secret key
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.authorities,
+                                                              self.authority_connections,
                                                               self.user.secret_keys,
                                                               self.user.registration_data,
                                                               record.write_private_key[0],

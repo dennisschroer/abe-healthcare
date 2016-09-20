@@ -81,6 +81,7 @@ class BaseExperiment(object):
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
         self.user_clients = None  # type: List[UserClient]
+        self.insurance = None  # type: InsuranceService
 
         if cases is None:
             cases = [ExperimentCase('base', None)]

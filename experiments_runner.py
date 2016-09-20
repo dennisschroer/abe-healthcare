@@ -2,6 +2,7 @@ import logging
 from multiprocessing import Process
 from os import makedirs
 from os import path
+from typing import List
 from typing import Tuple
 
 import psutil
@@ -169,7 +170,8 @@ class ExperimentsRunner(object):
         # Wait for the experiment to output the result
         self.sync(self.current_sequence.experiment.results_saved_sync)
 
-    def sync(self, condition):
+    @staticmethod
+    def sync(condition):
         """
         Synchronize with the experiment's process. This happens at three moments:
         - When the state of the next experiment is set

@@ -3,6 +3,7 @@ from os import listdir, path, makedirs
 from os.path import isfile, join
 from pprint import pprint
 from pstats import Stats
+from typing import List
 
 import psutil
 
@@ -47,7 +48,8 @@ class ABEHealthCare(object):
         self.connections = list()  # type: List[BaseConnection]
         self.check_paths()
 
-    def check_paths(self):
+    @staticmethod
+    def check_paths():
         if not path.exists(INPUT_DATA_DIRECTORY):
             makedirs(INPUT_DATA_DIRECTORY)
 
@@ -145,7 +147,8 @@ class ABEHealthCare(object):
         self.run_policy_updates(locations)
         self.run_decryptions(locations)
 
-    def output_measurements(self, stats: Stats, connections):
+    @staticmethod
+    def output_measurements(stats: Stats, connections):
         print("Times")
         stats.strip_dirs().sort_stats('cumtime').print_stats(
             '(user|authority|insurance|storage|RSA)')
