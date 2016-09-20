@@ -120,6 +120,7 @@ class RD13AttributeAuthority(AttributeAuthority):
         Generate the public and secret keys for the given time period.
         :param time_period: The time period
         """
+        print("RD13 generating authority (%s) keys for time period %d" % (self.name, time_period))
         attributes = list(map(lambda x: add_time_period_to_attribute(x, time_period), self.attributes))
 
         dabe = DabeRD13(self.global_parameters.group)
