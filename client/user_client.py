@@ -15,7 +15,7 @@ from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
 from shared.model.records.update_record import UpdateRecord
-from shared.model.types import AbeEncryption
+from shared.model.types import AbeEncryption, DecryptionKeys
 from shared.model.user import User
 from shared.utils.key_utils import extract_key_from_group_element
 
@@ -167,7 +167,8 @@ class UserClient(object):
         if self.verbose:
             print('Decrypting %s' % join('data/storage', location))
 
-        info, data = self.decrypt_record(record)
+        decryption_keys = self._decryption_keys_for_read_key(record)
+        info, data = self.decrypt_record(record, decryption_keys)
 
         if self.verbose:
             print('Writing    %s' % join('data/output', info['name']))
@@ -176,34 +177,36 @@ class UserClient(object):
         file.close()
         return info['name']
 
-    def _decrypt_abe(self, ciphertext: AbeEncryption, time_period: int):
+    def _decryption_keys_for_read_key(self, record: DataRecord):
+        return self.implementation.decryption_keys(self.global_parameters,
+                                                   self.authority_connections,
+                                                   self.user.secret_keys,
+                                                   self.user.registration_data,
+                                                   record.encryption_key_read,
+                                                   record.time_period)
+
+    def _decrypt_abe(self, ciphertext: AbeEncryption, decryption_keys: DecryptionKeys):
         """
         Decrypt the ABE ciphertext. The method calculates decryption keys if necessary.
         :param ciphertext: The ABE ciphertext to decrypt.
-        :param time_period: The time period.
+        :param decryption_keys: The decryption keys to use.
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: The plaintext
         """
-        decryption_keys = self.implementation.decryption_keys(self.global_parameters,
-                                                              self.authority_connections,
-                                                              self.user.secret_keys,
-                                                              self.user.registration_data,
-                                                              ciphertext,
-                                                              time_period)
         return self.implementation.abe_decrypt(self.global_parameters, decryption_keys, self.user.gid, ciphertext,
                                                self.user.registration_data)
 
-    def decrypt_record(self, record: DataRecord) -> Tuple[dict, bytes]:
+    def decrypt_record(self, record: DataRecord, decryption_keys: DecryptionKeys) -> Tuple[dict, bytes]:
         """
         Decrypt a data record if possible.
         :param record: The data record to decrypt
-        :type record: records.data_record.DataRecord
+        :param decryption_keys: Decryption keys required to decrypt the encrypted read key
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: info, data
         """
         ske = self.implementation.symmetric_key_scheme
         # Check if we need to fetch update keys first
-        key = self._decrypt_abe(record.encryption_key_read, record.time_period)
+        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
         return pickle.loads(
@@ -237,7 +240,8 @@ class UserClient(object):
         pke = self.implementation.public_key_scheme
         ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
-        key = self._decrypt_abe(record.encryption_key_read, record.time_period)
+        decryption_keys = self._decryption_keys_for_read_key(record)
+        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
         symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
                                                        ske.ske_key_size())
         # Retrieve the write secret key
