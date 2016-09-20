@@ -7,3 +7,4 @@ SecretKeys = Any
 AuthorityPublicKeysStore = Any
 AuthoritySecretKeysStore = Any
 RegistrationData = Any
+DecryptionKeys = Any
