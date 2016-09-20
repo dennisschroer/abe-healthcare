@@ -4,8 +4,8 @@ from typing import Any, Dict
 
 from authority.attribute_authority import AttributeAuthority
 from charm.schemes.abenc.dabe_rd13 import DabeRD13
-from charm.toolbox.secretutil import SecretUtil
 from charm.toolbox.pairinggroup import G1, PairingGroup
+from charm.toolbox.secretutil import SecretUtil
 from service.central_authority import CentralAuthority
 from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
 from shared.implementations.base_implementation import BaseImplementation

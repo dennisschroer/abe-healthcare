@@ -51,7 +51,8 @@ class DACMACS13Implementation(BaseImplementation):
         policy = add_time_periods_to_policy(policy, time_period, self.group)
         return dacmacs.encrypt(global_parameters.scheme_parameters, public_keys, message, policy)
 
-    def decryption_keys(self, global_parameters: GlobalParameters, authorities: Dict[str, UserAttributeAuthorityConnection],
+    def decryption_keys(self, global_parameters: GlobalParameters,
+                        authorities: Dict[str, UserAttributeAuthorityConnection],
                         secret_keys: SecretKeyStore,
                         registration_data: Any, ciphertext: AbeEncryption, time_period: int):
         dacmacs = DACMACS(self.group)
@@ -115,7 +116,8 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
     def public_keys(self, time_period: int) -> Any:
         if time_period not in self._public_keys:
             logging.error("UGH, this should not happen in an experiment as it messes the timings up.")
-            logging.error("DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
+            logging.error(
+                "DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             logging.error('caller name:', calframe[1][3])
@@ -130,7 +132,8 @@ class DACMACS13AttributeAuthority(AttributeAuthority):
     def secret_keys(self, time_period: int) -> Any:
         if time_period not in self._secret_keys:
             logging.error("UGH, this should not happen in an experiment as it messes the timings up.")
-            logging.error("DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
+            logging.error(
+                "DAC-MACS generating authority (%s) public keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             logging.error('caller name:', calframe[1][3])

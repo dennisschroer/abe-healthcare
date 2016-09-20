@@ -135,10 +135,10 @@ class TAAC12AttributeAuthority(AttributeAuthority):
         taac = Taac(self.global_parameters.group)
         revocation_list = self.revocation_list_for_time_period(time_period)
         self._update_keys[time_period] = taac.generate_update_keys(self.global_parameters.scheme_parameters,
-                                                                  self.public_keys(time_period),
-                                                                  self.secret_keys(time_period),
-                                                                  self.states, revocation_list,
-                                                                  time_period, self.attributes)
+                                                                   self.public_keys(time_period),
+                                                                   self.secret_keys(time_period),
+                                                                   self.states, revocation_list,
+                                                                   time_period, self.attributes)
 
 
 class TAAC12Serializer(BaseSerializer):
