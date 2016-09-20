@@ -99,7 +99,7 @@ class RD13AttributeAuthority(AttributeAuthority):
             logging.error("RD13 generating authority (%s) public keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
-            logging.error('caller name:', calframe[1][3])
+            logging.error('caller name: %s', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return self._public_keys[time_period]
 
@@ -109,7 +109,7 @@ class RD13AttributeAuthority(AttributeAuthority):
             logging.error("RD13 generating authority (%s) secret keys for time period %d" % (self.name, time_period))
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
-            logging.error('caller name:', calframe[1][3])
+            logging.error('caller name: %s', calframe[1][3])
             self.generate_keys_for_time_period(time_period)
         return self._secret_keys[time_period]
 
