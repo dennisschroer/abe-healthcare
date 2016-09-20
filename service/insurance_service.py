@@ -4,10 +4,10 @@ from typing import Dict
 from Crypto.Hash import SHA
 
 from authority.attribute_authority import AttributeAuthority
+from service.central_authority import CentralAuthority
 from service.storage import Storage
 from shared.implementations.public_key.base_public_key import BasePublicKey
 from shared.implementations.serializer.base_serializer import BaseSerializer
-from shared.model.global_parameters import GlobalParameters
 from shared.model.records.create_record import CreateRecord
 from shared.model.records.data_record import DataRecord
 from shared.model.records.policy_update_record import PolicyUpdateRecord
@@ -20,12 +20,16 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, serializer: BaseSerializer, global_parameters: GlobalParameters,
+    def __init__(self, serializer: BaseSerializer, central_authority: CentralAuthority,
                  public_key_scheme: BasePublicKey, storage_path: str = None) -> None:
-        self.global_parameters = global_parameters
+        self.central_authority = central_authority
         self.storage = Storage(serializer, storage_path)
         self.public_key_scheme = public_key_scheme
         self.authorities = dict()  # type: Dict[str, AttributeAuthority]
+
+    @property
+    def global_parameters(self):
+        return self.central_authority.global_parameters
 
     def add_authority(self, attribute_authority: AttributeAuthority):
         """

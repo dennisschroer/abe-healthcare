@@ -56,3 +56,9 @@ class UserInsuranceConnection(BaseConnection):
             self.add_benchmark('out policy_update_record',
                                len(location) + len(
                                    self.serializer.serialize_policy_update_record(policy_update_record)))
+
+    def register_user(self, gid):
+        registration_data = self.insurance_service.central_authority.register_user(gid)
+        if self.benchmark:
+            self.add_benchmark('out register_user', len(gid))
+            self.add_benchmark('in register_user', len(self.serializer.serialize_registration_data(registration_data)))
