@@ -148,8 +148,7 @@ class BaseExperiment(object):
         :return:
         """
         for user_client in self.user_clients:
-            user_client.set_registration_data(self.central_authority.register_user(user_client.user.gid))
-            user_client.save_registration_data()
+            user_client.register()
 
     def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
             List[AttributeAuthority]:
@@ -216,7 +215,7 @@ class BaseExperiment(object):
     def setup_insurance(self):
         # Create insurance service
         self.insurance = InsuranceService(self.sequence_state.implementation.serializer,
-                                          self.central_authority.global_parameters,
+                                          self.central_authority,
                                           self.sequence_state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 

@@ -102,7 +102,7 @@ class ABEHealthCare(object):
         user_client = UserClient(user, self.insurance_service, self.implementation, verbose=True)
         self.connections.append(user_client.insurance_connection)
 
-        user_client.set_registration_data(self.central_authority.register_user(user.gid))
+        user_client.register()
 
         # Add attributes
         if insurance_attributes is not None:
