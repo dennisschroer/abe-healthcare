@@ -68,6 +68,7 @@ class BaseExperiment(object):
     file_size = 10 * 1024 * 1024  # type: int
     read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
     write_policy = read_policy
+    measurement_types = MeasurementType
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         self.state = ExperimentState()  # type:ExperimentState
@@ -270,7 +271,7 @@ class BaseExperiment(object):
 
         for case in self.cases:
             self.state.case = case
-            for measurement_type in MeasurementType:  # type: ignore
+            for measurement_type in self.measurement_types:  # type: ignore
                 try:
                     self.state.measurement_type = measurement_type
 
