@@ -11,6 +11,7 @@ from memory_profiler import memory_usage
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
+from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
 from experiments.experiment_output import ExperimentOutput, OUTPUT_DETAILED
@@ -68,7 +69,7 @@ class BaseExperiment(object):
     file_size = 10 * 1024 * 1024  # type: int
     read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
     write_policy = read_policy
-    measurement_types = [MeasurementType.timings]
+    measurement_types = MeasurementType
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         self.state = ExperimentState()  # type:ExperimentState
@@ -269,12 +270,14 @@ class BaseExperiment(object):
             self.run_keygen()
 
         for i in range(0, self.sequence_state.amount):
-            self.state.iteration = i
+            self.sequence_state.iteration = i
             for case in self.cases:
                 self.state.case = case
                 for measurement_type in self.measurement_types:  # type: ignore
                     try:
                         self.state.measurement_type = measurement_type
+
+                        self.log_current_state()
 
                         self.sync(self.state_sync)  # 1
 
@@ -324,6 +327,18 @@ class BaseExperiment(object):
 
         self.state.progress = ExperimentProgress.stopping
         self.sync(self.state_sync)
+
+    def log_current_state(self):
+        logging.info("=> Running %s with implementation %s (%d/%d), iteration %d/%d, case %s, measurement %s" % (
+            self.get_name(),
+            self.sequence_state.implementation.get_name(),
+            implementations.index(self.sequence_state.implementation) + 1,
+            len(implementations),
+            self.sequence_state.iteration + 1,
+            self.sequence_state.amount,
+            self.state.case.name,
+            str(self.state.measurement_type)
+        ))
 
     def start_measurements(self):
         logging.debug("Experiment.start")
