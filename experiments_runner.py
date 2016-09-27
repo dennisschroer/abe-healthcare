@@ -63,13 +63,7 @@ class ExperimentsRunner(object):
 
         for implementation in implementations:
             current_state.implementation = implementation
-
-
-
-                # if i == 0:
-                    # We need to do some cleanup first
             experiments_sequence.experiment.setup_directories()
-
             self.run_current_experiment_with_current_implementation()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (

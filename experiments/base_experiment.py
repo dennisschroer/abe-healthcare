@@ -276,7 +276,6 @@ class BaseExperiment(object):
                 for measurement_type in self.measurement_types:  # type: ignore
                     try:
                         self.state.measurement_type = measurement_type
-
                         self.log_current_state()
 
                         self.sync(self.state_sync)  # 1
