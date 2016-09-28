@@ -11,6 +11,7 @@ from memory_profiler import memory_usage
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
+from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
 from experiments.experiment_output import ExperimentOutput, OUTPUT_DETAILED
@@ -268,60 +269,75 @@ class BaseExperiment(object):
             self.run_register()
             self.run_keygen()
 
-        for case in self.cases:
-            self.state.case = case
-            for measurement_type in self.measurement_types:  # type: ignore
-                try:
-                    self.state.measurement_type = measurement_type
+        for i in range(0, self.sequence_state.amount):
+            self.sequence_state.iteration = i
+            for case in self.cases:
+                self.state.case = case
+                for measurement_type in self.measurement_types:  # type: ignore
+                    try:
+                        self.state.measurement_type = measurement_type
+                        self.log_current_state()
 
-                    self.sync(self.state_sync)  # 1
+                        self.sync(self.state_sync)  # 1
 
-                    if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
-                        os.makedirs(self.output.experiment_case_iteration_results_directory())
-                    self.clear_insurance_storage()
+                        if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
+                            os.makedirs(self.output.experiment_case_iteration_results_directory())
+                        self.clear_insurance_storage()
 
-                    self.start_measurements()  # 2
+                        self.start_measurements()  # 2
 
-                    if self.state.measurement_type == MeasurementType.memory:
-                        if self.run_descriptions['setup_authsetup'] == 'always':
-                            u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['setup'] = [min(u), max(u), len(u)]
-                            u = memory_usage((self.run_authsetup, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
-                        if self.run_descriptions['register_keygen'] == 'always':
-                            u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['register'] = [min(u), max(u), len(u)]
-                            u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['keygen'] = [min(u), max(u), len(u)]
+                        if self.state.measurement_type == MeasurementType.memory:
+                            if self.run_descriptions['setup_authsetup'] == 'always':
+                                u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['setup'] = [min(u), max(u), len(u)]
+                                u = memory_usage((self.run_authsetup, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
+                            if self.run_descriptions['register_keygen'] == 'always':
+                                u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['register'] = [min(u), max(u), len(u)]
+                                u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['keygen'] = [min(u), max(u), len(u)]
 
-                        u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
-                        self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
-                        u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
-                        self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
-                    else:
-                        if self.run_descriptions['setup_authsetup'] == 'always':
-                            self.run_setup()
-                            self.run_authsetup()
-                        if self.run_descriptions['register_keygen'] == 'always':
-                            self.run_register()
-                            self.run_keygen()
-                        self.run_encrypt()
-                        self.run_decrypt()
+                            u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
+                            u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
+                            self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
+                        else:
+                            if self.run_descriptions['setup_authsetup'] == 'always':
+                                self.run_setup()
+                                self.run_authsetup()
+                            if self.run_descriptions['register_keygen'] == 'always':
+                                self.run_register()
+                                self.run_keygen()
+                            self.run_encrypt()
+                            self.run_decrypt()
 
-                    self.stop_measurements()
+                        self.stop_measurements()
 
-                    if measurement_type == MeasurementType.storage_and_network:
-                        for authority in self.attribute_authorities:
-                            authority.save_attribute_keys()
+                        if measurement_type == MeasurementType.storage_and_network:
+                            for authority in self.attribute_authorities:
+                                authority.save_attribute_keys()
 
-                    self.finish_measurements()  # 0
-                except:
-                    self.output.output_error()
-                    self.state.progress = ExperimentProgress.experiment_setup
-                    self.remaining_syncs()
+                        self.finish_measurements()  # 0
+                    except:
+                        self.output.output_error()
+                        self.state.progress = ExperimentProgress.experiment_setup
+                        self.remaining_syncs()
 
         self.state.progress = ExperimentProgress.stopping
         self.sync(self.state_sync)
+
+    def log_current_state(self):
+        logging.info("=> Running %s with implementation %s (%d/%d), iteration %d/%d, case %s, measurement %s" % (
+            self.get_name(),
+            self.sequence_state.implementation.get_name(),
+            implementations.index(self.sequence_state.implementation) + 1,
+            len(implementations),
+            self.sequence_state.iteration + 1,
+            self.sequence_state.amount,
+            self.state.case.name,
+            str(self.state.measurement_type)
+        ))
 
     def start_measurements(self):
         logging.debug("Experiment.start")

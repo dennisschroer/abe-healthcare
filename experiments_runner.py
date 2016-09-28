@@ -61,17 +61,10 @@ class ExperimentsRunner(object):
         self.current_sequence.experiment.global_setup()
         logging.info("Global setup finished")
 
-        for i in range(0, current_state.amount):
-            current_state.iteration = i
-
-            for implementation in implementations:
-                current_state.implementation = implementation
-
-                if i == 0:
-                    # We need to do some cleanup first
-                    experiments_sequence.experiment.setup_directories()
-
-                self.run_current_experiment_with_current_state()
+        for implementation in implementations:
+            current_state.implementation = implementation
+            experiments_sequence.experiment.setup_directories()
+            self.run_current_experiment_with_current_implementation()
 
         logging.info("Device '%s' finished experiment '%s' with timestamp '%s', current time: %s" % (
             current_state.device_name,
@@ -97,24 +90,12 @@ class ExperimentsRunner(object):
         logging.info("Cases: %s" % str(self.current_sequence.experiment.cases))
         logging.info("Measurements: %s" % str(self.current_sequence.experiment.measurement_types))
 
-    def log_current_experiment(self):
-        logging.info("=> Run %d/%d of %s, implementation=%s (%d/%d)" % (
-            self.current_sequence.state.iteration + 1,
-            self.current_sequence.state.amount,
-            self.current_sequence.experiment.get_name(),
-            self.current_sequence.state.implementation.get_name(),
-            implementations.index(self.current_sequence.state.implementation) + 1,
-            len(implementations)
-        ))
-
-    def run_current_experiment_with_current_state(self) -> None:
+    def run_current_experiment_with_current_implementation(self) -> None:
         """
         Run the current case with the current implementation of the current experiment.
 
         This is done by starting the experiment in a separate process.
         """
-        self.log_current_experiment()
-
         self.current_sequence.experiment.sequence_state = self.current_sequence.state
 
         self.current_sequence.experiment.setup_done_sync.acquire()
