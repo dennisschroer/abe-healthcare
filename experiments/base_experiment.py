@@ -383,7 +383,7 @@ class BaseExperiment(object):
             self.output.output_storage_space([
                 {
                     'path': self.get_insurance_storage_path(),
-                    'filename_mapper': lambda file: path.splitext(file)[1]
+                    'filename_mapper': lambda file: path.splitext(file)[1].strip('.')
                 },
                 {
                     'path': self.get_user_client_storage_path()
