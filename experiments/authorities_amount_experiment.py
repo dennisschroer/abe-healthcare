@@ -5,7 +5,7 @@ from experiments.experiment_case import ExperimentCase
 
 
 class AuthoritiesAmountExperiment(BaseExperiment):
-    attribute_authority_descriptions = []
+    attribute_authority_descriptions = []  # type: List[Dict[str, Any]]
     user_descriptions = [  # type: List[Dict[str, Any]]
         {
             'gid': 'BOB',
@@ -60,6 +60,10 @@ class AuthoritiesAmountExperiment(BaseExperiment):
             for index
             in range(self.state.case.arguments['amount'])
             }
+
+        # As each case has a different number of authorities, we clear the authority storage before each case.
+        # Otherwise, the files containing the keys of non-present authorities would still exist.
+        self.clear_attribute_authority_storage()
 
     def run_encrypt(self):
         self.location = self.user_clients[0].encrypt_file(

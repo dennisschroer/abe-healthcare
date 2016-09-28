@@ -470,6 +470,14 @@ class BaseExperiment(object):
             shutil.rmtree(self.get_insurance_storage_path())
         os.makedirs(self.get_insurance_storage_path())
 
+    def clear_attribute_authority_storage(self) -> None:
+        """
+        Clear the storage as used by the insurance company for the ciphertexts.
+        """
+        if os.path.exists(self.get_attribute_authority_storage_path()):
+            shutil.rmtree(self.get_attribute_authority_storage_path())
+        os.makedirs(self.get_attribute_authority_storage_path())
+
     def get_experiment_storage_base_path(self) -> str:
         """
         Gets the base path of the location to be used for storage in this experiment.
