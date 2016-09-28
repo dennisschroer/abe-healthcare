@@ -51,14 +51,14 @@ class BaseExperiment(object):
     ]
     user_descriptions = [  # type: List[Dict[str, Any]]
         {
-            'gid': 'USER0',
+            'gid': 'BOB',
             'attributes': {
                 'AUTHORITY0': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0'],
                 'AUTHORITY1': ['FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1']
             }
         },
         {
-            'gid': 'USER1',
+            'gid': 'DOCTOR',
             'attributes': {
                 'AUTHORITY0': attribute_authority_descriptions[0]['attributes'],
                 'AUTHORITY1': attribute_authority_descriptions[1]['attributes']
