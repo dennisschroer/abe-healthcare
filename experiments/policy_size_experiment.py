@@ -13,7 +13,7 @@ class PolicySizeExperiment(BaseExperiment):
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         if cases is None:
-            attribute_pairs = list(map(lambda a: '(%s@AUTHORITY1 OR %s@AUTHORITY2)' % (a, a), [
+            attribute_pairs = list(map(lambda a: '(%s@AUTHORITY0 OR %s@AUTHORITY1)' % (a, a), [
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
             cases = list(map(
