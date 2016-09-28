@@ -9,8 +9,7 @@ from shared.utils.random_file_generator import RandomFileGenerator
 class FileSizeExperiment(BaseExperiment):
     run_descriptions = {
         'setup_authsetup': 'once',
-        'register_keygen': 'once',
-        'encrypt_decrypt': 'always'
+        'register_keygen': 'once'
     }
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:

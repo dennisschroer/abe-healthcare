@@ -32,8 +32,7 @@ class BaseExperiment(object):
         # When 'always', it is run in the run() method
         # When 'once', it is run during global setup and loaded in the run() method
         'setup_authsetup': 'always',
-        'register_keygen': 'always',
-        'encrypt_decrypt': 'always'
+        'register_keygen': 'always'
     }
     # Default configurations
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
@@ -103,11 +102,11 @@ class BaseExperiment(object):
         self.profiler = None  # type: Profile
 
     @property
-    def sequence_state(self):
+    def sequence_state(self) -> ExperimentsSequenceState:
         return self._sequence_state
 
     @sequence_state.setter
-    def sequence_state(self, value: ExperimentsSequenceState):
+    def sequence_state(self, value: ExperimentsSequenceState) -> None:
         self._sequence_state = value
         self.output = ExperimentOutput(self.get_name(), self.state, self.sequence_state)
 
@@ -123,10 +122,23 @@ class BaseExperiment(object):
 
     def setup(self) -> None:
         """
-        Setup this experiment for a single implementation and a single case in a single run.
+        Setup for a single run of this experiment for a single implementation, case and measurement type.
         """
         input_path = self.get_experiment_input_path()
         self.file_name = join(input_path, '%i-0' % self.file_size)
+
+        if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
+            os.makedirs(self.output.experiment_case_iteration_results_directory())
+        self.clear_insurance_storage()
+
+    def tear_down(self) -> None:
+        """
+        Tear down after a single run of the experiment for a single implementation, case and measurement type.
+        Note: this is run after the measurements are stopped, but before the measurements are finished.
+        """
+        if self.state.measurement_type == MeasurementType.storage_and_network:
+            for authority in self.attribute_authorities:
+                authority.save_attribute_keys()
 
     def setup_directories(self) -> None:
         """
@@ -143,7 +155,7 @@ class BaseExperiment(object):
             os.makedirs(self.get_experiment_input_path())
         os.makedirs(self.get_user_client_storage_path())
 
-    def register_user_clients(self):
+    def register_user_clients(self) -> None:
         """
         Register all current user clients in this experiment to the central authority.
         :return:
@@ -204,7 +216,7 @@ class BaseExperiment(object):
                             monitor_network=self.state.measurement_type == MeasurementType.storage_and_network)
         return client
 
-    def run_setup(self):
+    def run_setup(self) -> None:
         self.set_progress(ExperimentProgress.setup)
         # Create central authority
         self.central_authority = self.sequence_state.implementation.create_central_authority(
@@ -213,14 +225,14 @@ class BaseExperiment(object):
         self.central_authority.save_global_parameters()
         self.setup_insurance()
 
-    def setup_insurance(self):
+    def setup_insurance(self) -> None:
         # Create insurance service
         self.insurance = InsuranceService(self.sequence_state.implementation.serializer,
                                           self.central_authority,
                                           self.sequence_state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 
-    def run_authsetup(self):
+    def run_authsetup(self) -> None:
         self.set_progress(ExperimentProgress.authsetup)
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
@@ -229,14 +241,14 @@ class BaseExperiment(object):
             self.insurance.add_authority(authority)
             authority.save_attribute_keys()
 
-    def run_register(self):
+    def run_register(self) -> None:
         self.state.progress = ExperimentProgress.register
         # Create user clients
         self.user_clients = self.create_user_clients(self.sequence_state.implementation,
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
 
-    def run_keygen(self):
+    def run_keygen(self) -> None:
         """
         Generate the user secret keys for each current user client by generating the
         keys at the attribute authorities. The attributes to issue/generate are taken from the user
@@ -249,18 +261,16 @@ class BaseExperiment(object):
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
 
-    def run_encrypt(self):
+    def run_encrypt(self) -> None:
         self.set_progress(ExperimentProgress.encrypt)
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
-    def run_decrypt(self):
+    def run_decrypt(self) -> None:
         self.set_progress(ExperimentProgress.decrypt)
         self.user_clients[1].decrypt_file(self.location)
 
-    def run(self):
+    def run(self) -> None:
         self.state.progress = ExperimentProgress.experiment_setup
-
-        self.setup()
 
         if self.run_descriptions['setup_authsetup'] == 'once':
             self.run_setup()
@@ -279,11 +289,7 @@ class BaseExperiment(object):
                         self.log_current_state()
 
                         self.sync(self.state_sync)  # 1
-
-                        if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
-                            os.makedirs(self.output.experiment_case_iteration_results_directory())
-                        self.clear_insurance_storage()
-
+                        self.setup()
                         self.start_measurements()  # 2
 
                         if self.state.measurement_type == MeasurementType.memory:
@@ -313,11 +319,7 @@ class BaseExperiment(object):
                             self.run_decrypt()
 
                         self.stop_measurements()
-
-                        if measurement_type == MeasurementType.storage_and_network:
-                            for authority in self.attribute_authorities:
-                                authority.save_attribute_keys()
-
+                        self.tear_down()
                         self.finish_measurements()  # 0
                     except:
                         self.output.output_error()
@@ -327,7 +329,10 @@ class BaseExperiment(object):
         self.state.progress = ExperimentProgress.stopping
         self.sync(self.state_sync)
 
-    def log_current_state(self):
+    def log_current_state(self) -> None:
+        """
+        Log the current state of the experiment, so the progress of the sequence can be followed.
+        """
         logging.info("=> Running %s with implementation %s (%d/%d), iteration %d/%d, case %s, measurement %s" % (
             self.get_name(),
             self.sequence_state.implementation.get_name(),
@@ -339,7 +344,10 @@ class BaseExperiment(object):
             str(self.state.measurement_type)
         ))
 
-    def start_measurements(self):
+    def start_measurements(self) -> None:
+        """
+        Start the measurements for a single run.
+        """
         logging.debug("Experiment.start")
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler = Profile()
@@ -352,13 +360,19 @@ class BaseExperiment(object):
         # self.setup_lock.notify()
         # self.setup_lock.release()
 
-    def stop_measurements(self):
+    def stop_measurements(self) -> None:
+        """
+        Stop the measurements for the current run, but do not export the results yet.
+        """
         logging.debug("Experiment.stop")
         self.state.progress = ExperimentProgress.experiment_setup
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler.disable()
 
-    def finish_measurements(self):
+    def finish_measurements(self) -> None:
+        """
+        Finish the stopped measurements by exporting the results to the output files.
+        """
         logging.debug("Experiment.finish")
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
@@ -369,7 +383,7 @@ class BaseExperiment(object):
             self.output.output_storage_space([
                 {
                     'path': self.get_insurance_storage_path(),
-                    'filename_mapper': lambda file: path.splitext(file)[1]
+                    'filename_mapper': lambda file: path.splitext(file)[1].strip('.')
                 },
                 {
                     'path': self.get_user_client_storage_path()
@@ -384,7 +398,11 @@ class BaseExperiment(object):
         self.sync(self.results_saved_sync)
         # Now sync with the other process
 
-    def set_progress(self, value: ExperimentProgress):
+    def set_progress(self, value: ExperimentProgress) -> None:
+        """
+        Set the progress of the current experiment.
+        :param value: The new progress indicator.
+        """
         self.state.progress = value
 
     def sync(self, condition):
@@ -399,7 +417,11 @@ class BaseExperiment(object):
             logging.debug("Experiment.sync %s", condition)
             self.sync_count = (self.sync_count + 1) % 3
 
-    def remaining_syncs(self):
+    def remaining_syncs(self) -> None:
+        """
+        Synchronize all remaining synchronization points in the current experiment, so the next run can start.
+        This is used when, during a single run, an exception occured.
+        """
         if self.sync_count == 1:
             self.sync(self.setup_done_sync)
             self.sync(self.results_saved_sync)
@@ -433,10 +455,17 @@ class BaseExperiment(object):
             result += user_client.authority_connections.values()
         return result
 
-    def get_name(self):
+    def get_name(self) -> str:
+        """
+        Gets the name of this experiment.
+        :return: The name of this experiment.
+        """
         return self.__class__.__name__
 
     def clear_insurance_storage(self) -> None:
+        """
+        Clear the storage as used by the insurance company for the ciphertexts.
+        """
         if os.path.exists(self.get_insurance_storage_path()):
             shutil.rmtree(self.get_insurance_storage_path())
         os.makedirs(self.get_insurance_storage_path())
