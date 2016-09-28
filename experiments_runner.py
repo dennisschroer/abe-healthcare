@@ -7,6 +7,7 @@ from typing import Tuple
 
 import psutil
 
+from experiments.authorities_amount_experiment import AuthoritiesAmountExperiment
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
@@ -41,6 +42,9 @@ class ExperimentsRunner(object):
 
     def run_policy_size_experiments(self) -> None:
         self.run_experiments_sequence(ExperimentsSequence(PolicySizeExperiment(), 100))
+
+    def run_authorities_amount_experiments(self) -> None:
+        self.run_experiments_sequence(ExperimentsSequence(AuthoritiesAmountExperiment(), 100))
 
     def run_experiments_sequence(self, experiments_sequence: ExperimentsSequence) -> None:
         """
@@ -175,5 +179,6 @@ class ExperimentsRunner(object):
 
 if __name__ == '__main__':
     runner = ExperimentsRunner()
-    runner.run_base_experiments()
-    runner.run_policy_size_experiments()
+    # runner.run_base_experiments()
+    # runner.run_policy_size_experiments()
+    runner.run_authorities_amount_experiments()

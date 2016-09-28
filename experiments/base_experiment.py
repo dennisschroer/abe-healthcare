@@ -37,13 +37,13 @@ class BaseExperiment(object):
     # Default configurations
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
-            'name': 'AUTHORITY1',
+            'name': 'AUTHORITY0',
             'attributes': list(map(lambda a: a + '@AUTHORITY1', [
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
         },
         {
-            'name': 'AUTHORITY2',
+            'name': 'AUTHORITY1',
             'attributes': list(map(lambda a: a + '@AUTHORITY2', [
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
@@ -51,22 +51,22 @@ class BaseExperiment(object):
     ]
     user_descriptions = [  # type: List[Dict[str, Any]]
         {
-            'gid': 'USER1',
+            'gid': 'BOB',
             'attributes': {
-                'AUTHORITY1': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1'],
-                'AUTHORITY2': ['SEVEN@AUTHORITY2', 'EIGHT@AUTHORITY2', 'NINE@AUTHORITY2', 'TEN@AUTHORITY2']
+                'AUTHORITY0': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0'],
+                'AUTHORITY1': ['FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1']
             }
         },
         {
-            'gid': 'USER2',
+            'gid': 'DOCTOR',
             'attributes': {
-                'AUTHORITY1': attribute_authority_descriptions[0]['attributes'],
-                'AUTHORITY2': attribute_authority_descriptions[1]['attributes']
+                'AUTHORITY0': attribute_authority_descriptions[0]['attributes'],
+                'AUTHORITY1': attribute_authority_descriptions[1]['attributes']
             }
         },
     ]
     file_size = 10 * 1024 * 1024  # type: int
-    read_policy = '(ONE@AUTHORITY1 AND SEVEN@AUTHORITY2) OR (TWO@AUTHORITY1 AND EIGHT@AUTHORITY2) OR (THREE@AUTHORITY1 AND NINE@AUTHORITY2)'
+    read_policy = '(ONE@AUTHORITY0 AND SIX@AUTHORITY1) OR (TWO@AUTHORITY0 AND SEVEN@AUTHORITY1) OR (THREE@AUTHORITY0 AND EIGHT@AUTHORITY1)'
     write_policy = read_policy
     measurement_types = MeasurementType
 
@@ -469,6 +469,14 @@ class BaseExperiment(object):
         if os.path.exists(self.get_insurance_storage_path()):
             shutil.rmtree(self.get_insurance_storage_path())
         os.makedirs(self.get_insurance_storage_path())
+
+    def clear_attribute_authority_storage(self) -> None:
+        """
+        Clear the storage as used by the insurance company for the ciphertexts.
+        """
+        if os.path.exists(self.get_attribute_authority_storage_path()):
+            shutil.rmtree(self.get_attribute_authority_storage_path())
+        os.makedirs(self.get_attribute_authority_storage_path())
 
     def get_experiment_storage_base_path(self) -> str:
         """
