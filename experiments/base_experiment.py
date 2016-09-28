@@ -32,8 +32,7 @@ class BaseExperiment(object):
         # When 'always', it is run in the run() method
         # When 'once', it is run during global setup and loaded in the run() method
         'setup_authsetup': 'always',
-        'register_keygen': 'always',
-        'encrypt_decrypt': 'always'
+        'register_keygen': 'always'
     }
     # Default configurations
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]

@@ -6,12 +6,8 @@ from experiments.experiment_case import ExperimentCase
 
 class PolicySizeExperiment(BaseExperiment):
     run_descriptions = {
-        # Can be 'always' or 'once'
-        # When 'always', it is run in the run() method
-        # When 'once', it is run during global setup and loaded in the run() method
         'setup_authsetup': 'once',
-        'register_keygen': 'once',
-        'encrypt_decrypt': 'always'
+        'register_keygen': 'once'
     }
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
