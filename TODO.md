@@ -1,5 +1,18 @@
 # TODO
 
+## Overhaul:
+
+- [ ] Use CPU times instead of CPU percentage, per step instead of over the total process
+- [ ] Improve memory profiler. Maybe it helps if we store everything in variables. 
+      Current zero-measurement could be explained by the usage of the stack instead of memory.
+- [ ] Only measure network traffic which is not directly related to storage size
+
+    - [ ] Data update
+    - [ ] Policy update
+    - [ ] Location/meta share with doctor
+    - [ ] Decryption keys (for TAAC)
+    - [ ] Key update (ciphertext update keys, key update keys)
+
 ## Connections:
 - [X] ~~secret keys request (keygen) + response~~
 - [X] ~~public keys request + response~~
