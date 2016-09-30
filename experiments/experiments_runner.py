@@ -65,5 +65,6 @@ class ExperimentsRunner(object):
         Setup logging for the current experiments run.
         """
         directory = self.current_experiment.output.experiment_results_directory()
+        [logging.root.removeHandler(handler) for handler in logging.root.handlers[:]]
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
         print("Logging to %s" % path.join(directory, 'log.log'))
