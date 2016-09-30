@@ -38,13 +38,13 @@ class BaseExperiment(object):
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
             'name': 'AUTHORITY0',
-            'attributes': list(map(lambda a: a + '@AUTHORITY1', [
+            'attributes': list(map(lambda a: a + '@AUTHORITY0', [
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
         },
         {
             'name': 'AUTHORITY1',
-            'attributes': list(map(lambda a: a + '@AUTHORITY2', [
+            'attributes': list(map(lambda a: a + '@AUTHORITY1', [
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
         }
@@ -88,8 +88,8 @@ class BaseExperiment(object):
     """The amount of times to repeat every measurement for each case and implementation."""
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
-        self.output = ExperimentOutput(self.get_name(), self.state)  # type: ExperimentOutput
         self.state = ExperimentState()  # type: ExperimentState
+        self.output = ExperimentOutput(self.get_name(), self.state)  # type: ExperimentOutput
         """
         The current state of the experiment.
         This shows for example which implementation we currently use, and which measurements are performed.
