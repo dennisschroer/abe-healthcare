@@ -7,5 +7,5 @@ class ABEStep(Enum):
     register = 3
     keygen = 4
     encrypt = 5
-    decryption_keys = 7
+    update_keys = 7
     decrypt = 8

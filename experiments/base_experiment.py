@@ -4,12 +4,14 @@ import shutil
 from cProfile import Profile
 from os import path
 from os.path import join
+from types import MethodType
 from typing import List, Dict, Any
 
 from memory_profiler import memory_usage
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
+from experiments.enum.abe_step import ABEStep
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
@@ -84,7 +86,7 @@ class BaseExperiment(object):
     """The types of measurments to perform in this experiment."""
     implementations = implementations
     """The implementations to run this experiments on."""
-    measurement_repeat = 100
+    measurement_repeat = 2
     """The amount of times to repeat every measurement for each case and implementation."""
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
@@ -98,7 +100,7 @@ class BaseExperiment(object):
         # Experiment variables
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
-        self.memory_usages = None  # type: Dict[str, List[float]]
+        self.memory_usages = None  # type: Dict[ABEStep, List[float]]
         self.profiler = None  # type: Profile
 
         # Use case actors
@@ -228,7 +230,7 @@ class BaseExperiment(object):
                             monitor_network=self.state.measurement_type == MeasurementType.storage_and_network)
         return client
 
-    def run_setup(self) -> None:
+    def _run_setup(self) -> None:
         # Create central authority
         self.central_authority = self.state.implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
@@ -243,7 +245,7 @@ class BaseExperiment(object):
                                           self.state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 
-    def run_authsetup(self) -> None:
+    def _run_authsetup(self) -> None:
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
                                                                        self.state.implementation)
@@ -251,13 +253,13 @@ class BaseExperiment(object):
             self.insurance.add_authority(authority)
             authority.save_attribute_keys()
 
-    def run_register(self) -> None:
+    def _run_register(self) -> None:
         # Create user clients
         self.user_clients = self.create_user_clients(self.state.implementation,
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
 
-    def run_keygen(self) -> None:
+    def _run_keygen(self) -> None:
         """
         Generate the user secret keys for each current user client by generating the
         keys at the attribute authorities. The attributes to issue/generate are taken from the user
@@ -269,19 +271,23 @@ class BaseExperiment(object):
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
 
-    def run_encrypt(self) -> None:
+    def _run_encrypt(self) -> None:
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
-    def run_decrypt(self) -> None:
+    def _run_update_keys(self) -> None:
+        for authority in self.attribute_authorities:
+            authority.update_keys(1)
+
+    def _run_decrypt(self) -> None:
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self) -> None:
         if self.run_descriptions['setup_authsetup'] == 'once':
-            self.run_setup()
-            self.run_authsetup()
+            self._run_setup()
+            self._run_authsetup()
         if self.run_descriptions['register_keygen'] == 'once':
-            self.run_register()
-            self.run_keygen()
+            self._run_register()
+            self._run_keygen()
 
         for implementation in self.implementations:
             self.state.implementation = implementation
@@ -299,38 +305,28 @@ class BaseExperiment(object):
                             self.setup()
                             self.start_measurements()
 
-                            if self.state.measurement_type == MeasurementType.memory:
-                                if self.run_descriptions['setup_authsetup'] == 'always':
-                                    u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
-                                    self.memory_usages['setup'] = [min(u), max(u), len(u)]
-                                    u = memory_usage((self.run_authsetup, [], {}),
-                                                     interval=self.memory_measure_interval)
-                                    self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
-                                if self.run_descriptions['register_keygen'] == 'always':
-                                    u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
-                                    self.memory_usages['register'] = [min(u), max(u), len(u)]
-                                    u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
-                                    self.memory_usages['keygen'] = [min(u), max(u), len(u)]
-
-                                u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
-                                u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
-                            else:
-                                if self.run_descriptions['setup_authsetup'] == 'always':
-                                    self.run_setup()
-                                    self.run_authsetup()
-                                if self.run_descriptions['register_keygen'] == 'always':
-                                    self.run_register()
-                                    self.run_keygen()
-                                self.run_encrypt()
-                                self.run_decrypt()
+                            if self.run_descriptions['setup_authsetup'] == 'always':
+                                self.run_step(ABEStep.setup, self._run_setup)
+                                self.run_step(ABEStep.authsetup, self._run_authsetup)
+                            if self.run_descriptions['register_keygen'] == 'always':
+                                self.run_step(ABEStep.register, self._run_register)
+                                self.run_step(ABEStep.keygen, self._run_keygen)
+                            self.run_step(ABEStep.encrypt, self._run_encrypt)
+                            self.run_step(ABEStep.update_keys, self._run_update_keys)
+                            self.run_step(ABEStep.decrypt, self._run_decrypt)
 
                             self.stop_measurements()
                             self.tear_down()
                             self.finish_measurements()
                         except:
                             self.output.output_error()
+
+    def run_step(self, abe_step: ABEStep, method: MethodType):
+        if self.state.measurement_type == MeasurementType.memory:
+            u = memory_usage((method, [], {}), interval=self.memory_measure_interval)
+            self.memory_usages[abe_step] = [min(u), max(u), len(u)]
+        else:
+            method()
 
     def log_current_state(self) -> None:
         """
