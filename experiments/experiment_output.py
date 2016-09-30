@@ -3,13 +3,13 @@ import logging
 import sys
 import traceback
 from cProfile import Profile
-from os import path, listdir
+from os import path, listdir, makedirs
 from typing import List, Any, Dict, Tuple
 from typing import Union
 
+from experiments.enum.abe_step import ABEStep
 from experiments.enum.implementations import implementations
-from experiments.experiment_state import ExperimentState, ExperimentProgress
-from experiments.experiments_sequence_state import ExperimentsSequenceState
+from experiments.experiment_state import ExperimentState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 
@@ -23,10 +23,11 @@ class ExperimentOutput(object):
     Utility class for exporting experiment results.
     """
 
-    def __init__(self, experiment_name: str, state: ExperimentState, sequence_state: ExperimentsSequenceState) -> None:
+    def __init__(self, experiment_name: str, state: ExperimentState) -> None:
+        if not path.exists(OUTPUT_DIRECTORY):
+            makedirs(OUTPUT_DIRECTORY)
         self.experiment_name = experiment_name
         self.state = state
-        self.sequence_state = sequence_state
 
     def experiment_results_directory(self) -> str:
         """
@@ -34,8 +35,8 @@ class ExperimentOutput(object):
         """
         return path.join(OUTPUT_DIRECTORY,
                          self.experiment_name,
-                         self.sequence_state.device_name,
-                         self.sequence_state.timestamp
+                         self.state.device_name,
+                         self.state.timestamp
                          )
 
     def experiment_case_iteration_results_directory(self) -> str:
@@ -45,9 +46,9 @@ class ExperimentOutput(object):
         """
         return path.join(
             self.experiment_results_directory(),
-            self.sequence_state.implementation.get_name(),
+            self.state.implementation.get_name(),
             self.state.case.name,
-            str(self.sequence_state.iteration)
+            str(self.state.iteration)
         )
 
     def output_cpu_usage(self, cpu_usage: float) -> None:
@@ -95,7 +96,7 @@ class ExperimentOutput(object):
 
         self.output_case_results('network', values)
 
-    def output_memory_usages(self, memory_usages: List[Tuple[ExperimentProgress, dict]]) -> None:
+    def output_memory_usages(self, memory_usages: List[Tuple[ABEStep, dict]]) -> None:
         """
         Output the memory usages.
         :param memory_usages: The list of memory usages.
@@ -258,7 +259,7 @@ class ExperimentOutput(object):
         return row
 
     def determine_implementation_index(self):
-        return implementations.index(self.sequence_state.implementation)
+        return implementations.index(self.state.implementation)
 
     @staticmethod
     def append_rows_to_file(file_path, headers, rows):

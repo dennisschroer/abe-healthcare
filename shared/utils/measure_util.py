@@ -42,7 +42,7 @@ function_step_mapping = {
     'decrypt_record': 'decrypt',
     'update_record': 'update',
     'update_policy': 'policy_update',
-    'decryption_keys': 'decryption_keys'
+    'update_keys': 'update_keys'
 }
 timing_functions = list(function_step_mapping.keys())
 algorithm_steps = set(list(function_step_mapping.values()))

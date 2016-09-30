@@ -20,23 +20,20 @@ class AuthoritiesAmountExperiment(BaseExperiment):
     ]
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
-        assert self.run_descriptions['setup_authsetup'] is not 'once', \
-            'Auth setup needs to run always in this experiment'
-
         if cases is None:
             cases = list(map(
                 lambda amount: ExperimentCase(
                     "amount %d" % amount,
                     {
                         'amount': amount,
-                        'policy': self._generate_policy(amount)
+                        'policy': self._generate_policy_for_authorities_amount(amount)
                     }
                 ),
                 [2, 4, 8, 16]
             ))
         super().__init__(cases)
 
-    def _generate_policy(self, amount: int) -> str:
+    def _generate_policy_for_authorities_amount(self, amount: int) -> str:
         """
         Generate a policy with a fixed size which uses attributes from the given amount of authorities.
         """
@@ -46,6 +43,8 @@ class AuthoritiesAmountExperiment(BaseExperiment):
 
     def setup(self):
         super().setup()
+        # Set the read policy
+        self.read_policy = self.state.case.arguments['policy']
         # Base amount of authorities on the current case
         self.attribute_authority_descriptions = list(map(
             lambda index: {
@@ -66,9 +65,3 @@ class AuthoritiesAmountExperiment(BaseExperiment):
         # As each case has a different number of authorities, we clear the authority storage before each case.
         # Otherwise, the files containing the keys of non-present authorities would still exist.
         self.clear_attribute_authority_storage()
-
-    def run_encrypt(self):
-        self.location = self.user_clients[0].encrypt_file(
-            self.file_name,
-            self.state.case.arguments['policy'],
-            self.write_policy)

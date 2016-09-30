@@ -2,7 +2,6 @@ from typing import List
 
 from experiments.base_experiment import BaseExperiment
 from experiments.experiment_case import ExperimentCase
-from experiments.experiment_state import ExperimentProgress
 
 
 class PolicySizeExperiment(BaseExperiment):
@@ -23,9 +22,6 @@ class PolicySizeExperiment(BaseExperiment):
             ))
         super().__init__(cases)
 
-    def run_encrypt(self):
-        self.set_progress(ExperimentProgress.encrypt)
-        self.location = self.user_clients[0].encrypt_file(
-            self.file_name,
-            self.state.case.arguments['policy'],
-            self.write_policy)
+    def setup(self):
+        super().setup()
+        self.read_policy = self.state.case.arguments['policy']

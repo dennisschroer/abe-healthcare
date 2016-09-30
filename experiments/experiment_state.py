@@ -1,54 +1,51 @@
-from enum import Enum
-from multiprocessing import Manager  # type: ignore
+import datetime
+import socket
 
+from experiments.enum.abe_step import ABEStep
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
+from shared.implementations.base_implementation import BaseImplementation
 
-
-class ExperimentProgress(Enum):
-    experiment_setup = 0
-    experiment_starting = 1
-    setup = 2
-    authsetup = 3
-    register = 4
-    keygen = 5
-    encrypt = 6
-    decryption_keys = 7
-    decrypt = 8
-    stopping = 10
+TIMESTAMP_FORMAT = '%Y-%m-%d %H-%M-%S'
 
 
 class ExperimentState(object):
     def __init__(self):
-        manager = Manager()
-        self._dict = manager.dict()
+        self._timestamp = None  # type:str
+        self._device_name = None  # type:str
+
+        self.implementation = None  # type: BaseImplementation
+        self.iteration = None  # type: int
         self.case = None  # type: ExperimentCase
         self.measurement_type = None  # type: MeasurementType
-        self.progress = None  # type: ExperimentProgress
+        self.abe_step = None  # type: ABEStep
 
     @property
-    def case(self):
-        return self._dict['case']
+    def device_name(self) -> str:
+        """
+        Gets the device name of the device running these experiments.
+        :return:
+        """
+        if self._device_name is None:
+            self._device_name = socket.gethostname()
+        return self._device_name
 
     @property
-    def measurement_type(self):
-        return self._dict['measurement_type']
+    def timestamp(self) -> str:
+        """
+        Gets the timestamp for this experiments run.
+        """
+        if self._timestamp is None:
+            self._timestamp = self.current_time_formatted()
+        return self._timestamp
 
-    @property
-    def progress(self):
-        return self._dict['progress']
-
-    @case.setter  # type: ignore
-    def case(self, value):
-        self._dict['case'] = value
-
-    @measurement_type.setter  # type: ignore
-    def measurement_type(self, value):
-        self._dict['measurement_type'] = value
-
-    @progress.setter  # type: ignore
-    def progress(self, value):
-        self._dict['progress'] = value
+    @staticmethod
+    def current_time_formatted() -> str:
+        """
+        Return the current time, formatted as a string
+        :return:
+        """
+        return datetime.datetime.now().strftime(TIMESTAMP_FORMAT)
 
     def __repr__(self):
         return "ExperimentState[case=%s, measurement_type=%s, progress=%s]" % (
