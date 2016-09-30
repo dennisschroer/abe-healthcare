@@ -4,8 +4,7 @@ import shutil
 from cProfile import Profile
 from os import path
 from os.path import join
-from types import MethodType
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable
 
 from memory_profiler import memory_usage
 
@@ -100,7 +99,7 @@ class BaseExperiment(object):
         # Experiment variables
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
-        self.memory_usages = None  # type: Dict[ABEStep, List[float]]
+        self.memory_usages = None  # type: Dict[str, List[float]]
         self.profiler = None  # type: Profile
 
         # Use case actors
@@ -322,10 +321,10 @@ class BaseExperiment(object):
                         except:
                             self.output.output_error()
 
-    def run_step(self, abe_step: ABEStep, method: MethodType):
+    def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
         if self.state.measurement_type == MeasurementType.memory:
             u = memory_usage((method, [], {}), interval=self.memory_measure_interval)
-            self.memory_usages[abe_step] = [min(u), max(u), len(u)]
+            self.memory_usages[abe_step.name] = [min(u), max(u), len(u)]
         else:
             method()
 
