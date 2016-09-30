@@ -2,10 +2,7 @@ import logging
 from os import makedirs
 from os import path
 
-from experiments.authorities_amount_experiment import AuthoritiesAmountExperiment
 from experiments.base_experiment import BaseExperiment
-from experiments.file_size_experiment import FileSizeExperiment
-from experiments.policy_size_experiment import PolicySizeExperiment
 
 
 class ExperimentsRunner(object):
@@ -70,11 +67,3 @@ class ExperimentsRunner(object):
         directory = self.current_experiment.output.experiment_results_directory()
         logging.basicConfig(filename=path.join(directory, 'log.log'), level=logging.INFO)
         print("Logging to %s" % path.join(directory, 'log.log'))
-
-
-if __name__ == '__main__':
-    runner = ExperimentsRunner()
-    runner.run_experiment(BaseExperiment())
-    runner.run_experiment(FileSizeExperiment())
-    runner.run_experiment(PolicySizeExperiment())
-    runner.run_experiment(AuthoritiesAmountExperiment())

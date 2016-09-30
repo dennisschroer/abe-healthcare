@@ -8,7 +8,7 @@ about end-to-end encryption using ABE (Attribute Based Encryption) in Health Car
 The framework allows to run experiments using different implementations of ABE, in order to compare these implementations.
 The experiments are tayored for a specific use case, which is displayed in the following image.
 
-![Overview](detailed-use-case.png)
+![Overview](doc/etailed-use-case.png)
 
 _Bob, an insured, submits an encrypted photo to an insurance company to be checked by a doctor in order to qualify for compensation.
 Only qualified doctors which act as reviewers are allowed to decrypt the ciphertext._
