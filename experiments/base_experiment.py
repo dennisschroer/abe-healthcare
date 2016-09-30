@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 from cProfile import Profile
-from multiprocessing import Condition, Event  # type: ignore
 from os import path
 from os.path import join
 from typing import List, Dict, Any
@@ -15,8 +14,7 @@ from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
 from experiments.experiment_case import ExperimentCase
 from experiments.experiment_output import ExperimentOutput, OUTPUT_DETAILED
-from experiments.experiment_state import ExperimentState, ExperimentProgress
-from experiments.experiments_sequence_state import ExperimentsSequenceState
+from experiments.experiment_state import ExperimentState
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
@@ -27,14 +25,16 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 class BaseExperiment(object):
     memory_measure_interval = 0.05
+    """Indicates how often the memory should be measured, in seconds."""
     run_descriptions = {
-        # Can be 'always' or 'once'
-        # When 'always', it is run in the run() method
-        # When 'once', it is run during global setup and loaded in the run() method
         'setup_authsetup': 'always',
         'register_keygen': 'always'
     }
-    # Default configurations
+    """
+    Description of which steps to run during the experiment. Steps can be run 'always', or only 'once'. In the latter,
+    the step is run for each implementation once, prior to all experiments. This can be helpful if only the encryption
+    and decryption is relevant.
+    """
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
             'name': 'AUTHORITY0',
@@ -49,6 +49,10 @@ class BaseExperiment(object):
             ]))
         }
     ]
+    """
+    Description of the attribute authorities to use in this experiment.
+    Is a list of dicts, where each dict contains at least a name and a list of attributes.
+    """
     user_descriptions = [  # type: List[Dict[str, Any]]
         {
             'gid': 'BOB',
@@ -65,50 +69,48 @@ class BaseExperiment(object):
             }
         },
     ]
-    file_size = 10 * 1024 * 1024  # type: int
-    read_policy = '(ONE@AUTHORITY0 AND SIX@AUTHORITY1) OR (TWO@AUTHORITY0 AND SEVEN@AUTHORITY1) OR (THREE@AUTHORITY0 AND EIGHT@AUTHORITY1)'
+    """Description of the users to use in this experiment."""
+    generated_file_sizes = [10 * 1024 * 1024]  # type: List[int]
+    """List of sizes of files to randomly generate as input files before the experiment."""
+    encrypted_file_size = generated_file_sizes[0]
+    """Size of the file to encrypt and decrypt."""
+    read_policy = '(ONE@AUTHORITY0 AND SIX@AUTHORITY1)' \
+                  ' OR (TWO@AUTHORITY0 AND SEVEN@AUTHORITY1)' \
+                  ' OR (THREE@AUTHORITY0 AND EIGHT@AUTHORITY1)'
+    """The read policy to use when encrypting."""
     write_policy = read_policy
+    """The write policy to use when encrypting."""
     measurement_types = MeasurementType
+    """The types of measurments to perform in this experiment."""
+    implementations = implementations
+    """The implementations to run this experiments on."""
+    measurement_repeat = 100
+    """The amount of times to repeat every measurement for each case and implementation."""
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
-        self.state = ExperimentState()  # type:ExperimentState
-        self.output = None  # type: ExperimentOutput
-        self._sequence_state = None  # type: ExperimentsSequenceState
-        self.file_name = None  # type: str
-        """File name of the file to encrypt. Is set during the experiment"""
+        self.output = ExperimentOutput(self.get_name(), self.state)  # type: ExperimentOutput
+        self.state = ExperimentState()  # type: ExperimentState
+        """
+        The current state of the experiment.
+        This shows for example which implementation we currently use, and which measurements are performed.
+        """
+
+        # Experiment variables
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
+        self.memory_usages = None  # type: Dict[str, List[float]]
+        self.profiler = None  # type: Profile
 
+        # Use case actors
         self.central_authority = None  # type: CentralAuthority
         self.attribute_authorities = None  # type: List[AttributeAuthority]
         self.user_clients = None  # type: List[UserClient]
         self.insurance = None  # type: InsuranceService
 
+        # Experiment cases
         if cases is None:
             cases = [ExperimentCase('base', None)]
         self.cases = cases  # type: List[ExperimentCase]
-
-        # When the state of the next experiment is set
-        self.state_sync = Condition()
-        # - When the setup is done and the measurements should start
-        self.setup_done_sync = Condition()
-        # - When the results are saved and before the state is updated for the next experiment
-        self.results_saved_sync = Condition()
-        # Event used when the state changes to make the main thread do measurements at the start of each state
-        self.state_change_event = Event()
-
-        self.sync_count = 0
-        self.memory_usages = None  # type: Dict[str, List[float]]
-        self.profiler = None  # type: Profile
-
-    @property
-    def sequence_state(self) -> ExperimentsSequenceState:
-        return self._sequence_state
-
-    @sequence_state.setter
-    def sequence_state(self, value: ExperimentsSequenceState) -> None:
-        self._sequence_state = value
-        self.output = ExperimentOutput(self.get_name(), self.state, self.sequence_state)
 
     def global_setup(self) -> None:
         """
@@ -116,17 +118,24 @@ class BaseExperiment(object):
         like generating random input files.
         This method is only called once for each experiment, namely at the very start.
         """
+        self.generate_files()
+
+    def generate_files(self) -> None:
+        """Generate all input files as specified by the generated_file_sizes property."""
         file_generator = RandomFileGenerator()
         input_path = self.get_experiment_input_path()
-        file_generator.generate(self.file_size, 1, input_path, skip_if_exists=True, verbose=True)
+        for size in self.generated_file_sizes:
+            file_generator.generate(size, 1, input_path, skip_if_exists=True, verbose=True)
+
+    @property
+    def file_name(self) -> str:
+        """File name of the file to encrypt. Is set during the experiment"""
+        return join(self.get_experiment_input_path(), '%i-0' % self.encrypted_file_size)
 
     def setup(self) -> None:
         """
         Setup for a single run of this experiment for a single implementation, case and measurement type.
         """
-        input_path = self.get_experiment_input_path()
-        self.file_name = join(input_path, '%i-0' % self.file_size)
-
         if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
             os.makedirs(self.output.experiment_case_iteration_results_directory())
         self.clear_insurance_storage()
@@ -140,11 +149,12 @@ class BaseExperiment(object):
             for authority in self.attribute_authorities:
                 authority.save_attribute_keys()
 
-    def setup_directories(self) -> None:
+    def setup_implementation_directories(self) -> None:
         """
-        Setup the directories used in this experiment. Empty directories and create them if they do not exist.
+        Setup the directories used in this experiment for a single implementation.
+        Empties directories and create them if they do not exist.
         """
-        assert self.sequence_state.implementation is not None
+        assert self.state.implementation is not None
 
         # Empty storage directories
         if os.path.exists(self.get_user_client_storage_path()):
@@ -185,8 +195,10 @@ class BaseExperiment(object):
         :param implementation: The implementation to use.
         :return: The attribute authority.
         """
-        attribute_authority = implementation.create_attribute_authority(authority_description['name'],
-                                                                        storage_path=self.get_attribute_authority_storage_path())
+        attribute_authority = implementation.create_attribute_authority(
+            authority_description['name'],
+            storage_path=self.get_attribute_authority_storage_path()
+        )
         attribute_authority.setup(central_authority, authority_description['attributes'], 1)
         return attribute_authority
 
@@ -217,9 +229,8 @@ class BaseExperiment(object):
         return client
 
     def run_setup(self) -> None:
-        self.set_progress(ExperimentProgress.setup)
         # Create central authority
-        self.central_authority = self.sequence_state.implementation.create_central_authority(
+        self.central_authority = self.state.implementation.create_central_authority(
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
@@ -227,24 +238,22 @@ class BaseExperiment(object):
 
     def setup_insurance(self) -> None:
         # Create insurance service
-        self.insurance = InsuranceService(self.sequence_state.implementation.serializer,
+        self.insurance = InsuranceService(self.state.implementation.serializer,
                                           self.central_authority,
-                                          self.sequence_state.implementation.public_key_scheme,
+                                          self.state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 
     def run_authsetup(self) -> None:
-        self.set_progress(ExperimentProgress.authsetup)
         # Create attribute authorities
         self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
-                                                                       self.sequence_state.implementation)
+                                                                       self.state.implementation)
         for authority in self.attribute_authorities:
             self.insurance.add_authority(authority)
             authority.save_attribute_keys()
 
     def run_register(self) -> None:
-        self.state.progress = ExperimentProgress.register
         # Create user clients
-        self.user_clients = self.create_user_clients(self.sequence_state.implementation,
+        self.user_clients = self.create_user_clients(self.state.implementation,
                                                      self.insurance)  # type: List[UserClient]
         self.register_user_clients()
 
@@ -255,23 +264,18 @@ class BaseExperiment(object):
         descriptions (self.user_descriptions)
         :requires: self.user_clients is not None
         """
-        self.set_progress(ExperimentProgress.keygen)
         for user_description in self.user_descriptions:
             user_client = self.get_user_client(user_description['gid'])  # type: ignore
             user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
             user_client.save_user_secret_keys()
 
     def run_encrypt(self) -> None:
-        self.set_progress(ExperimentProgress.encrypt)
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
     def run_decrypt(self) -> None:
-        self.set_progress(ExperimentProgress.decrypt)
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self) -> None:
-        self.state.progress = ExperimentProgress.experiment_setup
-
         if self.run_descriptions['setup_authsetup'] == 'once':
             self.run_setup()
             self.run_authsetup()
@@ -279,55 +283,54 @@ class BaseExperiment(object):
             self.run_register()
             self.run_keygen()
 
-        for i in range(0, self.sequence_state.amount):
-            self.sequence_state.iteration = i
-            for case in self.cases:
-                self.state.case = case
-                for measurement_type in self.measurement_types:  # type: ignore
-                    try:
+        for implementation in self.implementations:
+            self.state.implementation = implementation
+            self.setup_implementation_directories()
+            for i in range(0, self.measurement_repeat):
+                for case in self.cases:
+                    for measurement_type in self.measurement_types:  # type: ignore
+                        self.state.iteration = i
+                        self.state.case = case
                         self.state.measurement_type = measurement_type
+
                         self.log_current_state()
+                        # noinspection PyBroadException
+                        try:
+                            self.setup()
+                            self.start_measurements()
 
-                        self.sync(self.state_sync)  # 1
-                        self.setup()
-                        self.start_measurements()  # 2
+                            if self.state.measurement_type == MeasurementType.memory:
+                                if self.run_descriptions['setup_authsetup'] == 'always':
+                                    u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
+                                    self.memory_usages['setup'] = [min(u), max(u), len(u)]
+                                    u = memory_usage((self.run_authsetup, [], {}),
+                                                     interval=self.memory_measure_interval)
+                                    self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
+                                if self.run_descriptions['register_keygen'] == 'always':
+                                    u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
+                                    self.memory_usages['register'] = [min(u), max(u), len(u)]
+                                    u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
+                                    self.memory_usages['keygen'] = [min(u), max(u), len(u)]
 
-                        if self.state.measurement_type == MeasurementType.memory:
-                            if self.run_descriptions['setup_authsetup'] == 'always':
-                                u = memory_usage((self.run_setup, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['setup'] = [min(u), max(u), len(u)]
-                                u = memory_usage((self.run_authsetup, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['authsetup'] = [min(u), max(u), len(u)]
-                            if self.run_descriptions['register_keygen'] == 'always':
-                                u = memory_usage((self.run_register, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['register'] = [min(u), max(u), len(u)]
-                                u = memory_usage((self.run_keygen, [], {}), interval=self.memory_measure_interval)
-                                self.memory_usages['keygen'] = [min(u), max(u), len(u)]
+                                u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
+                                u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
+                                self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
+                            else:
+                                if self.run_descriptions['setup_authsetup'] == 'always':
+                                    self.run_setup()
+                                    self.run_authsetup()
+                                if self.run_descriptions['register_keygen'] == 'always':
+                                    self.run_register()
+                                    self.run_keygen()
+                                self.run_encrypt()
+                                self.run_decrypt()
 
-                            u = memory_usage((self.run_encrypt, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['encrypt'] = [min(u), max(u), len(u)]
-                            u = memory_usage((self.run_decrypt, [], {}), interval=self.memory_measure_interval)
-                            self.memory_usages['decrypt'] = [min(u), max(u), len(u)]
-                        else:
-                            if self.run_descriptions['setup_authsetup'] == 'always':
-                                self.run_setup()
-                                self.run_authsetup()
-                            if self.run_descriptions['register_keygen'] == 'always':
-                                self.run_register()
-                                self.run_keygen()
-                            self.run_encrypt()
-                            self.run_decrypt()
-
-                        self.stop_measurements()
-                        self.tear_down()
-                        self.finish_measurements()  # 0
-                    except:
-                        self.output.output_error()
-                        self.state.progress = ExperimentProgress.experiment_setup
-                        self.remaining_syncs()
-
-        self.state.progress = ExperimentProgress.stopping
-        self.sync(self.state_sync)
+                            self.stop_measurements()
+                            self.tear_down()
+                            self.finish_measurements()
+                        except:
+                            self.output.output_error()
 
     def log_current_state(self) -> None:
         """
@@ -335,11 +338,11 @@ class BaseExperiment(object):
         """
         logging.info("=> Running %s with implementation %s (%d/%d), iteration %d/%d, case %s, measurement %s" % (
             self.get_name(),
-            self.sequence_state.implementation.get_name(),
-            implementations.index(self.sequence_state.implementation) + 1,
+            self.state.implementation.get_name(),
+            implementations.index(self.state.implementation) + 1,
             len(implementations),
-            self.sequence_state.iteration + 1,
-            self.sequence_state.amount,
+            self.state.iteration + 1,
+            self.measurement_repeat,
             self.state.case.name,
             str(self.state.measurement_type)
         ))
@@ -354,18 +357,10 @@ class BaseExperiment(object):
             self.profiler.enable()
         self.memory_usages = dict()
 
-        self.state.progress = ExperimentProgress.experiment_starting
-        self.sync(self.setup_done_sync)
-        # self.setup_lock.acquire()
-        # self.setup_lock.notify()
-        # self.setup_lock.release()
-
     def stop_measurements(self) -> None:
         """
         Stop the measurements for the current run, but do not export the results yet.
         """
-        logging.debug("Experiment.stop")
-        self.state.progress = ExperimentProgress.experiment_setup
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler.disable()
 
@@ -395,38 +390,6 @@ class BaseExperiment(object):
                     'path': self.get_central_authority_storage_path()
                 }
             ])
-        self.sync(self.results_saved_sync)
-        # Now sync with the other process
-
-    def set_progress(self, value: ExperimentProgress) -> None:
-        """
-        Set the progress of the current experiment.
-        :param value: The new progress indicator.
-        """
-        self.state.progress = value
-
-    def sync(self, condition):
-        """
-        Synchronize with the main process. This happens at three moments:
-        - When the state of the next experiment is set
-        - When the setup is done and the measurements should start
-        - When the results are saved and before the state is updated for the next experiment
-        """
-        with condition:
-            condition.notify_all()
-            logging.debug("Experiment.sync %s", condition)
-            self.sync_count = (self.sync_count + 1) % 3
-
-    def remaining_syncs(self) -> None:
-        """
-        Synchronize all remaining synchronization points in the current experiment, so the next run can start.
-        This is used when, during a single run, an exception occured.
-        """
-        if self.sync_count == 1:
-            self.sync(self.setup_done_sync)
-            self.sync(self.results_saved_sync)
-        elif self.sync_count == 2:
-            self.sync(self.results_saved_sync)
 
     def get_user_client(self, gid: str) -> UserClient:
         """
@@ -497,7 +460,7 @@ class BaseExperiment(object):
         """
         return os.path.join(
             self.get_experiment_storage_base_path(),
-            self.sequence_state.implementation.get_name(),
+            self.state.implementation.get_name(),
             'client')
 
     def get_insurance_storage_path(self) -> str:
@@ -514,7 +477,7 @@ class BaseExperiment(object):
         """
         return os.path.join(
             self.get_experiment_storage_base_path(),
-            self.sequence_state.implementation.get_name(),
+            self.state.implementation.get_name(),
             'authorities')
 
     def get_central_authority_storage_path(self) -> str:
@@ -523,5 +486,5 @@ class BaseExperiment(object):
         """
         return os.path.join(
             self.get_experiment_storage_base_path(),
-            self.sequence_state.implementation.get_name(),
+            self.state.implementation.get_name(),
             'central_authority')
