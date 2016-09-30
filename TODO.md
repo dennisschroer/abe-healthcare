@@ -2,6 +2,8 @@
 
 ## Overhaul:
 
+- [X] Remove separate process for experiment as it is obsolete now.
+- [X] Clean up the repo.
 - [ ] Use CPU times instead of CPU percentage, per step instead of over the total process
 - [ ] Improve memory profiler. Maybe it helps if we store everything in variables. 
       Current zero-measurement could be explained by the usage of the stack instead of memory.
