@@ -282,16 +282,17 @@ class BaseExperiment(object):
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self) -> None:
-        if self.run_descriptions['setup_authsetup'] == 'once':
-            self._run_setup()
-            self._run_authsetup()
-        if self.run_descriptions['register_keygen'] == 'once':
-            self._run_register()
-            self._run_keygen()
-
         for implementation in self.implementations:
             self.state.implementation = implementation
             self.setup_implementation_directories()
+
+            if self.run_descriptions['setup_authsetup'] == 'once':
+                self._run_setup()
+                self._run_authsetup()
+            if self.run_descriptions['register_keygen'] == 'once':
+                self._run_register()
+                self._run_keygen()
+
             for i in range(0, self.measurement_repeat):
                 for case in self.cases:
                     for measurement_type in self.measurement_types:  # type: ignore
