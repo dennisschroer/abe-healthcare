@@ -318,6 +318,8 @@ class BaseExperiment(object):
                             self.stop_measurements()
                             self.tear_down()
                             self.finish_measurements()
+                        except KeyboardInterrupt:
+                            raise
                         except:
                             self.output.output_error()
 
