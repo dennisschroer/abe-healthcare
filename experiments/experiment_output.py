@@ -129,6 +129,9 @@ class ExperimentOutput(object):
                 for _, row in memory_usages:
                     writer.writerow(row._asdict())  # type: ignore
 
+    def output_cpu_times(self, cpu_times):
+        self.output_case_results('cpu', cpu_times)
+
     def output_storage_space(self, directories: List[dict]) -> None:
         """
         Output the storage space used by the different parties.

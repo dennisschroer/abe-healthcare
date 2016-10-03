@@ -7,6 +7,7 @@ from os.path import join
 from typing import List, Dict, Any, Callable
 
 from memory_profiler import memory_usage
+from psutil import Process
 
 from authority.attribute_authority import AttributeAuthority
 from client.user_client import UserClient
@@ -100,7 +101,9 @@ class BaseExperiment(object):
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
         self.memory_usages = None  # type: Dict[str, List[float]]
+        self.cpu_times = None  # type: Dict[str, List[float]]
         self.profiler = None  # type: Profile
+        self.psutil_process = None  # type: Process
 
         # Use case actors
         self.central_authority = None  # type: CentralAuthority
@@ -327,6 +330,12 @@ class BaseExperiment(object):
         if self.state.measurement_type == MeasurementType.memory:
             u = memory_usage((method, [], {}), interval=self.memory_measure_interval)
             self.memory_usages[abe_step.name] = [min(u), max(u), len(u)]
+        elif self.state.measurement_type == MeasurementType.cpu:
+            times_before = self.psutil_process.cpu_times()
+            method()
+            times_after = self.psutil_process.cpu_times()
+            self.cpu_times[abe_step.name] = (times_after.user - times_before.user) + \
+                                            (times_after.system - times_before.system)
         else:
             method()
 
@@ -353,7 +362,11 @@ class BaseExperiment(object):
         if self.state.measurement_type == MeasurementType.timings:
             self.profiler = Profile()
             self.profiler.enable()
-        self.memory_usages = dict()
+        elif self.state.measurement_type == MeasurementType.cpu:
+            self.cpu_times = dict()
+            self.psutil_process = Process()
+        elif self.state.measurement_type == MeasurementType.memory:
+            self.memory_usages = dict()
 
     def stop_measurements(self) -> None:
         """
@@ -369,9 +382,9 @@ class BaseExperiment(object):
         logging.debug("Experiment.finish")
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
-        if self.state.measurement_type == MeasurementType.memory:
+        elif self.state.measurement_type == MeasurementType.memory:
             self.output.output_case_results('memory', self.memory_usages, variables=['min', 'max', 'amount'])
-        if self.state.measurement_type == MeasurementType.storage_and_network:
+        elif self.state.measurement_type == MeasurementType.storage_and_network:
             self.output.output_connections(self.get_connections())
             self.output.output_storage_space([
                 {
@@ -388,6 +401,8 @@ class BaseExperiment(object):
                     'path': self.get_central_authority_storage_path()
                 }
             ])
+        elif self.state.measurement_type == MeasurementType.cpu:
+            self.output.output_cpu_times(self.cpu_times)
 
     def get_user_client(self, gid: str) -> UserClient:
         """
