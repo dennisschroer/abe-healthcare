@@ -12,14 +12,14 @@ class UserAttributeAuthorityConnection(BaseConnection):
         self.attribute_authority = attribute_authority
         self.serializer = serializer
 
-    def public_keys(self, time_period: int) -> Any:
+    def request_public_keys(self, time_period: int) -> Any:
         response = self.attribute_authority.public_keys(time_period)
-        if self.benchmark:
-            self.add_benchmark('out public_keys', (time_period.bit_length() + 7) // 8)
-            self.add_benchmark('in public_keys', len(self.serializer.serialize_authority_public_keys(response)))
+        # if self.benchmark:
+        #     self.add_benchmark('out public_keys', (time_period.bit_length() + 7) // 8)
+        #     self.add_benchmark('in public_keys', len(self.serializer.serialize_authority_public_keys(response)))
         return response
 
-    def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
+    def request_keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         request = {
             'gid': gid,
             'registration_data': registration_data,
@@ -32,9 +32,9 @@ class UserAttributeAuthorityConnection(BaseConnection):
             self.add_benchmark('in keygen', len(self.serializer.serialize_user_secret_keys(response)))
         return response
 
-    def update_keys(self, time_period):
+    def request_update_keys(self, time_period):
         response = self.attribute_authority.update_keys(time_period)
         if self.benchmark:
-            self.add_benchmark('out update_keys', (time_period.bit_length() + 7) // 8)
-            self.add_benchmark('in update_keys', len(self.serializer.serialize_authority_update_keys(response)))
+            self.add_benchmark('Update Keys out', (time_period.bit_length() + 7) // 8)
+            self.add_benchmark('Update Keys in', len(self.serializer.serialize_authority_update_keys(response)))
         return response
