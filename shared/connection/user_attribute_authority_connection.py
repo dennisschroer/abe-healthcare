@@ -28,8 +28,8 @@ class UserAttributeAuthorityConnection(BaseConnection):
         }
         response = self.attribute_authority.keygen(gid, registration_data, attributes, time_period)
         if self.benchmark:
-            self.add_benchmark('out keygen', len(self.serializer.serialize_keygen_request(request)))
-            self.add_benchmark('in keygen', len(self.serializer.serialize_user_secret_keys(response)))
+            self.add_benchmark('Keygen out', len(self.serializer.serialize_keygen_request(request)))
+            self.add_benchmark('Keygen in', len(self.serializer.serialize_user_secret_keys(response)))
         return response
 
     def request_update_keys(self, time_period):
