@@ -23,7 +23,7 @@ before_install:
 # Install OpenSSL
 - sudo apt-get install -y openssl libssl-dev
 # Download charm
-- git clone git@github.com:denniss17/charm.git
+- git clone https://github.com/denniss17/charm.git
 install:
 # Install charm
 - pip install -r charm/requirements.txt
