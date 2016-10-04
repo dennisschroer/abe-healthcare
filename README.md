@@ -3,24 +3,38 @@
 Master: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=master)](https://travis-ci.com/denniss17/abe-healthcare)
 Develop: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=develop)](https://travis-ci.com/denniss17/abe-healthcare)
 
-This repository contains the experiments framework as used in my master's thesis 
-about end-to-end encryption using ABE (Attribute Based Encryption) in Health Care. 
-The framework allows to run experiments using different implementations of ABE, in order to compare these implementations.
-The experiments are tayored for a specific use case, which is displayed in the following image.
+This repository contains the experiments framework as used in my master's thesis. In this thesis, we try to investigate
+the feasibility of Attribute Based Encryption (ABE) in a realistic scenario, with requirements for authentication, write access
+and access revocation. 
+
+ABE is an encryption approach in which multiple attributes can be used in a boolean formular
+to encrypt data. We focus on the so called Ciphertext Policy based ABE (CP-ABE), where the data is encrypted using
+the attributes, and the keys for the attributes are issued to the users.
 
 ![Overview](detailed-use-case.png)
 
-_Bob, an insured, submits an encrypted photo to an insurance company to be checked by a doctor in order to qualify for compensation.
-Only qualified doctors which act as reviewers are allowed to decrypt the ciphertext._
+_Bob, an insured, submits an encrypted photo to an insurance company to be checked by a reviewing doctor 
+in order to qualify for compensation. Only qualified doctors which act as reviewers 
+for this insurance company are allowed to decrypt the ciphertext. Bob encrypts the photo using the policy_ 
+Reviewer ^ Doctor. _Only users who own keys for these attributes are able to decrypt the photo.
+When the image is reviewed, the access should be revoked.
+Attributes from multiple authorities are used to describe the role of the users._
 
-The 
+For the implementation, the [Charm](http://charm-crypto.com/) framework is utilized. Part of our contribution involves
+the implementation of several ABE schemes which could be of interest for our scenario. 
+
 
 ## Requirements
 
+- Python 3
 - Charm ([link](http://charm-crypto.com/))
 
-Download charm from [here](https://github.com/denniss17/charm). Charm has its own requirements, see their website
-for more info.
+We created a fork from Charm with the added implementations. 
+The fork can be found [here](https://github.com/denniss17/charm). 
+
+Charm has its own requirements, see their website for more info.
+
+Python 3 is required because we utilized some new features which are only present in Python 3 (typing).
 
 ## Installation and tests
 
@@ -28,16 +42,16 @@ for more info.
 
 ## Experiments
 
-The different experiments can be found in `experiments`. All experiments should extend `BaseExperiment`, and 
+The different experiments can be found in `experiments`. All experiments extend `BaseExperiment` and 
 should define one or more cases of type `ExperimentCase`. 
 
-The `ExperimentRunner` in `experiments_runner.py` runs all experiments for all implementations for each case.
+The `ExperimentRunner` in `experiments_runner.py` runs an for all implementations for each case.
 
 ### Execution
 
 The experiments can be started with:
 
-    python experiments_runner.py
+    python main.py
 
 ### Output
 
