@@ -37,6 +37,12 @@ class ExperimentsRunner(object):
         self.log_experiment_finish()
 
     def log_experiment_start(self):
+        try:
+            import subprocess
+            label = subprocess.check_output(["git", "describe"])
+            logging.info("Current version: %s", label.decode('UTF-8'))
+        except:
+            pass
         logging.info("Device '%s' starting experiment '%s' with timestamp '%s', running %d times" % (
             self.current_experiment.state.device_name,
             self.current_experiment.get_name(),
