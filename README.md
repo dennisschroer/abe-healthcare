@@ -1,7 +1,7 @@
 # ABE in Health Care
 
-Master: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=master)](https://travis-ci.com/denniss17/abe-healthcare)
-Develop: [![Build Status](https://travis-ci.com/denniss17/abe-healthcare.svg?token=yNBTTxeeyDjVthn2bzgm&branch=develop)](https://travis-ci.com/denniss17/abe-healthcare)
+Master: [![Build Status](https://travis-ci.org/denniss17/abe-healthcare.svg?branch=master)](https://travis-ci.org/denniss17/abe-healthcare)
+Develop: [![Build Status](https://travis-ci.org/denniss17/abe-healthcare.svg?branch=develop)](https://travis-ci.org/denniss17/abe-healthcare)
 
 This repository contains the experiments framework as used in my master's thesis. In this thesis, we try to investigate
 the feasibility of Attribute Based Encryption (ABE) in a realistic scenario, with requirements for authentication, write access
