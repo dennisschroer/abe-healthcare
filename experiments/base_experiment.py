@@ -26,7 +26,7 @@ from shared.utils.random_file_generator import RandomFileGenerator
 
 
 class BaseExperiment(object):
-    memory_measure_interval = 0.05
+    memory_measure_interval = 0.1
     """Indicates how often the memory should be measured, in seconds."""
     run_descriptions = {
         'setup_authsetup': 'always',
@@ -86,7 +86,7 @@ class BaseExperiment(object):
     """The types of measurments to perform in this experiment."""
     implementations = implementations
     """The implementations to run this experiments on."""
-    measurement_repeat = 2
+    measurement_repeat = 100
     """The amount of times to repeat every measurement for each case and implementation."""
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
@@ -152,6 +152,19 @@ class BaseExperiment(object):
         if self.state.measurement_type == MeasurementType.storage_and_network:
             for authority in self.attribute_authorities:
                 authority.save_attribute_keys()
+
+    def reset_variables(self):
+        self.location = None
+        self.memory_usages = None
+        self.cpu_times = None
+        self.profiler = None
+        self.psutil_process = None
+
+        # Use case actors
+        self.central_authority = None
+        self.attribute_authorities = None
+        self.user_clients = None
+        self.insurance = None
 
     def setup_implementation_directories(self) -> None:
         """
@@ -284,6 +297,8 @@ class BaseExperiment(object):
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self) -> None:
+        self.global_setup()
+
         for implementation in self.implementations:
             self.state.implementation = implementation
             self.setup_implementation_directories()
@@ -326,10 +341,12 @@ class BaseExperiment(object):
                         except:
                             self.output.output_error()
 
+            self.reset_variables()
+
     def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
         if self.state.measurement_type == MeasurementType.memory:
             u = memory_usage((method, [], {}), interval=self.memory_measure_interval)
-            self.memory_usages[abe_step.name] = [min(u), max(u), len(u)]
+            self.memory_usages[abe_step.name] = [min(u), max(u), max(u) - min(u), len(u)]
         elif self.state.measurement_type == MeasurementType.cpu:
             times_before = self.psutil_process.cpu_times()
             method()
@@ -383,7 +400,7 @@ class BaseExperiment(object):
         if self.state.measurement_type == MeasurementType.timings:
             self.output.output_timings(self.profiler)
         elif self.state.measurement_type == MeasurementType.memory:
-            self.output.output_case_results('memory', self.memory_usages, variables=['min', 'max', 'amount'])
+            self.output.output_case_results('memory', self.memory_usages, variables=['min', 'max', 'diff', 'amount'])
         elif self.state.measurement_type == MeasurementType.storage_and_network:
             self.output.output_connections(self.get_connections())
             self.output.output_storage_space([
