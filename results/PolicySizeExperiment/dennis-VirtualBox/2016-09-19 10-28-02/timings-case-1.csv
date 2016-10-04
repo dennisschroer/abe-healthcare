@@ -1,0 +1,17 @@
+case/step,DAC-MACS,RD-DABE,RW-ABE,TAAC
+encrypt,0.46347499999999997,,,
+authsetup,3.4e-05,,,
+decryption_keys,0.042996,,,
+decrypt,0.043422999999999996,,,
+encrypt,,0.5129819999999999,,
+authsetup,,3.1e-05,,
+decryption_keys,,0.0,,
+decrypt,,0.00629,,
+encrypt,,,0.665864,
+authsetup,,,1.8e-05,
+decryption_keys,,,1e-06,
+decrypt,,,0.07399,
+encrypt,,,,0.44237299999999996
+authsetup,,,,2.4e-05
+decryption_keys,,,,0.17160399999999998
+decrypt,,,,0.223466

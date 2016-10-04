@@ -2,33 +2,34 @@ import pickle
 import unittest
 
 from client.user_client import UserClient
-from exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
-from implementations.base_implementation import BaseImplementation
-from implementations.dacmacs13_implementation import DACMACS13Implementation
-from implementations.rd13_implementation import RD13Implementation
-from implementations.rw15_implementation import RW15Implementation
-from implementations.taac12_implementation import TAAC12Implementation
-from model.user import User
 from service.insurance_service import InsuranceService
+from shared.exception.policy_not_satisfied_exception import PolicyNotSatisfiedException
+from shared.implementations.base_implementation import BaseImplementation
+from shared.implementations.dacmacs13_implementation import DACMACS13Implementation
+from shared.implementations.rd13_implementation import RD13Implementation
+from shared.implementations.rw15_implementation import RW15Implementation
+from shared.implementations.taac12_implementation import TAAC12Implementation
+from shared.model.user import User
 
 
 class UserClientTestCase(unittest.TestCase):
     def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
-        central_authority.setup()
+        central_authority.central_setup()
         attributes = ['TEST@TEST', 'TEST2@TEST', 'TEST3@TEST', 'TEST4@TEST']
         user_attributes = ['TEST@TEST', 'TEST3@TEST', 'TEST4@TEST']
         attribute_authority = implementation.create_attribute_authority('TEST')
-        attribute_authority.setup(central_authority, attributes)
+        attribute_authority.setup(central_authority, attributes, 1)
         for attribute in user_attributes:
-            attribute_authority.revoke_attribute_indirect('bob', attribute,2)
-        insurance_service = InsuranceService(central_authority.global_parameters, implementation)
+            attribute_authority.revoke_attribute_indirect('bob', attribute, 2)
+        insurance_service = InsuranceService(implementation.serializer, central_authority,
+                                             implementation.public_key_scheme)
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
-        user.registration_data = central_authority.register_user(user.gid)
-        user.issue_secret_keys(
-            attribute_authority.keygen_valid_attributes(user.gid, user.registration_data, user_attributes, 1))
+
         self.subject = UserClient(user, insurance_service, implementation)
+        self.subject.register()
+        self.subject.request_secret_keys(attribute_authority.name, user_attributes, 1)
 
     def test_create_record_dacmacs13(self):
         self._test_create_record(DACMACS13Implementation())
@@ -84,7 +85,7 @@ class UserClientTestCase(unittest.TestCase):
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.write_public_key, update_record.signature,
                                    update_record.data))
 
@@ -124,7 +125,7 @@ class UserClientTestCase(unittest.TestCase):
         self.assertIsNotNone(update_record.time_period)
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
-        pke = self.subject.implementation.create_public_key_scheme()
+        pke = self.subject.implementation.public_key_scheme
         self.assertTrue(pke.verify(create_record.owner_public_key, update_record.signature,
                                    pickle.dumps((update_record.read_policy,
                                                  update_record.write_policy,

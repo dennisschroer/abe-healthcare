@@ -1,0 +1,67 @@
+from typing import Any
+from typing import Dict
+from typing import List
+
+from experiments.base_experiment import BaseExperiment
+from experiments.experiment_case import ExperimentCase
+
+
+class AuthoritiesAmountExperiment(BaseExperiment):
+    attribute_authority_descriptions = []  # type: List[Dict[str, Any]]
+    user_descriptions = [  # type: List[Dict[str, Any]]
+        {
+            'gid': 'BOB',
+            'attributes': {}
+        },
+        {
+            'gid': 'DOCTOR',
+            'attributes': {}
+        },
+    ]
+
+    def __init__(self, cases: List[ExperimentCase] = None) -> None:
+        if cases is None:
+            cases = list(map(
+                lambda amount: ExperimentCase(
+                    "amount %d" % amount,
+                    {
+                        'amount': amount,
+                        'policy': self._generate_policy_for_authorities_amount(amount)
+                    }
+                ),
+                [2, 4, 8, 16]
+            ))
+        super().__init__(cases)
+
+    def _generate_policy_for_authorities_amount(self, amount: int) -> str:
+        """
+        Generate a policy with a fixed size which uses attributes from the given amount of authorities.
+        """
+        attribute_names = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+        attributes = ['%s@AUTHORITY%d' % (attribute_names[i % len(attribute_names)], i % amount) for i in range(16)]
+        return ' AND '.join(attributes)
+
+    def setup(self):
+        super().setup()
+        # Set the read policy
+        self.read_policy = self.state.case.arguments['policy']
+        # Base amount of authorities on the current case
+        self.attribute_authority_descriptions = list(map(
+            lambda index: {
+                'name': 'AUTHORITY%d' % index,
+                'attributes': list(map(lambda a: a + ('@AUTHORITY%d' % index), [
+                    'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'
+                ]))
+            },
+            range(self.state.case.arguments['amount'])
+        ))
+        # Base user keys on the current case
+        self.user_descriptions[1]['attributes'] = {
+            'AUTHORITY%d' % index: self.attribute_authority_descriptions[index]['attributes']
+            for index
+            in range(self.state.case.arguments['amount'])
+            }
+
+        # As each case has a different number of authorities, we clear the authority storage before each case.
+        # Otherwise, the files containing the keys of non-present authorities would still exist.
+        self.clear_attribute_authority_storage()

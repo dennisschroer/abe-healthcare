@@ -1,7 +1,13 @@
+import os
 from typing import Any, List, Dict
 
-from model.records.global_parameters import GlobalParameters
 from service.central_authority import CentralAuthority
+from shared.implementations.serializer.base_serializer import BaseSerializer
+from shared.model.global_parameters import GlobalParameters
+
+DEFAULT_STORAGE_PATH = 'data/authorities'
+ATTRIBUTE_PUBLIC_KEYS_FILENAME = '%s_public_attributes.dat'
+ATTRIBUTE_SECRET_KEYS_FILENAME = '%s_secret_attributes.dat'
 
 
 class AttributeAuthority(object):
@@ -10,27 +16,32 @@ class AttributeAuthority(object):
     The authority is able to issue secret keys to users for these attributes.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, serializer: BaseSerializer, storage_path=None) -> None:
         """
         Create a new attribute authority.
         :param name: The name of the authority.
         """
+        self.storage_path = DEFAULT_STORAGE_PATH if storage_path is None else storage_path
         self.name = name
+        self.serializer = serializer
         self.attributes = []  # type: list
         self._public_keys = None  # type: Any
         self._secret_keys = None  # type: Any
         self.global_parameters = None  # type: GlobalParameters
         self.revocation_list = dict()  # type: Dict[int, Dict[str, List[str]]]
+        if not os.path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
 
-    def setup(self, central_authority: CentralAuthority, attributes: list):
+    def setup(self, central_authority: CentralAuthority, attributes: list, time_period: int):
         """
         Setup this attribute authority.
         :param central_authority: The central authority to get the global parameters from.
         :param attributes: The attributes managed by this authority.
+        :param time_period: The time period to setup the attributes for
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
-    def public_keys_for_time_period(self, time_period: int) -> Any:
+    def public_keys(self, time_period: int) -> Any:
         """
         Gets the public keys to be used in the given time period.
         :param time_period: The time period
@@ -38,13 +49,21 @@ class AttributeAuthority(object):
         """
         return self._public_keys
 
-    def secret_keys_for_time_period(self, time_period: int) -> Any:
+    def secret_keys(self, time_period: int) -> Any:
         """
         Gets the secret/master keys to be used in the given time period.
         :param time_period: The time period
         :return: The secret keys for the given time period.
         """
         return self._secret_keys
+
+    def update_keys(self, time_period: int) -> Any:
+        """
+        Gets the update keys required for a given time period
+        :param time_period:
+        :return:
+        """
+        pass
 
     def revoke_attribute_indirect(self, gid: str, attribute: str, time_period: int) -> None:
         """
@@ -84,11 +103,11 @@ class AttributeAuthority(object):
     def remove_revoked_attributes(self, gid: str, attributes: List[str], time_period: int) -> List[str]:
         return [attribute for attribute in attributes if not self.is_revoked(gid, attribute, time_period)]
 
-    def keygen_valid_attributes(self, gid: str, registration_data: Any, attributes: list, time_period: int):
-        valid_attributes = self.remove_revoked_attributes(gid, attributes, time_period)
-        return self.keygen(gid, registration_data, valid_attributes, time_period)
-
     def keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
+        valid_attributes = self.remove_revoked_attributes(gid, attributes, time_period)
+        return self._keygen(gid, registration_data, valid_attributes, time_period)
+
+    def _keygen(self, gid: str, registration_data: Any, attributes: list, time_period: int):
         """
         Generate secret keys for a user.
 
@@ -101,4 +120,22 @@ class AttributeAuthority(object):
 
         Note: this method does not check whether the user owns the attribute.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
+
+    def save_attribute_keys(self):
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_PUBLIC_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.serializer.serialize_authority_public_keys(self._public_keys))
+
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'wb') as f:
+            f.write(self.serializer.serialize_authority_secret_keys(self._secret_keys))
+
+    def load_attribute_keys(self):
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_PUBLIC_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'rb') as f:
+            self._public_keys = self.serializer.deserialize_authority_public_keys(f.read())
+
+        save_file_path = os.path.join(self.storage_path, ATTRIBUTE_SECRET_KEYS_FILENAME % self.name)
+        with open(save_file_path, 'rb') as f:
+            self._secret_keys = self.serializer.deserialize_authority_secret_keys(f.read())

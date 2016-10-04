@@ -4,13 +4,14 @@ from typing import Dict
 from Crypto.Hash import SHA
 
 from authority.attribute_authority import AttributeAuthority
-from implementations.base_implementation import BaseImplementation
-from model.records.create_record import CreateRecord
-from model.records.data_record import DataRecord
-from model.records.global_parameters import GlobalParameters
-from model.records.policy_update_record import PolicyUpdateRecord
-from model.records.update_record import UpdateRecord
+from service.central_authority import CentralAuthority
 from service.storage import Storage
+from shared.implementations.public_key.base_public_key import BasePublicKey
+from shared.implementations.serializer.base_serializer import BaseSerializer
+from shared.model.records.create_record import CreateRecord
+from shared.model.records.data_record import DataRecord
+from shared.model.records.policy_update_record import PolicyUpdateRecord
+from shared.model.records.update_record import UpdateRecord
 
 
 class InsuranceService(object):
@@ -19,11 +20,16 @@ class InsuranceService(object):
     signatures and storing the data records.
     """
 
-    def __init__(self, global_parameters: GlobalParameters, implementation: BaseImplementation) -> None:
-        self.global_parameters = global_parameters
-        self.implementation = implementation
-        self.storage = Storage()
+    def __init__(self, serializer: BaseSerializer, central_authority: CentralAuthority,
+                 public_key_scheme: BasePublicKey, storage_path: str = None) -> None:
+        self.central_authority = central_authority
+        self.storage = Storage(serializer, storage_path)
+        self.public_key_scheme = public_key_scheme
         self.authorities = dict()  # type: Dict[str, AttributeAuthority]
+
+    @property
+    def global_parameters(self):
+        return self.central_authority.global_parameters
 
     def add_authority(self, attribute_authority: AttributeAuthority):
         """
@@ -41,7 +47,7 @@ class InsuranceService(object):
         # In future possibly adapt and check the record
 
         location = InsuranceService.determine_record_location(create_record)
-        self.storage.store(location, create_record, self.implementation)
+        self.storage.store(location, create_record)
         return location
 
     def update(self, location: str, update_record: UpdateRecord):
@@ -52,11 +58,10 @@ class InsuranceService(object):
         """
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
-        pke = self.implementation.create_public_key_scheme()
-        assert pke.verify(current_record.write_public_key, update_record.signature,
-                          update_record.data), 'Signature should be valid'
+        assert self.public_key_scheme.verify(current_record.write_public_key, update_record.signature,
+                                             update_record.data), 'Signature should be valid'
         current_record.update(update_record)
-        self.storage.store(location, current_record, self.implementation)
+        self.storage.store(location, current_record)
 
     def policy_update(self, location: str, policy_update_record: PolicyUpdateRecord):
         """
@@ -66,13 +71,12 @@ class InsuranceService(object):
         """
         current_record = self.load(location)
         assert current_record is not None, 'Only existing records can be updated'
-        pke = self.implementation.create_public_key_scheme()
-        assert pke.verify(current_record.owner_public_key, policy_update_record.signature,
-                          pickle.dumps((policy_update_record.read_policy,
-                                            policy_update_record.write_policy,
-                                            policy_update_record.time_period))), 'Signature should be valid'
+        assert self.public_key_scheme.verify(current_record.owner_public_key, policy_update_record.signature,
+                                             pickle.dumps((policy_update_record.read_policy,
+                                                           policy_update_record.write_policy,
+                                                           policy_update_record.time_period))), 'Signature should be valid'
         current_record.update_policy(policy_update_record)
-        self.storage.store(location, current_record, self.implementation)
+        self.storage.store(location, current_record)
 
     @staticmethod
     def determine_record_location(record: DataRecord) -> str:
@@ -85,4 +89,4 @@ class InsuranceService(object):
         return SHA.new(record.info).hexdigest()
 
     def load(self, location: str) -> DataRecord:
-        return self.storage.load(location, self.implementation)
+        return self.storage.load(location)
