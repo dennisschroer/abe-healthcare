@@ -58,7 +58,7 @@ class TAAC12Implementation(BaseImplementation):
         update_keys = []
         taac = Taac(self.group)
         for authority_name in authorities:
-            update_keys.append(authorities[authority_name].update_keys(time_period))
+            update_keys.append(authorities[authority_name].request_update_keys(time_period))
         merged_update_keys = Taac.merge_timed_keys(*update_keys)
         return taac.decryption_keys_computation(secret_keys, merged_update_keys)
 

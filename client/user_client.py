@@ -79,7 +79,7 @@ class UserClient(object):
         # Retrieve authority public keys
         return self.implementation.merge_public_keys(
             {
-                name: authority.public_keys(time_period)
+                name: authority.request_public_keys(time_period)
                 for name, authority
                 in self.authority_connections.items()
                 })
@@ -331,7 +331,7 @@ class UserClient(object):
         :param time_period: The time period to request secret keys for, if applicable
         """
         connection = self.authority_connections[authority_name]
-        secret_keys = connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period)
+        secret_keys = connection.request_keygen(self.user.gid, self.user.registration_data, attributes, time_period)
         self.user.issue_secret_keys(secret_keys)
 
         self.save_user_secret_keys()
@@ -349,7 +349,7 @@ class UserClient(object):
         """
         for authority_name, attributes in authority_attributes.items():  # type: ignore
             connection = self.authority_connections[authority_name]
-            secret_keys = connection.keygen(self.user.gid, self.user.registration_data, attributes, time_period)
+            secret_keys = connection.request_keygen(self.user.gid, self.user.registration_data, attributes, time_period)
             self.user.issue_secret_keys(secret_keys)
 
         self.save_user_secret_keys()
@@ -390,7 +390,7 @@ class UserClient(object):
         self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
     def register(self):
-        registration_data = self.insurance_connection.register_user(self.user.gid)
+        registration_data = self.insurance_connection.send_register_user(self.user.gid)
         self.user.registration_data = registration_data
         self.save_registration_data()
 

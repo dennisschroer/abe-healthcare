@@ -9,10 +9,11 @@
       Current zero-measurement could be explained by the usage of the stack instead of memory.
 - [ ] Only measure network traffic which is not directly related to storage size
 
-    - [ ] Data update
-    - [ ] Policy update
+    - [X] Data update
+    - [X] Policy update
+    - [ ] Not relevant: Attribute authority information request (name + attributes)
     - [ ] Location/meta share with doctor
-    - [ ] Decryption keys (for TAAC)
+    - [X] Update keys (for TAAC)
     - [ ] Key update (ciphertext update keys, key update keys)
 
 ## Connections:
