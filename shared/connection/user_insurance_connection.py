@@ -20,29 +20,29 @@ class UserInsuranceConnection(BaseConnection):
 
     def request_global_parameters(self) -> GlobalParameters:
         response = self.insurance_service.global_parameters
-        if self.benchmark:
-            self.add_benchmark('Global Parameters in',
-                               len(self.serializer.serialize_global_parameters(response)))
+        # if self.benchmark:
+        #     self.add_benchmark('Global Parameters in',
+        #                        len(self.serializer.serialize_global_parameters(response)))
         return response
 
     def request_authorities(self) -> Dict[str, AttributeAuthority]:
         response = self.insurance_service.authorities
-        if self.benchmark:
-            self.add_benchmark('Authorities in', len(self.serializer.serialize_authorities(response)))
+        # if self.benchmark:
+        #     self.add_benchmark('Authorities in', len(self.serializer.serialize_authorities(response)))
         return response
 
     def request_record(self, location: str) -> DataRecord:
         response = self.insurance_service.load(location)
-        if self.benchmark:
-            self.add_benchmark('Record Request out', len(location))
-            self.add_benchmark('Record Request in', len(self.serializer.serialize_data_record(response)))
+        # if self.benchmark:
+        #     self.add_benchmark('Record Request out', len(location))
+        #     self.add_benchmark('Record Request in', len(self.serializer.serialize_data_record(response)))
         return response
 
     def send_create_record(self, create_record: CreateRecord) -> str:
         location = self.insurance_service.create(create_record)
-        if self.benchmark:
-            self.add_benchmark('Record Create out', len(self.serializer.serialize_create_record(create_record)))
-            self.add_benchmark('Record Create in', len(location))
+        # if self.benchmark:
+        #     self.add_benchmark('Record Create out', len(self.serializer.serialize_create_record(create_record)))
+        #     self.add_benchmark('Record Create in', len(location))
         return location
 
     def send_update_record(self, location: str, update_record: UpdateRecord) -> None:
@@ -57,9 +57,9 @@ class UserInsuranceConnection(BaseConnection):
                                len(location) + len(
                                    self.serializer.serialize_policy_update_record(policy_update_record)))
 
-    def register_user(self, gid):
+    def send_register_user(self, gid):
         registration_data = self.insurance_service.central_authority.register_user(gid)
-        if self.benchmark:
-            self.add_benchmark('Register out', len(gid))
-            self.add_benchmark('Register in', len(self.serializer.serialize_registration_data(registration_data)))
+        # if self.benchmark:
+        #     self.add_benchmark('Register out', len(gid))
+        #     self.add_benchmark('Register in', len(self.serializer.serialize_registration_data(registration_data)))
         return registration_data
