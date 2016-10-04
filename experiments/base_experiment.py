@@ -153,6 +153,19 @@ class BaseExperiment(object):
             for authority in self.attribute_authorities:
                 authority.save_attribute_keys()
 
+    def reset_variables(self):
+        self.location = None
+        self.memory_usages = None
+        self.cpu_times = None
+        self.profiler = None
+        self.psutil_process = None
+
+        # Use case actors
+        self.central_authority = None
+        self.attribute_authorities = None
+        self.user_clients = None
+        self.insurance = None
+
     def setup_implementation_directories(self) -> None:
         """
         Setup the directories used in this experiment for a single implementation.
@@ -284,6 +297,8 @@ class BaseExperiment(object):
         self.user_clients[1].decrypt_file(self.location)
 
     def run(self) -> None:
+        self.global_setup()
+
         for implementation in self.implementations:
             self.state.implementation = implementation
             self.setup_implementation_directories()
@@ -325,6 +340,8 @@ class BaseExperiment(object):
                             raise
                         except:
                             self.output.output_error()
+
+            self.reset_variables()
 
     def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
         if self.state.measurement_type == MeasurementType.memory:

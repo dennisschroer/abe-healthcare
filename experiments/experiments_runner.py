@@ -28,10 +28,6 @@ class ExperimentsRunner(object):
         self.setup_logging()
         self.log_experiment_start()
 
-        # Setup the experiment
-        experiment.global_setup()
-        logging.info("Global setup finished")
-
         self.current_experiment.run()
 
         self.log_experiment_finish()
