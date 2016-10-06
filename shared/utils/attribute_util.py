@@ -1,5 +1,10 @@
 from functools import reduce
-from typing import Callable, Any
+from typing import Callable, Any, Union
+
+import boolean
+from boolean import AND
+from boolean import OR
+from boolean import Symbol
 
 from charm.toolbox.node import BinNode, OpType
 from charm.toolbox.pairinggroup import PairingGroup
@@ -70,38 +75,50 @@ def add_time_period_to_attribute(attribute: str, time_period: int) -> str:
     return ATTRIBUTE_TIME_FORMAT % (time_period, attribute)
 
 
-def translate_policy_to_access_structure(policy: BinNode):
+def translate_policy_to_access_structure(policy: str):
     """
     Translate an access policy to an access structure.
     Example: (ONE AND THREE) OR (TWO AND FOUR) is translated to
                 [['ONE', 'THREE'], ['TWO', 'FOUR']]
     :param policy: The policy to translate
     :return:
-    >>> group = PairingGroup('SS512')
-    >>> util = SecretUtil(group, verbose=False)
-    >>> policy = util.createPolicy('(ONE AND THREE) OR (TWO AND FOUR)')
+    >>> policy = '(ONE AND THREE) OR (TWO AND FOUR)'
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR']]
     True
-    >>> policy = util.createPolicy('ONE')
+    >>> policy = 'ONE'
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE']]
     True
-    >>> policy = util.createPolicy('(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)')
+    >>> policy = '(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)'
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
     True
-    >>> policy = util.createPolicy('(ONE OR THREE) AND (TWO OR FOUR)')
+    >>> policy = '(ONE OR THREE) AND (TWO OR FOUR)'
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE', 'TWO'], ['ONE', 'FOUR'], ['THREE', 'TWO'], ['THREE', 'FOUR']]
+    True
     """
-    if policy.type == OpType.OR:
-        left = translate_policy_to_access_structure(policy.getLeft())
-        right = translate_policy_to_access_structure(policy.getRight())
-        return left + right
-    elif policy.type == OpType.AND:
-        left = translate_policy_to_access_structure(policy.getLeft())
-        right = translate_policy_to_access_structure(policy.getRight())
-        return [left[0] + right[0]]
-    else:
-        return [[policy.getAttribute()]]
+    algebra = boolean.BooleanAlgebra()
+    dnf = algebra.dnf(algebra.parse(policy))
+    return dnf_algebra_to_access_structure(dnf)
+
+
+def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]):
+    """
+    Transform a DNF algebra formular to an access structure.
+    :param policy: The policy to transform
+    :return: The access structure
+
+    >>> algebra = boolean.BooleanAlgebra()
+    >>> policy = algebra.parse('(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)')
+    >>> translated = dnf_algebra_to_access_structure(policy)
+    >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
+    True
+    """
+    if isinstance(policy, OR):
+        return reduce(lambda base, sub_policy: base + dnf_algebra_to_access_structure(sub_policy), policy.args, [])
+    elif isinstance(policy, AND):
+        return [reduce(lambda base, sub_policy: base + dnf_algebra_to_access_structure(sub_policy)[0], policy.args, [])]
+    elif isinstance(policy, Symbol):
+        return [[policy.obj]]
