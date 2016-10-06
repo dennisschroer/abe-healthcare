@@ -51,9 +51,7 @@ class RD13Implementation(BaseImplementation):
     def abe_encrypt(self, global_parameters: GlobalParameters, public_keys: Dict[str, Any], message: bytes,
                     policy: str, time_period: int) -> AbeEncryption:
         dabe = DabeRD13(self.group)
-        util = SecretUtil(self.group, verbose=False)
-        parsed_policy = util.createPolicy(policy)
-        access_structure = translate_policy_to_access_structure(parsed_policy)
+        access_structure = translate_policy_to_access_structure(policy)
         # Now we add times to the attributes
         access_structure = list(map(
             lambda authorized_set: [
