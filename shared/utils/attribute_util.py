@@ -104,7 +104,7 @@ def translate_policy_to_access_structure(policy: str) -> list:
     True
     """
     algebra = boolean.BooleanAlgebra()
-    dnf = algebra.dnf(algebra.parse(policy))
+    dnf = algebra.dnf(algebra.parse(policy.replace('@', '::')))
     return dnf_algebra_to_access_structure(dnf)
 
 
@@ -125,9 +125,29 @@ def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]) -> list:
     elif isinstance(policy, AND):
         return [reduce(lambda base, sub_policy: base + dnf_algebra_to_access_structure(sub_policy)[0], policy.args, [])]
     elif isinstance(policy, Symbol):
-        return [[policy.obj]]
+        return [[policy.obj.replace('::', '@')]]
 
 
 def equal_access_structures(first_access_structure, other_access_structure):
+    """
+    Compare access structures for equality, independent of order
+    :param first_access_structure:
+    :param other_access_structure:
+    :return:
+    >>> equal_access_structures([[1]], [[1]])
+    True
+    >>> equal_access_structures([[1,2]], [[1,2]])
+    True
+    >>> equal_access_structures([[1,2]], [[2,1]])
+    True
+    >>> equal_access_structures([[1,2], [3,4]], [[4,3], [1,2]])
+    True
+    >>> equal_access_structures([[1,2]], [[1,3]])
+    False
+    >>> equal_access_structures([[1,2]], [[1,2,3]])
+    False
+    >>> equal_access_structures([[1,2]], [[1,2], [3,4]])
+    False
+    """
     return set(map(lambda x: frozenset(x), first_access_structure)) == \
            set(map(lambda x: frozenset(x), other_access_structure))
