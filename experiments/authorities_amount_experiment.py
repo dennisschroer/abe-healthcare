@@ -33,11 +33,21 @@ class AuthoritiesAmountExperiment(BaseExperiment):
             ))
         super().__init__(cases)
 
-    def _generate_policy_for_authorities_amount(self, amount: int) -> str:
+    @staticmethod
+    def _generate_policy_for_authorities_amount(amount: int) -> str:
         """
         Generate a policy with a fixed size which uses attributes from the given amount of authorities.
+        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(2).split(' AND ')))
+        16
+        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(4).split(' AND ')))
+        16
+        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(8).split(' AND ')))
+        16
+        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(16).split(' AND ')))
+        16
         """
-        attribute_names = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT']
+        # Nine attributes are used to make sure that there are no double attributes in the policy
+        attribute_names = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE']
         attributes = ['%s@AUTHORITY%d' % (attribute_names[i % len(attribute_names)], i % amount) for i in range(16)]
         return ' AND '.join(attributes)
 
@@ -50,7 +60,7 @@ class AuthoritiesAmountExperiment(BaseExperiment):
             lambda index: {
                 'name': 'AUTHORITY%d' % index,
                 'attributes': list(map(lambda a: a + ('@AUTHORITY%d' % index), [
-                    'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'
+                    'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'
                 ]))
             },
             range(self.state.case.arguments['amount'])
