@@ -1,13 +1,9 @@
 from functools import reduce
 from typing import Union, Callable, Any
 
-# noinspection PyPackageRequirements
 import boolean
-# noinspection PyPackageRequirements
 from boolean import AND
-# noinspection PyPackageRequirements
 from boolean import OR
-# noinspection PyPackageRequirements
 from boolean import Symbol
 
 from charm.toolbox.node import BinNode, OpType
@@ -94,6 +90,10 @@ def translate_policy_to_access_structure(policy: str) -> list:
     >>> translated = translate_policy_to_access_structure(policy)
     >>> equal_access_structures(translated, [['ONE']])
     True
+    >>> policy = '(ONE@A1 AND THREE@A1) OR (TWO@A2 AND FOUR@A2)'
+    >>> translated = translate_policy_to_access_structure(policy)
+    >>> equal_access_structures(translated, [['ONE@A1', 'THREE@A1'], ['TWO@A2', 'FOUR@A2']])
+    True
     >>> policy = '(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)'
     >>> translated = translate_policy_to_access_structure(policy)
     >>> equal_access_structures(translated, [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']])
@@ -104,7 +104,8 @@ def translate_policy_to_access_structure(policy: str) -> list:
     True
     """
     algebra = boolean.BooleanAlgebra()
-    dnf = algebra.dnf(algebra.parse(policy.replace('@', '::')))
+    policy = algebra.parse(policy.replace('@', '::'))
+    dnf = policy if isinstance(policy, Symbol) else algebra.dnf(policy)
     return dnf_algebra_to_access_structure(dnf)
 
 
