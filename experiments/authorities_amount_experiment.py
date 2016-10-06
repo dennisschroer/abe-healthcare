@@ -26,7 +26,7 @@ class AuthoritiesAmountExperiment(BaseExperiment):
                     "amount %d" % amount,
                     {
                         'amount': amount,
-                        'policy': self._generate_policy_for_authorities_amount(amount)
+                        'policy': self.generate_policy_for_authorities_amount(amount)
                     }
                 ),
                 [2, 4, 8, 16]
@@ -34,16 +34,16 @@ class AuthoritiesAmountExperiment(BaseExperiment):
         super().__init__(cases)
 
     @staticmethod
-    def _generate_policy_for_authorities_amount(amount: int) -> str:
+    def generate_policy_for_authorities_amount(amount: int) -> str:
         """
         Generate a policy with a fixed size which uses attributes from the given amount of authorities.
-        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(2).split(' AND ')))
+        >>> len(set(AuthoritiesAmountExperiment.generate_policy_for_authorities_amount(2).split(' AND ')))
         16
-        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(4).split(' AND ')))
+        >>> len(set(AuthoritiesAmountExperiment.generate_policy_for_authorities_amount(4).split(' AND ')))
         16
-        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(8).split(' AND ')))
+        >>> len(set(AuthoritiesAmountExperiment.generate_policy_for_authorities_amount(8).split(' AND ')))
         16
-        >>> len(set(AuthoritiesAmountExperiment._generate_policy_for_authorities_amount(16).split(' AND ')))
+        >>> len(set(AuthoritiesAmountExperiment.generate_policy_for_authorities_amount(16).split(' AND ')))
         16
         """
         # Nine attributes are used to make sure that there are no double attributes in the policy
