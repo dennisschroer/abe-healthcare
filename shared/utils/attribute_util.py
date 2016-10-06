@@ -1,9 +1,13 @@
 from functools import reduce
-from typing import Union
+from typing import Union, Callable, Any
 
+# noinspection PyPackageRequirements
 import boolean
+# noinspection PyPackageRequirements
 from boolean import AND
+# noinspection PyPackageRequirements
 from boolean import OR
+# noinspection PyPackageRequirements
 from boolean import Symbol
 
 from charm.toolbox.node import BinNode, OpType
