@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Callable, Any, Union
+from typing import Union
 
 import boolean
 from boolean import AND
@@ -75,7 +75,7 @@ def add_time_period_to_attribute(attribute: str, time_period: int) -> str:
     return ATTRIBUTE_TIME_FORMAT % (time_period, attribute)
 
 
-def translate_policy_to_access_structure(policy: str):
+def translate_policy_to_access_structure(policy: str) -> list:
     """
     Translate an access policy to an access structure.
     Example: (ONE AND THREE) OR (TWO AND FOUR) is translated to
@@ -84,19 +84,19 @@ def translate_policy_to_access_structure(policy: str):
     :return:
     >>> policy = '(ONE AND THREE) OR (TWO AND FOUR)'
     >>> translated = translate_policy_to_access_structure(policy)
-    >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR']]
+    >>> equal_access_structures(translated, [['ONE', 'THREE'], ['TWO', 'FOUR']])
     True
     >>> policy = 'ONE'
     >>> translated = translate_policy_to_access_structure(policy)
-    >>> translated == [['ONE']]
+    >>> equal_access_structures(translated, [['ONE']])
     True
     >>> policy = '(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)'
     >>> translated = translate_policy_to_access_structure(policy)
-    >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
+    >>> equal_access_structures(translated, [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']])
     True
     >>> policy = '(ONE OR THREE) AND (TWO OR FOUR)'
     >>> translated = translate_policy_to_access_structure(policy)
-    >>> translated == [['ONE', 'TWO'], ['ONE', 'FOUR'], ['THREE', 'TWO'], ['THREE', 'FOUR']]
+    >>> equal_access_structures(translated, [['ONE', 'TWO'], ['ONE', 'FOUR'], ['THREE', 'TWO'], ['THREE', 'FOUR']])
     True
     """
     algebra = boolean.BooleanAlgebra()
@@ -104,7 +104,7 @@ def translate_policy_to_access_structure(policy: str):
     return dnf_algebra_to_access_structure(dnf)
 
 
-def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]):
+def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]) -> list:
     """
     Transform a DNF algebra formular to an access structure.
     :param policy: The policy to transform
@@ -113,7 +113,7 @@ def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]):
     >>> algebra = boolean.BooleanAlgebra()
     >>> policy = algebra.parse('(ONE AND THREE) OR (TWO AND FOUR AND FIVE) OR (SEVEN AND SIX)')
     >>> translated = dnf_algebra_to_access_structure(policy)
-    >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
+    >>> equal_access_structures(translated, [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']])
     True
     """
     if isinstance(policy, OR):
@@ -122,3 +122,8 @@ def dnf_algebra_to_access_structure(policy: Union[OR, AND, Symbol]):
         return [reduce(lambda base, sub_policy: base + dnf_algebra_to_access_structure(sub_policy)[0], policy.args, [])]
     elif isinstance(policy, Symbol):
         return [[policy.obj]]
+
+
+def equal_access_structures(first_access_structure, other_access_structure):
+    return set(map(lambda x: frozenset(x), first_access_structure)) == \
+           set(map(lambda x: frozenset(x), other_access_structure))
