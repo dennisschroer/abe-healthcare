@@ -59,8 +59,8 @@ class BaseExperiment(object):
         {
             'gid': 'BOB',
             'attributes': {
-                'AUTHORITY0': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0'],
-                'AUTHORITY1': ['FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1']
+                'AUTHORITY0': [],
+                'AUTHORITY1': []
             }
         },
         {
@@ -76,9 +76,9 @@ class BaseExperiment(object):
     """List of sizes of files to randomly generate as input files before the experiment."""
     encrypted_file_size = generated_file_sizes[0]
     """Size of the file to encrypt and decrypt."""
-    read_policy = '(ONE@AUTHORITY0 AND SIX@AUTHORITY1)' \
-                  ' OR (TWO@AUTHORITY0 AND SEVEN@AUTHORITY1)' \
-                  ' OR (THREE@AUTHORITY0 AND EIGHT@AUTHORITY1)'
+    read_policy = '(ONE@AUTHORITY0 OR SIX@AUTHORITY1)' \
+                  ' AND (TWO@AUTHORITY0 OR SEVEN@AUTHORITY1)' \
+                  ' AND (THREE@AUTHORITY0 OR EIGHT@AUTHORITY1)'
     """The read policy to use when encrypting."""
     write_policy = read_policy
     """The write policy to use when encrypting."""
