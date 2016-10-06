@@ -15,6 +15,9 @@
     - [ ] Location/meta share with doctor
     - [X] Update keys (for TAAC)
     - [ ] Key update (ciphertext update keys, key update keys)
+    
+- [ ] Update keys in file storage
+- [ ] Update keys: over all keys or just a few?
 
 ## Connections:
 - [X] ~~secret keys request (keygen) + response~~

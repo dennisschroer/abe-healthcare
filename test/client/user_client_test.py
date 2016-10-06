@@ -13,6 +13,9 @@ from shared.model.user import User
 
 
 class UserClientTestCase(unittest.TestCase):
+
+    access_policy = '(TEST@TEST OR TEST2@TEST) AND (TEST3@TEST OR TEST4@TEST)'
+
     def setUpWithImplementation(self, implementation: BaseImplementation):
         central_authority = implementation.create_central_authority()
         central_authority.central_setup()
@@ -47,7 +50,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
         self.assertIsNotNone(create_record.info)
         self.assertIsNotNone(create_record.write_policy)
         self.assertIsNotNone(create_record.read_policy)
@@ -81,7 +84,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
@@ -112,7 +115,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
         update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST', 1)
 
         self.assertIsNotNone(update_record.info)
@@ -157,7 +160,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
 
         # Now update to policies which the user can not satisfy
         update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST', 1)
@@ -191,7 +194,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
 
         # Now update to policies which the user can not satisfy
         update_record = self.subject.update_policy(create_record, create_record.read_policy, create_record.write_policy,
@@ -200,8 +203,8 @@ class UserClientTestCase(unittest.TestCase):
         # Update the original record
         create_record.update_policy(update_record)
 
-        self.assertEqual('TEST@TEST', create_record.read_policy)
-        self.assertEqual('TEST@TEST', create_record.write_policy)
+        self.assertEqual(self.access_policy, create_record.read_policy)
+        self.assertEqual(self.access_policy, create_record.write_policy)
 
         # Attempt to decrypt
         try:
@@ -226,7 +229,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_valid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'}, 1)
+        create_record_valid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
 
         # Attempt to decrypt
         info, message = self.subject.decrypt_record(create_record_valid)
@@ -249,7 +252,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_invalid = self.subject.create_record('TEST2@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
+        create_record_invalid = self.subject.create_record('TEST2@TEST', self.access_policy, b'Hello world', {'test': 'info'},
                                                            1)
 
         # Attempt to decrypt
@@ -275,7 +278,7 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_invalid = self.subject.create_record('TEST@TEST', 'TEST@TEST', b'Hello world', {'test': 'info'},
+        create_record_invalid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'},
                                                            2)
 
         # Attempt to decrypt
