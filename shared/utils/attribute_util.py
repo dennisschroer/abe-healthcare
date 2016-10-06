@@ -75,7 +75,6 @@ def translate_policy_to_access_structure(policy: BinNode):
     Translate an access policy to an access structure.
     Example: (ONE AND THREE) OR (TWO AND FOUR) is translated to
                 [['ONE', 'THREE'], ['TWO', 'FOUR']]
-    The access policy is assumed to be in DNF, see https://en.wikipedia.org/wiki/Disjunctive_normal_form
     :param policy: The policy to translate
     :return:
     >>> group = PairingGroup('SS512')
@@ -92,6 +91,9 @@ def translate_policy_to_access_structure(policy: BinNode):
     >>> translated = translate_policy_to_access_structure(policy)
     >>> translated == [['ONE', 'THREE'], ['TWO', 'FOUR', 'FIVE'], ['SEVEN', 'SIX']]
     True
+    >>> policy = util.createPolicy('(ONE OR THREE) AND (TWO OR FOUR)')
+    >>> translated = translate_policy_to_access_structure(policy)
+    >>> translated == [['ONE', 'TWO'], ['ONE', 'FOUR'], ['THREE', 'TWO'], ['THREE', 'FOUR']]
     """
     if policy.type == OpType.OR:
         left = translate_policy_to_access_structure(policy.getLeft())
