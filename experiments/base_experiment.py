@@ -82,7 +82,12 @@ class BaseExperiment(object):
     """The read policy to use when encrypting."""
     write_policy = read_policy
     """The write policy to use when encrypting."""
-    measurement_types = MeasurementType
+    measurement_types = [
+        MeasurementType.timings,
+        MeasurementType.cpu,
+        MeasurementType.memory,
+        MeasurementType.storage_and_network
+    ]
     """The types of measurments to perform in this experiment."""
     implementations = implementations
     """The implementations to run this experiments on."""
