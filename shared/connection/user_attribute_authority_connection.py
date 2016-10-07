@@ -7,8 +7,8 @@ from shared.implementations.serializer.base_serializer import BaseSerializer
 
 class UserAttributeAuthorityConnection(BaseConnection):
     def __init__(self, attribute_authority: AttributeAuthority, serializer: BaseSerializer = None,
-                 benchmark: bool = False) -> None:
-        super().__init__(benchmark)
+                 benchmark: bool = False, identifier: str = None) -> None:
+        super().__init__(benchmark, identifier)
         self.attribute_authority = attribute_authority
         self.serializer = serializer
 

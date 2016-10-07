@@ -4,8 +4,9 @@ from typing import List
 
 
 class BaseConnection(object):
-    def __init__(self, benchmark: bool = False) -> None:
+    def __init__(self, benchmark: bool = False, identifier: str = None) -> None:
         self.benchmark = benchmark
+        self.identifier = identifier
         self.benchmarks = dict()  # type: Dict[str, List[int]]
 
     def dumps(self):
@@ -16,5 +17,5 @@ class BaseConnection(object):
 
     def add_benchmark(self, name: str, size: int) -> None:
         if name not in self.benchmarks:
-            self.benchmarks[name] = list()
+            self.benchmarks["%s.%s" % (self.identifier, name)] = list()
         self.benchmarks[name].append(size)

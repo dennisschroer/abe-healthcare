@@ -62,7 +62,7 @@ class UserClient(object):
         if self._authority_connections is None:
             self._authority_connections = {
                 name: UserAttributeAuthorityConnection(authority, self.implementation.serializer,
-                                                       benchmark=self.monitor_network)
+                                                       benchmark=self.monitor_network, identifier=self.user.gid)
                 for name, authority
                 in self.authorities.items()
                 }
@@ -72,7 +72,8 @@ class UserClient(object):
     def insurance_connection(self) -> UserInsuranceConnection:
         if self._insurance_connection is None:
             self._insurance_connection = UserInsuranceConnection(self.insurance, self.implementation.serializer,
-                                                                 benchmark=self.monitor_network)
+                                                                 benchmark=self.monitor_network,
+                                                                 identifier=self.user.gid)
         return self._insurance_connection
 
     def authorities_public_keys(self, time_period):
@@ -82,7 +83,8 @@ class UserClient(object):
                 name: authority.request_public_keys(time_period)
                 for name, authority
                 in self.authority_connections.items()
-                })
+            }
+        )
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
                      time_period: int = 1) -> str:
