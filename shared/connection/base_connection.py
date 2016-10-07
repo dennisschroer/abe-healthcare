@@ -22,5 +22,5 @@ class BaseConnection(object):
             self.benchmarks[benchmark_name] = list()
         else:
             print("Connection benchmark %s already exists" % benchmark_name)
-            logging.waring("Connection benchmark %s already exists" % benchmark_name)
+            logging.warning("Connection benchmark %s already exists" % benchmark_name)
         self.benchmarks[benchmark_name].append(size)
