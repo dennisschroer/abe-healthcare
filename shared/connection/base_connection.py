@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Dict
 from typing import List
 
@@ -16,6 +17,10 @@ class BaseConnection(object):
         json.dump(self.benchmarks, file_pointer)
 
     def add_benchmark(self, name: str, size: int) -> None:
-        if name not in self.benchmarks:
-            self.benchmarks["%s.%s" % (self.identifier, name)] = list()
-        self.benchmarks[name].append(size)
+        benchmark_name = "%s.%s" % (self.identifier, name)
+        if benchmark_name not in self.benchmarks:
+            self.benchmarks[benchmark_name] = list()
+        else:
+            print("Connection benchmark %s already exists" % benchmark_name)
+            logging.waring("Connection benchmark %s already exists" % benchmark_name)
+        self.benchmarks[benchmark_name].append(size)
