@@ -20,11 +20,7 @@ if __name__ == '__main__':
             'register_keygen': 'once'
         }
         # Storage and network are skipped, as they are just the same as on notebook
-        base_experiment.measurement_types = [
-            MeasurementType.timings,
-            MeasurementType.cpu,
-            MeasurementType.memory
-        ]
+        base_experiment.measurement_types_once = []
 
     runner.run_experiment(base_experiment)
     runner.run_experiment(policy_size_experiment)
