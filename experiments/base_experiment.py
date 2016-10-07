@@ -82,8 +82,16 @@ class BaseExperiment(object):
     """The read policy to use when encrypting."""
     write_policy = read_policy
     """The write policy to use when encrypting."""
-    measurement_types = MeasurementType
-    """The types of measurments to perform in this experiment."""
+    measurement_types = [
+        MeasurementType.timings,
+        MeasurementType.cpu,
+        MeasurementType.memory
+    ]
+    """The types of measurements to perform in this experiment for each run."""
+    measurement_types_once = [
+        MeasurementType.storage_and_network
+    ]
+    """The types of measurements to perform only once during this experiment."""
     implementations = implementations
     """The implementations to run this experiments on."""
     measurement_repeat = 100
@@ -317,31 +325,43 @@ class BaseExperiment(object):
                         self.state.case = case
                         self.state.measurement_type = measurement_type
 
-                        self.log_current_state()
-                        # noinspection PyBroadException
-                        try:
-                            self.setup()
-                            self.start_measurements()
+                        self.run_current_state()
 
-                            if self.run_descriptions['setup_authsetup'] == 'always':
-                                self.run_step(ABEStep.setup, self._run_setup)
-                                self.run_step(ABEStep.authsetup, self._run_authsetup)
-                            if self.run_descriptions['register_keygen'] == 'always':
-                                self.run_step(ABEStep.register, self._run_register)
-                                self.run_step(ABEStep.keygen, self._run_keygen)
-                            self.run_step(ABEStep.encrypt, self._run_encrypt)
-                            self.run_step(ABEStep.update_keys, self._run_update_keys)
-                            self.run_step(ABEStep.decrypt, self._run_decrypt)
+            for case in self.cases:
+                for measurement_type in self.measurement_types_once:  # type: ignore
+                    self.state.iteration = 0
+                    self.state.case = case
+                    self.state.measurement_type = measurement_type
 
-                            self.stop_measurements()
-                            self.tear_down()
-                            self.finish_measurements()
-                        except KeyboardInterrupt:
-                            raise
-                        except:
-                            self.output.output_error()
+                    self.run_current_state()
 
             self.reset_variables()
+
+    def run_current_state(self):
+        self.log_current_state()
+        # noinspection PyBroadException
+        try:
+            self.setup()
+            self.start_measurements()
+
+            if self.run_descriptions['setup_authsetup'] == 'always':
+                self.run_step(ABEStep.setup, self._run_setup)
+                self.run_step(ABEStep.authsetup, self._run_authsetup)
+            if self.run_descriptions['register_keygen'] == 'always':
+                self.run_step(ABEStep.register, self._run_register)
+                self.run_step(ABEStep.keygen, self._run_keygen)
+            self.run_step(ABEStep.encrypt, self._run_encrypt)
+            self.run_step(ABEStep.update_keys, self._run_update_keys)
+            self.run_step(ABEStep.decrypt, self._run_decrypt)
+
+            self.stop_measurements()
+            self.tear_down()
+            self.finish_measurements()
+        except KeyboardInterrupt:
+            raise
+        except:
+            self.output.output_error()
+
 
     def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
         if self.state.measurement_type == MeasurementType.memory:

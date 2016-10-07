@@ -13,8 +13,8 @@ from shared.model.records.update_record import UpdateRecord
 
 class UserInsuranceConnection(BaseConnection):
     def __init__(self, insurance_service: InsuranceService, serializer: BaseSerializer = None,
-                 benchmark: bool = False) -> None:
-        super().__init__(benchmark)
+                 benchmark: bool = False, identifier: str = None) -> None:
+        super().__init__(benchmark, identifier)
         self.insurance_service = insurance_service
         self.serializer = serializer
 
