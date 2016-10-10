@@ -1,9 +1,8 @@
 from experiments.authorities_amount_experiment import AuthoritiesAmountExperiment
 from experiments.base_experiment import BaseExperiment
-from experiments.enum.measurement_type import MeasurementType
-from experiments.experiments_runner import ExperimentsRunner
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
+from experiments.runner.experiments_runner import ExperimentsRunner
 
 IS_MOBILE = False
 
