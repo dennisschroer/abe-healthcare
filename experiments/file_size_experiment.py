@@ -7,7 +7,8 @@ from experiments.runner.experiment_case import ExperimentCase
 class FileSizeExperiment(BaseExperiment):
     run_descriptions = {
         'setup_authsetup': 'once',
-        'register_keygen': 'once'
+        'register_keygen': 'once',
+        'encrypt_decrypt': 'always'
     }
     generated_file_sizes = [
         1,
