@@ -4,6 +4,7 @@ from experiments.disjunctive_policy_size_experiment import DisjunctivePolicySize
 from experiments.file_size_experiment import FileSizeExperiment
 from experiments.policy_size_experiment import PolicySizeExperiment
 from experiments.runner.experiments_runner import ExperimentsRunner
+from experiments.user_key_size_experiment import UserKeySizeExperiment
 
 IS_MOBILE = False
 
@@ -12,6 +13,7 @@ if __name__ == '__main__':
     base_experiment = BaseExperiment()
     policy_size_experiment = PolicySizeExperiment()
     disjunctive_policy_size_experiment = DisjunctivePolicySizeExperiment()
+    user_key_size_experiment = UserKeySizeExperiment()
     authorities_amount_experiment = AuthoritiesAmountExperiment()
     file_size_experiment = FileSizeExperiment()
 
@@ -26,5 +28,6 @@ if __name__ == '__main__':
     runner.run_experiment(base_experiment)
     runner.run_experiment(policy_size_experiment)
     runner.run_experiment(disjunctive_policy_size_experiment)
+    runner.run_experiment(user_key_size_experiment)
     runner.run_experiment(authorities_amount_experiment)
     runner.run_experiment(file_size_experiment)
