@@ -14,9 +14,9 @@ from client.user_client import UserClient
 from experiments.enum.abe_step import ABEStep
 from experiments.enum.implementations import implementations
 from experiments.enum.measurement_type import MeasurementType
-from experiments.experiment_case import ExperimentCase
-from experiments.experiment_output import ExperimentOutput, OUTPUT_DETAILED
-from experiments.experiment_state import ExperimentState
+from experiments.runner.experiment_case import ExperimentCase
+from experiments.runner.experiment_output import ExperimentOutput, OUTPUT_DETAILED
+from experiments.runner.experiment_state import ExperimentState
 from service.central_authority import CentralAuthority
 from service.insurance_service import InsuranceService
 from shared.connection.base_connection import BaseConnection
@@ -30,7 +30,8 @@ class BaseExperiment(object):
     """Indicates how often the memory should be measured, in seconds."""
     run_descriptions = {
         'setup_authsetup': 'always',
-        'register_keygen': 'always'
+        'register_keygen': 'always',
+        'encrypt_decrypt': 'always'
     }
     """
     Description of which steps to run during the experiment. Steps can be run 'always', or only 'once'. In the latter,
@@ -350,9 +351,10 @@ class BaseExperiment(object):
             if self.run_descriptions['register_keygen'] == 'always':
                 self.run_step(ABEStep.register, self._run_register)
                 self.run_step(ABEStep.keygen, self._run_keygen)
-            self.run_step(ABEStep.encrypt, self._run_encrypt)
-            self.run_step(ABEStep.update_keys, self._run_update_keys)
-            self.run_step(ABEStep.decrypt, self._run_decrypt)
+            if self.run_descriptions['encrypt_decrypt'] == 'always':
+                self.run_step(ABEStep.encrypt, self._run_encrypt)
+                self.run_step(ABEStep.update_keys, self._run_update_keys)
+                self.run_step(ABEStep.decrypt, self._run_decrypt)
 
             self.stop_measurements()
             self.tear_down()
@@ -361,7 +363,6 @@ class BaseExperiment(object):
             raise
         except:
             self.output.output_error()
-
 
     def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
         if self.state.measurement_type == MeasurementType.memory:

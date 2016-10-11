@@ -1,0 +1,9 @@
+case/step,DAC-MACS,RD-DABE,RW-ABE,TAAC
+keygen,0.06000000000000005,,,
+register,0.0,,,
+keygen,,0.10999999999999943,,
+register,,0.0,,
+keygen,,,0.23000000000000043,
+register,,,0.010000000000000009,
+keygen,,,,0.5499999999999989
+register,,,,0.0

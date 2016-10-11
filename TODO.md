@@ -16,8 +16,9 @@
     - [X] Update keys (for TAAC)
     - [ ] Key update (ciphertext update keys, key update keys)
     
-- [ ] Update keys in file storage
+- [ ] Update keys in file storage -> are in network
 - [ ] Update keys: over all keys or just a few?
+- [ ] User secret keys in storage are about twice the size of the keygen result.
 
 ## Connections:
 - [X] ~~secret keys request (keygen) + response~~

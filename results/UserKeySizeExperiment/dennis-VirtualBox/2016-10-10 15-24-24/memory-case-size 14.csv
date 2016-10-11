@@ -1,0 +1,9 @@
+case/step,DAC-MACS min,DAC-MACS max,DAC-MACS diff,DAC-MACS amount,RD-DABE min,RD-DABE max,RD-DABE diff,RD-DABE amount,RW-ABE min,RW-ABE max,RW-ABE diff,RW-ABE amount,TAAC min,TAAC max,TAAC diff,TAAC amount
+keygen,24.01953125,24.01953125,0.0,8,,,,,,,,,,,,
+register,24.01953125,24.01953125,0.0,11,,,,,,,,,,,,
+keygen,,,,,24.59765625,24.59765625,0.0,12,,,,,,,,
+register,,,,,24.59765625,24.59765625,0.0,6,,,,,,,,
+keygen,,,,,,,,,24.6796875,24.6796875,0.0,5,,,,
+register,,,,,,,,,24.6796875,24.6796875,0.0,6,,,,
+keygen,,,,,,,,,,,,,25.73046875,25.73046875,0.0,8
+register,,,,,,,,,,,,,25.73046875,25.73046875,0.0,7
