@@ -1,0 +1,21 @@
+case/step,DAC-MACS,RD-DABE,RW-ABE,TAAC
+size 1,256,,,
+size 3,256,,,
+size 5,256,,,
+size 7,256,,,
+size 9,256,,,
+size 1,,151,,
+size 3,,151,,
+size 5,,151,,
+size 7,,151,,
+size 9,,151,,
+size 1,,,444,
+size 3,,,444,
+size 5,,,444,
+size 7,,,444,
+size 9,,,444,
+size 1,,,,151
+size 3,,,,151
+size 5,,,,151
+size 7,,,,151
+size 9,,,,151
