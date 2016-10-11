@@ -9,7 +9,7 @@ from typing import Union
 
 from experiments.enum.abe_step import ABEStep
 from experiments.enum.implementations import implementations
-from experiments.experiment_state import ExperimentState
+from experiments.runner.experiment_state import ExperimentState
 from shared.connection.base_connection import BaseConnection
 from shared.utils.measure_util import connections_to_csv, pstats_to_step_timings
 

@@ -1,7 +1,7 @@
 from typing import List
 
 from experiments.base_experiment import BaseExperiment
-from experiments.experiment_case import ExperimentCase
+from experiments.runner.experiment_case import ExperimentCase
 
 
 class PolicySizeExperiment(BaseExperiment):
