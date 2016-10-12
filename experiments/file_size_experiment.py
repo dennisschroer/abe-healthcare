@@ -8,7 +8,9 @@ class FileSizeExperiment(BaseExperiment):
     run_descriptions = {
         'setup_authsetup': 'once',
         'register_keygen': 'once',
-        'encrypt_decrypt': 'always'
+        'encrypt': 'always',
+        'update_keys': 'always',
+        'decrypt': 'always'
     }
     generated_file_sizes = [
         1,

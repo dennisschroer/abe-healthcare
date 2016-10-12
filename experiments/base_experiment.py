@@ -31,7 +31,9 @@ class BaseExperiment(object):
     run_descriptions = {
         'setup_authsetup': 'always',
         'register_keygen': 'always',
-        'encrypt_decrypt': 'always'
+        'encrypt': 'always',
+        'update_keys': 'always',
+        'decrypt': 'always'
     }
     """
     Description of which steps to run during the experiment. Steps can be run 'always', or only 'once'. In the latter,
@@ -318,6 +320,12 @@ class BaseExperiment(object):
             if self.run_descriptions['register_keygen'] == 'once':
                 self._run_register()
                 self._run_keygen()
+            if self.run_descriptions['encrypt'] == 'once':
+                self._run_encrypt()
+            if self.run_descriptions['update_keys'] == 'once':
+                self._run_update_keys()
+            if self.run_descriptions['decrypt'] == 'once':
+                self._run_decrypt()
 
             for i in range(0, self.measurement_repeat):
                 for case in self.cases:
@@ -351,9 +359,11 @@ class BaseExperiment(object):
             if self.run_descriptions['register_keygen'] == 'always':
                 self.run_step(ABEStep.register, self._run_register)
                 self.run_step(ABEStep.keygen, self._run_keygen)
-            if self.run_descriptions['encrypt_decrypt'] == 'always':
+            if self.run_descriptions['encrypt'] == 'always':
                 self.run_step(ABEStep.encrypt, self._run_encrypt)
+            if self.run_descriptions['update_keys'] == 'always':
                 self.run_step(ABEStep.update_keys, self._run_update_keys)
+            if self.run_descriptions['decrypt'] == 'always':
                 self.run_step(ABEStep.decrypt, self._run_decrypt)
 
             self.stop_measurements()

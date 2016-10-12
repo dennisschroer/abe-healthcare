@@ -9,7 +9,9 @@ class UserKeySizeExperiment(BaseExperiment):
     run_descriptions = {
         'setup_authsetup': 'once',
         'register_keygen': 'always',
-        'encrypt_decrypt': 'never',
+        'encrypt': 'never',
+        'update_keys': 'never',
+        'decrypt': 'never'
     }
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
