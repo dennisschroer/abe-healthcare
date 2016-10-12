@@ -155,7 +155,13 @@ class BaseExperiment(object):
         """
         if OUTPUT_DETAILED and not path.exists(self.output.experiment_case_iteration_results_directory()):
             os.makedirs(self.output.experiment_case_iteration_results_directory())
+        self.reset_user_clients()
         self.clear_insurance_storage()
+
+    def reset_user_clients(self):
+        for user_client in self.user_clients:
+            user_client.monitor_network = self.state.measurement_type == MeasurementType.storage_and_network
+            user_client.reset_connections()
 
     def tear_down(self) -> None:
         """
