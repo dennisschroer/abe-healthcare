@@ -5,11 +5,14 @@ from experiments.runner.experiment_case import ExperimentCase
 
 
 class PolicySizeExperiment(BaseExperiment):
+    generated_file_amount = 1
     run_descriptions = {
         'setup_authsetup': 'once',
         'register_keygen': 'once',
         'encrypt': 'always',
         'update_keys': 'always',
+        'data_update': 'never',
+        'policy_update': 'never',
         'decrypt': 'always'
     }
 

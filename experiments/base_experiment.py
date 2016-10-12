@@ -33,12 +33,16 @@ class BaseExperiment(object):
         'register_keygen': 'always',
         'encrypt': 'always',
         'update_keys': 'always',
+        'data_update': 'always',
+        'policy_update': 'always',
         'decrypt': 'always'
     }
     """
-    Description of which steps to run during the experiment. Steps can be run 'always', or only 'once'. In the latter,
-    the step is run for each implementation once, prior to all experiments. This can be helpful if only the encryption
-    and decryption is relevant.
+    Description of which steps to run during the experiment. Values can be one of either:
+    - 'always': This step is run always, in each iteration for each case
+    - 'once': The step is run for each implementation once, prior to all experiments. This can be helpful if only
+    the encryption and decryption is relevant.
+    - 'never': This step is never executed.
     """
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {
@@ -77,7 +81,7 @@ class BaseExperiment(object):
     """Description of the users to use in this experiment."""
     generated_file_sizes = [10 * 1024 * 1024]  # type: List[int]
     """List of sizes of files to randomly generate as input files before the experiment."""
-    generated_file_amount = 1
+    generated_file_amount = 2
     """Amount of random files to generate for each size."""
     encrypted_file_size = generated_file_sizes[0]
     """Size of the file to encrypt and decrypt."""
@@ -87,6 +91,12 @@ class BaseExperiment(object):
     """The read policy to use when encrypting."""
     write_policy = read_policy
     """The write policy to use when encrypting."""
+    updated_read_policy = '(SIX@AUTHORITY0 OR ONE@AUTHORITY1)' \
+                          ' AND (SEVEN@AUTHORITY0 OR TWO@AUTHORITY1)' \
+                          ' AND (EIGHT@AUTHORITY0 OR THREE@AUTHORITY1)'
+    """The read policy to use when updating the policy"""
+    updated_write_policy = updated_read_policy
+    """The write policy to use when updating the policy"""
     measurement_types = [
         MeasurementType.timings,
         MeasurementType.cpu,
@@ -146,8 +156,13 @@ class BaseExperiment(object):
 
     @property
     def file_name(self) -> str:
-        """File name of the file to encrypt. Is set during the experiment"""
+        """File name of the file to encrypt."""
         return join(self.get_experiment_input_path(), '%i-0' % self.encrypted_file_size)
+
+    @property
+    def update_file_name(self) -> str:
+        """File name of the file containing the data to use when updating the data."""
+        return join(self.get_experiment_input_path(), '%i-1' % self.encrypted_file_size)
 
     def setup(self) -> None:
         """
@@ -271,9 +286,9 @@ class BaseExperiment(object):
             storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
-        self.setup_insurance()
+        self._setup_insurance()
 
-    def setup_insurance(self) -> None:
+    def _setup_insurance(self) -> None:
         # Create insurance service
         self.insurance = InsuranceService(self.state.implementation.serializer,
                                           self.central_authority,
@@ -312,6 +327,13 @@ class BaseExperiment(object):
     def _run_update_keys(self) -> None:
         for authority in self.attribute_authorities:
             authority.update_keys(1)
+
+    def _run_data_update(self):
+        with open(self.update_file_name, 'rb') as update_file:
+            self.user_clients[1].update_file(self.location, update_file.read())
+
+    def _run_policy_update(self):
+        self.user_clients[0].update_policy_file(self.location, self.updated_read_policy, self.updated_write_policy, 1)
 
     def _run_decrypt(self) -> None:
         self.user_clients[1].decrypt_file(self.location)
@@ -372,6 +394,10 @@ class BaseExperiment(object):
                 self.run_step(ABEStep.encrypt, self._run_encrypt)
             if self.run_descriptions['update_keys'] == 'always':
                 self.run_step(ABEStep.update_keys, self._run_update_keys)
+            if self.run_descriptions['data_update'] == 'always':
+                self.run_step(ABEStep.data_update, self._run_data_update)
+            if self.run_descriptions['policy_update'] == 'always':
+                self.run_step(ABEStep.policy_update, self._run_policy_update)
             if self.run_descriptions['decrypt'] == 'always':
                 self.run_step(ABEStep.decrypt, self._run_decrypt)
 
