@@ -77,6 +77,8 @@ class BaseExperiment(object):
     """Description of the users to use in this experiment."""
     generated_file_sizes = [10 * 1024 * 1024]  # type: List[int]
     """List of sizes of files to randomly generate as input files before the experiment."""
+    generated_file_amount = 1
+    """Amount of random files to generate for each size."""
     encrypted_file_size = generated_file_sizes[0]
     """Size of the file to encrypt and decrypt."""
     read_policy = '(ONE@AUTHORITY0 OR SIX@AUTHORITY1)' \
@@ -140,7 +142,7 @@ class BaseExperiment(object):
         file_generator = RandomFileGenerator()
         input_path = self.get_experiment_input_path()
         for size in self.generated_file_sizes:
-            file_generator.generate(size, 1, input_path, skip_if_exists=True, verbose=True)
+            file_generator.generate(size, self.generated_file_amount, input_path, skip_if_exists=True, verbose=True)
 
     @property
     def file_name(self) -> str:
