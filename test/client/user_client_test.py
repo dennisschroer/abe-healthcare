@@ -13,7 +13,6 @@ from shared.model.user import User
 
 
 class UserClientTestCase(unittest.TestCase):
-
     access_policy = '(TEST@TEST OR TEST2@TEST) AND (TEST3@TEST OR TEST4@TEST)'
 
     def setUpWithImplementation(self, implementation: BaseImplementation):
@@ -50,7 +49,8 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                   {'test': 'info'}, 1)
         self.assertIsNotNone(create_record.info)
         self.assertIsNotNone(create_record.write_policy)
         self.assertIsNotNone(create_record.read_policy)
@@ -84,7 +84,8 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                   {'test': 'info'}, 1)
         update_record = self.subject.update_record(create_record, b'Goodbye world')
         self.assertIsNotNone(update_record.data)
         self.assertIsNotNone(update_record.signature)
@@ -115,7 +116,8 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                   {'test': 'info'}, 1)
         update_record = self.subject.update_policy(create_record, 'TEST3@TEST', 'TEST4@TEST', 1)
 
         self.assertIsNotNone(update_record.info)
@@ -140,27 +142,32 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual('TEST3@TEST', create_record.read_policy)
         self.assertEqual('TEST4@TEST', create_record.write_policy)
 
+        # Update the owner key, so the subject has to use attribute keys to decrypt
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record.owner_public_key, self.subject.user.owner_key_pair.publickey())
+
         # Attempt to decrypt
         info, message = self.subject.decrypt_record(create_record)
         self.assertEqual(message, b'Hello world')
 
-    def test_update_policy_insufficient_policy_dacmacs13(self):
-        self._test_update_policy_insufficient_policy(DACMACS13Implementation())
+    def test_update_policy_to_insufficient_policy_dacmacs13(self):
+        self._test_update_policy_to_insufficient_policy(DACMACS13Implementation())
 
-    def test_update_policy_insufficient_policy_rd13(self):
-        self._test_update_policy_insufficient_policy(RD13Implementation())
+    def test_update_policy_to_insufficient_policy_rd13(self):
+        self._test_update_policy_to_insufficient_policy(RD13Implementation())
 
-    def test_update_policy_insufficient_policy_rw15(self):
-        self._test_update_policy_insufficient_policy(RW15Implementation())
+    def test_update_policy_to_insufficient_policy_rw15(self):
+        self._test_update_policy_to_insufficient_policy(RW15Implementation())
 
-    def test_update_policy_insufficient_policy_taac12(self):
-        self._test_update_policy_insufficient_policy(TAAC12Implementation())
+    def test_update_policy_to_insufficient_policy_taac12(self):
+        self._test_update_policy_to_insufficient_policy(TAAC12Implementation())
 
-    def _test_update_policy_insufficient_policy(self, implementation):
+    def _test_update_policy_to_insufficient_policy(self, implementation):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                   {'test': 'info'}, 1)
 
         # Now update to policies which the user can not satisfy
         update_record = self.subject.update_policy(create_record, 'TEST2@TEST', 'TEST2@TEST', 1)
@@ -171,6 +178,10 @@ class UserClientTestCase(unittest.TestCase):
         self.assertEqual('TEST2@TEST', create_record.read_policy)
         self.assertEqual('TEST2@TEST', create_record.write_policy)
 
+        # Update the owner key, so the subject has to use attribute keys to decrypt
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record.owner_public_key, self.subject.user.owner_key_pair.publickey())
+
         # Attempt to decrypt
         try:
             self.subject.decrypt_record(create_record)
@@ -178,23 +189,24 @@ class UserClientTestCase(unittest.TestCase):
         except PolicyNotSatisfiedException:
             pass
 
-    def test_update_policy_invalid_time_period_dacmacs13(self):
-        self._test_update_policy_invalid_time_period(DACMACS13Implementation())
+    def test_update_policy_to_invalid_time_period_dacmacs13(self):
+        self._test_update_policy_to_invalid_time_period(DACMACS13Implementation())
 
-    def test_update_policy_invalid_time_period_rd13(self):
-        self._test_update_policy_invalid_time_period(RD13Implementation())
+    def test_update_policy_to_invalid_time_period_rd13(self):
+        self._test_update_policy_to_invalid_time_period(RD13Implementation())
 
-    def test_update_policy_invalid_time_period_rw15(self):
-        self._test_update_policy_invalid_time_period(RW15Implementation())
+    def test_update_policy_to_invalid_time_period_rw15(self):
+        self._test_update_policy_to_invalid_time_period(RW15Implementation())
 
-    def test_update_policy_invalid_time_period_taac12(self):
-        self._test_update_policy_invalid_time_period(TAAC12Implementation())
+    def test_update_policy_to_invalid_time_period_taac12(self):
+        self._test_update_policy_to_invalid_time_period(TAAC12Implementation())
 
-    def _test_update_policy_invalid_time_period(self, implementation):
+    def _test_update_policy_to_invalid_time_period(self, implementation):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                   {'test': 'info'}, 1)
 
         # Now update to policies which the user can not satisfy
         update_record = self.subject.update_policy(create_record, create_record.read_policy, create_record.write_policy,
@@ -205,6 +217,10 @@ class UserClientTestCase(unittest.TestCase):
 
         self.assertEqual(self.access_policy, create_record.read_policy)
         self.assertEqual(self.access_policy, create_record.write_policy)
+
+        # Update the owner key, so the subject has to use attribute keys to decrypt
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record.owner_public_key, self.subject.user.owner_key_pair.publickey())
 
         # Attempt to decrypt
         try:
@@ -229,31 +245,62 @@ class UserClientTestCase(unittest.TestCase):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_valid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'}, 1)
+        create_record_valid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                         {'test': 'info'}, 1)
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record_valid.owner_public_key, self.subject.user.owner_key_pair.publickey())
 
         # Attempt to decrypt
         info, message = self.subject.decrypt_record(create_record_valid)
         self.assertEqual(message, b'Hello world')
         self.assertEqual(info, {'test': 'info'})
 
-    def test_decrypt_record_insufficient_attributes_dacmacs13(self):
-        self._test_decrypt_record_insufficient_attributes(DACMACS13Implementation())
+    def test_decrypt_record_with_owner_key_dacmacs13(self):
+        self._test_decrypt_record_with_owner_key(DACMACS13Implementation())
 
-    def test_decrypt_record_insufficient_attributes_rd13(self):
-        self._test_decrypt_record_insufficient_attributes(RD13Implementation())
+    def test_decrypt_record_with_owner_key_rd13(self):
+        self._test_decrypt_record_with_owner_key(RD13Implementation())
 
-    def test_decrypt_record_insufficient_attributes_rw15(self):
-        self._test_decrypt_record_insufficient_attributes(RW15Implementation())
+    def test_decrypt_record_with_owner_key_rw15(self):
+        self._test_decrypt_record_with_owner_key(RW15Implementation())
 
-    def test_decrypt_record_insufficient_attributes_taac12(self):
-        self._test_decrypt_record_insufficient_attributes(TAAC12Implementation())
+    def test_decrypt_record_with_owner_key_taac12(self):
+        self._test_decrypt_record_with_owner_key(TAAC12Implementation())
 
-    def _test_decrypt_record_insufficient_attributes(self, implementation):
+    def _test_decrypt_record_with_owner_key(self, implementation):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_invalid = self.subject.create_record('TEST2@TEST', self.access_policy, b'Hello world', {'test': 'info'},
-                                                           1)
+        # We use a policy the subject does not have enough attributes for
+        create_record_valid = self.subject.create_record('TEST2@TEST', self.access_policy, b'Hello world',
+                                                         {'test': 'info'}, 1)
+        self.assertEqual(create_record_valid.owner_public_key, self.subject.user.owner_key_pair.publickey())
+
+        # Attempt to decrypt
+        info, message = self.subject.decrypt_record(create_record_valid)
+        self.assertEqual(message, b'Hello world')
+        self.assertEqual(info, {'test': 'info'})
+
+    def test_decrypt_record_with_insufficient_attributes_dacmacs13(self):
+        self._test_decrypt_record_with_insufficient_attributes(DACMACS13Implementation())
+
+    def test_decrypt_record_with_insufficient_attributes_rd13(self):
+        self._test_decrypt_record_with_insufficient_attributes(RD13Implementation())
+
+    def test_decrypt_record_with_insufficient_attributes_rw15(self):
+        self._test_decrypt_record_with_insufficient_attributes(RW15Implementation())
+
+    def test_decrypt_record_with_insufficient_attributes_taac12(self):
+        self._test_decrypt_record_with_insufficient_attributes(TAAC12Implementation())
+
+    def _test_decrypt_record_with_insufficient_attributes(self, implementation):
+        self.setUpWithImplementation(implementation)
+
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        create_record_invalid = self.subject.create_record('TEST2@TEST', self.access_policy, b'Hello world',
+                                                           {'test': 'info'}, 1)
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record_invalid.owner_public_key, self.subject.user.owner_key_pair.publickey())
 
         # Attempt to decrypt
         try:
@@ -262,24 +309,26 @@ class UserClientTestCase(unittest.TestCase):
         except PolicyNotSatisfiedException:
             pass
 
-    def test_decrypt_record_invalid_time_period_dacmacs13(self):
-        self._test_decrypt_record_invalid_time_period(DACMACS13Implementation())
+    def test_decrypt_record_invalid_with_time_period_dacmacs13(self):
+        self._test_decrypt_record_with_invalid_time_period(DACMACS13Implementation())
 
-    def test_decrypt_record_invalid_time_period_rd13(self):
-        self._test_decrypt_record_invalid_time_period(RD13Implementation())
+    def test_decrypt_record_invalid_with_time_period_rd13(self):
+        self._test_decrypt_record_with_invalid_time_period(RD13Implementation())
 
-    def test_decrypt_record_invalid_time_period_rw15(self):
-        self._test_decrypt_record_invalid_time_period(RW15Implementation())
+    def test_decrypt_record_invalid_with_time_period_rw15(self):
+        self._test_decrypt_record_with_invalid_time_period(RW15Implementation())
 
-    def test_decrypt_record_invalid_time_period_taac12(self):
-        self._test_decrypt_record_invalid_time_period(TAAC12Implementation())
+    def test_decrypt_record_invalid_with_time_period_taac12(self):
+        self._test_decrypt_record_with_invalid_time_period(TAAC12Implementation())
 
-    def _test_decrypt_record_invalid_time_period(self, implementation):
+    def _test_decrypt_record_with_invalid_time_period(self, implementation):
         self.setUpWithImplementation(implementation)
 
         self.subject.user.owner_key_pair = self.subject.create_owner_key()
-        create_record_invalid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world', {'test': 'info'},
-                                                           2)
+        create_record_invalid = self.subject.create_record(self.access_policy, self.access_policy, b'Hello world',
+                                                           {'test': 'info'}, 2)
+        self.subject.user.owner_key_pair = self.subject.create_owner_key()
+        self.assertNotEqual(create_record_invalid.owner_public_key, self.subject.user.owner_key_pair.publickey())
 
         # Attempt to decrypt
         try:

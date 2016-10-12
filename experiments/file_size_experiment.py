@@ -5,10 +5,15 @@ from experiments.runner.experiment_case import ExperimentCase
 
 
 class FileSizeExperiment(BaseExperiment):
+    generated_file_amount = 1
     run_descriptions = {
         'setup_authsetup': 'once',
         'register_keygen': 'once',
-        'encrypt_decrypt': 'always'
+        'encrypt': 'always',
+        'update_keys': 'always',
+        'data_update': 'never',
+        'policy_update': 'never',
+        'decrypt': 'always'
     }
     generated_file_sizes = [
         1,

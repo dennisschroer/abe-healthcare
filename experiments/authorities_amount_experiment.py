@@ -7,6 +7,7 @@ from experiments.runner.experiment_case import ExperimentCase
 
 
 class AuthoritiesAmountExperiment(BaseExperiment):
+    generated_file_amount = 1
     attribute_authority_descriptions = []  # type: List[Dict[str, Any]]
     user_descriptions = [  # type: List[Dict[str, Any]]
         {
