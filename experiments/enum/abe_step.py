@@ -9,3 +9,5 @@ class ABEStep(Enum):
     encrypt = 5
     update_keys = 7
     decrypt = 8
+    data_update = 9
+    policy_update = 10
