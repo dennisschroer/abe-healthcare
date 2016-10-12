@@ -76,6 +76,10 @@ class UserClient(object):
                                                                  identifier=self.user.gid)
         return self._insurance_connection
 
+    def reset_connections(self):
+        self._insurance_connection = None
+        self._authority_connections = None
+
     def authorities_public_keys(self, time_period):
         # Retrieve authority public keys
         return self.implementation.merge_public_keys(
