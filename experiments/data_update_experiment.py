@@ -1,9 +1,7 @@
 import os
-from typing import List
-
-from os.path import join
-
 from os import path
+from os.path import join
+from typing import List
 
 from experiments.base_experiment import BaseExperiment
 from experiments.enum.abe_step import ABEStep
@@ -20,6 +18,10 @@ class DataUpdateExperiment(BaseExperiment):
         'decrypt': 'never'
     }
     generated_file_amount = 2
+    updated_read_policy = '(SIX@AUTHORITY0 OR ONE@AUTHORITY1)' \
+                          ' AND (SEVEN@AUTHORITY0 OR TWO@AUTHORITY1)' \
+                          ' AND (EIGHT@AUTHORITY0 OR THREE@AUTHORITY1)'
+    updated_write_policy = updated_read_policy
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
         super().__init__(cases)
@@ -48,6 +50,7 @@ class DataUpdateExperiment(BaseExperiment):
             self.start_measurements()
 
             self.run_step(ABEStep.data_update, self._run_data_update)
+            self.run_step(ABEStep.policy_update, self._run_policy_update)
 
             self.stop_measurements()
             self.tear_down()
@@ -57,6 +60,4 @@ class DataUpdateExperiment(BaseExperiment):
         except:
             self.output.output_error()
 
-    def _run_data_update(self):
-        with open(self.update_file_name, 'rb') as update_file:
-            self.user_clients[1].update_file(self.location, update_file.read())
+
