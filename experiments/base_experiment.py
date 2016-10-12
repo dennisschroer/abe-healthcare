@@ -333,6 +333,7 @@ class BaseExperiment(object):
             self.user_clients[1].update_file(self.location, update_file.read())
 
     def _run_policy_update(self):
+        # Performed by the owner, as only the owner is allowed to do this
         self.user_clients[0].update_policy_file(self.location, self.updated_read_policy, self.updated_write_policy, 1)
 
     def _run_decrypt(self) -> None:
