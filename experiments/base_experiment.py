@@ -155,9 +155,10 @@ class BaseExperiment(object):
         self.clear_insurance_storage()
 
     def reset_user_clients(self):
-        for user_client in self.user_clients:
-            user_client.monitor_network = self.state.measurement_type == MeasurementType.storage_and_network
-            user_client.reset_connections()
+        if self.user_clients is not None:
+            for user_client in self.user_clients:
+                user_client.monitor_network = self.state.measurement_type == MeasurementType.storage_and_network
+                user_client.reset_connections()
 
     def tear_down(self) -> None:
         """
