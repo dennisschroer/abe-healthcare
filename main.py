@@ -20,7 +20,12 @@ if __name__ == '__main__':
     if IS_MOBILE:
         base_experiment.run_descriptions = {
             'setup_authsetup': 'once',
-            'register_keygen': 'once'
+            'register_keygen': 'once',
+            'encrypt': 'always',
+            'update_keys': 'always',
+            'data_update': 'always',
+            'policy_update': 'always',
+            'decrypt': 'always'
         }
         # Storage and network are skipped, as they are just the same as on notebook
         base_experiment.measurement_types_once = []
@@ -29,5 +34,4 @@ if __name__ == '__main__':
     runner.run_experiment(policy_size_experiment)
     runner.run_experiment(disjunctive_policy_size_experiment)
     runner.run_experiment(user_key_size_experiment)
-    # runner.run_experiment(authorities_amount_experiment)
     runner.run_experiment(file_size_experiment)
