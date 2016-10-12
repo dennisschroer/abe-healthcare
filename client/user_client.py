@@ -87,7 +87,7 @@ class UserClient(object):
                 name: authority.request_public_keys(time_period)
                 for name, authority
                 in self.authority_connections.items()
-            }
+                }
         )
 
     def encrypt_file(self, filename: str, read_policy: str = None, write_policy: str = None,
@@ -205,16 +205,32 @@ class UserClient(object):
         """
         Decrypt a data record if possible.
         :param record: The data record to decrypt
-        :param decryption_keys: Decryption keys required to decrypt the encrypted read key
         :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
         :return: info, data
         """
         ske = self.implementation.symmetric_key_scheme
-        # Check if we need to fetch update keys first
-        decryption_keys = self._decryption_keys_for_read_key(record)
-        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key, ske.ske_key_size())
-        return pickle.loads(ske.ske_decrypt(record.info, symmetric_key)), ske.ske_decrypt(record.data, symmetric_key)
+        decryption_key = self._retrieve_decryption_key(record)
+        return pickle.loads(ske.ske_decrypt(record.info, decryption_key)), ske.ske_decrypt(record.data, decryption_key)
+
+    def _retrieve_decryption_key(self, record: DataRecord):
+        """
+        Retrieve the symmetric decryption key from the given date record, if possible.
+        The key is retrieved by using the owner key if possible, otherwise ABE is used to retrieve the symmetric key.
+        :param record: The DataRecord to retrieve the symmetric decryption key from.
+        :return: The symmetric decryption key.
+        :raise exceptions.policy_not_satisfied_exception.PolicyNotSatisfiedException
+        """
+        owner_keys = self.find_owner_keys(record.owner_public_key)
+        if owner_keys is not None:
+            pke = self.implementation.public_key_scheme
+            decryption_key = pke.decrypt(record.encryption_key_owner, owner_keys)
+        else:
+            ske = self.implementation.symmetric_key_scheme
+            # Check if we need to fetch update keys first
+            abe_decryption_keys = self._decryption_keys_for_read_key(record)
+            key = self._decrypt_abe(record.encryption_key_read, abe_decryption_keys)
+            decryption_key = extract_key_from_group_element(self.global_parameters.group, key, ske.ske_key_size())
+        return decryption_key
 
     def update_file(self, location: str, message: bytes = b'updated content'):
         """
@@ -242,10 +258,7 @@ class UserClient(object):
         pke = self.implementation.public_key_scheme
         ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
-        decryption_keys = self._decryption_keys_for_read_key(record)
-        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                                       ske.ske_key_size())
+        decryption_key = self._retrieve_decryption_key(record)
         # Retrieve the write secret key
         decryption_keys = self.implementation.decryption_keys(self.global_parameters,
                                                               self.authority_connections,
@@ -258,7 +271,7 @@ class UserClient(object):
                                                     self.user.gid, record.write_private_key,
                                                     self.user.registration_data))
         # Encrypt the updated data
-        data = ske.ske_encrypt(message, symmetric_key)
+        data = ske.ske_encrypt(message, decryption_key)
         # Sign the data
         signature = pke.sign(write_secret_key, data)
         return UpdateRecord(data, signature)
@@ -285,10 +298,7 @@ class UserClient(object):
         pke = self.implementation.public_key_scheme
         ske = self.implementation.symmetric_key_scheme
         # Retrieve the encryption key
-        decryption_keys = self._decryption_keys_for_read_key(record)
-        key = self._decrypt_abe(record.encryption_key_read, decryption_keys)
-        symmetric_key = extract_key_from_group_element(self.global_parameters.group, key,
-                                                       ske.ske_key_size())
+        decryption_key = self._retrieve_decryption_key(record)
         # Find the correct owner key
         owner_key_pair = self.find_owner_keys(record.owner_public_key)
         # Generate new encryption keys
@@ -311,9 +321,9 @@ class UserClient(object):
                                                                       write_key_pair.exportKey('DER'), write_policy,
                                                                       time_period),
             time_period=record.time_period,
-            info=ske.ske_encrypt(ske.ske_decrypt(record.info, symmetric_key),
+            info=ske.ske_encrypt(ske.ske_decrypt(record.info, decryption_key),
                                  new_symmetric_key),
-            data=ske.ske_encrypt(ske.ske_decrypt(record.data, symmetric_key),
+            data=ske.ske_encrypt(ske.ske_decrypt(record.data, decryption_key),
                                  new_symmetric_key),
             signature=pke.sign(owner_key_pair, pickle.dumps((read_policy, write_policy, time_period)))
         )
@@ -489,4 +499,7 @@ class UserClient(object):
         :return: The key pair beloning to the public key
         """
         # For now there is only one owner pair -> return that one
-        return self.get_owner_key()
+        key_pair = self.get_owner_key()
+        if public_key == key_pair.publickey():
+            return key_pair
+        return None
