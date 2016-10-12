@@ -16,9 +16,10 @@
     - [X] Update keys (for TAAC)
     - [ ] Key update (ciphertext update keys, key update keys)
     
-- [ ] Update keys in file storage -> are in network
-- [ ] Update keys: over all keys or just a few?
-- [ ] User secret keys in storage are about twice the size of the keygen result.
+- [X] Update keys in file storage -> are in network
+- [X] Update keys: over all keys or just a few? -> all keys
+- [X] User secret keys in storage are about twice the size of the keygen result. -> There are two authorities :P
+- [ ] CPU times is not over the same code, but also includes file io. That is why it is higher than profile times
 
 ## Connections:
 - [X] ~~secret keys request (keygen) + response~~
