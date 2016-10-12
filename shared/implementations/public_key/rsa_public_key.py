@@ -37,6 +37,16 @@ class RSAPublicKey(BasePublicKey):
         encryption = PKCS1_OAEP.new(key)
         return encryption.encrypt(message)
 
+    def decrypt(self, ciphertext: bytes, key: Any) -> bytes:
+        """
+        Decrypt a ciphertext using public key encryption.
+        :param ciphertext: The ciphertext to decrypt.
+        :param key: The private key to decrypt with.
+        :return: The original message.
+        """
+        encryption = PKCS1_OAEP.new(key)
+        return encryption.decrypt(ciphertext)
+
     def sign(self, secret_key: Any, data: bytes) -> bytes:
         """
         Sign the data using the secret key

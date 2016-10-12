@@ -5,11 +5,16 @@ from experiments.runner.experiment_case import ExperimentCase
 
 
 class UserKeySizeExperiment(BaseExperiment):
+    generated_file_amount = 0
     measurement_repeat = 1
     run_descriptions = {
         'setup_authsetup': 'once',
         'register_keygen': 'always',
-        'encrypt_decrypt': 'never',
+        'encrypt': 'never',
+        'update_keys': 'never',
+        'data_update': 'never',
+        'policy_update': 'never',
+        'decrypt': 'never'
     }
     attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
         {

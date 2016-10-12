@@ -29,5 +29,5 @@ if __name__ == '__main__':
     runner.run_experiment(policy_size_experiment)
     runner.run_experiment(disjunctive_policy_size_experiment)
     runner.run_experiment(user_key_size_experiment)
-    runner.run_experiment(authorities_amount_experiment)
+    # runner.run_experiment(authorities_amount_experiment)
     runner.run_experiment(file_size_experiment)
