@@ -35,7 +35,7 @@ class ExperimentsRunner(object):
     def log_experiment_start(self):
         try:
             import subprocess
-            label = subprocess.check_output(["git", "describe"])
+            label = subprocess.check_output(["git", "describe", "--tags"])
             logging.info("Current version: %s", label.decode('UTF-8'))
         except:
             pass
