@@ -22,6 +22,15 @@ class BasePublicKey(object):
         """
         raise NotImplementedError()
 
+    def decrypt(self, ciphertext, key):
+        """
+        Decrypt a ciphertext using public key encryption.
+        :param ciphertext: The ciphertext to decrypt.
+        :param key: The private key to decrypt with.
+        :return: The original message.
+        """
+        raise NotImplementedError()
+
     def sign(self, secret_key: Any, data: bytes) -> bytes:
         """
         Sign the data using the secret key
@@ -43,3 +52,5 @@ class BasePublicKey(object):
 
     def export_key(self, owner_public_key):
         raise NotImplementedError()
+
+
