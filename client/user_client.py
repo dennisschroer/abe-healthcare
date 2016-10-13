@@ -29,11 +29,11 @@ DEFAULT_STORAGE_PATH = 'data/output'
 
 
 class UserClient(object):
-    def __init__(self, user: User, insurance: InsuranceService,
+    def __init__(self, user: User,
                  implementation: BaseImplementation, verbose=False, storage_path=None, monitor_network=False) -> None:
         self.storage_path = DEFAULT_STORAGE_PATH if storage_path is None else storage_path
         self.user = user
-        self.insurance = insurance
+        self.insurance = None  # type: InsuranceService
         self.implementation = implementation
         self.verbose = verbose
         self.monitor_network = monitor_network
@@ -405,7 +405,8 @@ class UserClient(object):
         """
         self.insurance_connection.send_policy_update_record(location, policy_update_record)
 
-    def register(self):
+    def register(self, insurance: InsuranceService):
+        self.insurance = insurance
         registration_data = self.insurance_connection.send_register_user(self.user.gid)
         self.user.registration_data = registration_data
         self.save_registration_data()

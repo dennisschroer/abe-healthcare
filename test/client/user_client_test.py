@@ -29,8 +29,8 @@ class UserClientTestCase(unittest.TestCase):
         insurance_service.add_authority(attribute_authority)
         user = User('bob', implementation)
 
-        self.subject = UserClient(user, insurance_service, implementation)
-        self.subject.register()
+        self.subject = UserClient(user, implementation)
+        self.subject.register(insurance_service)
         self.subject.request_secret_keys(attribute_authority.name, user_attributes, 1)
 
     def test_create_record_dacmacs13(self):
