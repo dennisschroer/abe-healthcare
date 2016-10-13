@@ -45,7 +45,7 @@ class BaseExperiment(object):
     the encryption and decryption is relevant.
     - 'never': This step is never executed.
     """
-    attribute_authority_descriptions = [  # type: List[Dict[str, Any]]
+    attribute_authority_descriptions = [
         {
             'name': 'AUTHORITY0',
             'attributes': list(map(lambda a: a + '@AUTHORITY0', [
@@ -58,7 +58,7 @@ class BaseExperiment(object):
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
         }
-    ]
+    ]  # type: List[Dict[str, Any]]
     """
     Description of the attribute authorities to use in this experiment.
     Is a list of dicts, where each dict contains at least a name and a list of attributes.
@@ -295,7 +295,7 @@ class BaseExperiment(object):
             for description
             in self.attribute_authority_descriptions
             if description['name'] == authority.name
-        )
+        )  # type: List[str]
         authority.setup(self.central_authority, attributes, 1)
         self.insurance.add_authority(authority)
         authority.save_attribute_keys()
@@ -414,7 +414,7 @@ class BaseExperiment(object):
         except:
             self.output.output_error()
 
-    def run_step(self, abe_step: ABEStep, method: Callable[[], None], args: List[Any] = list()):
+    def run_step(self, abe_step: ABEStep, method: Callable[..., None], args: List[Any] = list()):
         if self.state.measurement_type == MeasurementType.memory:
             u = memory_usage((method, args, {}), interval=self.memory_measure_interval)
             self.memory_usages.append((abe_step.name, [min(u), max(u), max(u) - min(u), len(u)]))
