@@ -29,9 +29,11 @@ if __name__ == '__main__':
         }
         # Storage and network are skipped, as they are just the same as on notebook
         base_experiment.measurement_types_once = []
+        runner.run_experiment(base_experiment)
 
-    runner.run_experiment(base_experiment)
-    runner.run_experiment(policy_size_experiment)
-    runner.run_experiment(disjunctive_policy_size_experiment)
-    runner.run_experiment(user_key_size_experiment)
-    runner.run_experiment(file_size_experiment)
+    else:
+        runner.run_experiment(base_experiment)
+        runner.run_experiment(policy_size_experiment)
+        runner.run_experiment(disjunctive_policy_size_experiment)
+        runner.run_experiment(user_key_size_experiment)
+        runner.run_experiment(file_size_experiment)

@@ -174,10 +174,6 @@ class BaseExperiment(object):
         self.reset_user_clients()
         self.clear_insurance_storage()
 
-        self.create_central_authority()
-        self.create_attribute_authorities(self.state.implementation)
-        self.create_user_clients(self.state.implementation)
-
     def reset_user_clients(self):
         if self.user_clients is not None:
             for user_client in self.user_clients:
@@ -345,10 +341,13 @@ class BaseExperiment(object):
             self.setup_implementation_directories()
 
             if self.run_descriptions['setup_authsetup'] == 'once':
+                self.create_central_authority()
+                self.create_attribute_authorities(self.state.implementation)
                 self._run_setup()
                 for authority in self.attribute_authorities:
                     self._run_authsetup(authority)
             if self.run_descriptions['register_keygen'] == 'once':
+                self.create_user_clients(self.state.implementation)
                 for user_client in self.user_clients:
                     self._run_register(user_client)
                     self._run_keygen(user_client)
@@ -387,10 +386,13 @@ class BaseExperiment(object):
             self.start_measurements()
 
             if self.run_descriptions['setup_authsetup'] == 'always':
+                self.create_central_authority()
+                self.create_attribute_authorities(self.state.implementation)
                 self.run_step(ABEStep.setup, self._run_setup)
                 for authority in self.attribute_authorities:
                     self.run_step(ABEStep.authsetup, self._run_authsetup, [authority])
             if self.run_descriptions['register_keygen'] == 'always':
+                self.create_user_clients(self.state.implementation)
                 for user_client in self.user_clients:
                     self.run_step(ABEStep.register, self._run_register, [user_client])
                     self.run_step(ABEStep.keygen, self._run_keygen, [user_client])
