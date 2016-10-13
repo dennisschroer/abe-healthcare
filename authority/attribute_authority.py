@@ -32,7 +32,7 @@ class AttributeAuthority(object):
         if not os.path.exists(self.storage_path):
             os.makedirs(self.storage_path)
 
-    def setup(self, central_authority: CentralAuthority, attributes: list, time_period: int):
+    def setup(self, central_authority: CentralAuthority, attributes: List[str], time_period: int):
         """
         Setup this attribute authority.
         :param central_authority: The central authority to get the global parameters from.
