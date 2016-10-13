@@ -7,7 +7,6 @@ from os import path, listdir, makedirs
 from typing import List, Any, Dict, Tuple
 from typing import Union
 
-from experiments.enum.abe_step import ABEStep
 from experiments.enum.implementations import implementations
 from experiments.runner.experiment_state import ExperimentState
 from shared.connection.base_connection import BaseConnection
@@ -88,48 +87,15 @@ class ExperimentOutput(object):
             directory = self.experiment_case_iteration_results_directory()
             connections_to_csv(connections, path.join(directory, 'network.csv'))
 
-        values = dict()
+        values = list()
         for connection in connections:
             for (name, sizes) in connection.benchmarks.items():
                 for size in sizes:
-                    values[name] = size
+                    values.append((name, size))
 
         self.output_case_results('network', values)
 
-    def output_memory_usages(self, memory_usages: List[Tuple[ABEStep, dict]]) -> None:
-        """
-        Output the memory usages.
-        :param memory_usages: The list of memory usages.
-        :return:
-        """
-        min_max_usages = dict()  # type: Dict[str, List[float]]
-        for usage_tuple in memory_usages:
-            # Extract tuple
-            step, usages = usage_tuple
-            step_name = step.name
-            value = usages.rss + usages.swap  # type: ignore
-
-            # Set minimum and maximum values
-            if step not in min_max_usages:
-                min_max_usages[step_name] = [-1, -1]
-            if min_max_usages[step_name][0] == -1 or value < min_max_usages[step_name][0]:
-                min_max_usages[step_name][0] = value
-            if min_max_usages[step_name][1] == -1 or value > min_max_usages[step_name][1]:
-                min_max_usages[step_name][1] = value
-
-        self.output_case_results('memory', min_max_usages, variables=['min', 'max'])
-
-        if OUTPUT_DETAILED:
-            directory = self.experiment_case_iteration_results_directory()
-            with open(path.join(directory, 'memory.csv'), 'w') as file:
-                writer = csv.DictWriter(file, fieldnames=[
-                    'rss', 'vms', 'shared', 'text', 'lib', 'data', 'dirty', 'uss', 'pss', 'swap'
-                ])
-                writer.writeheader()
-                for _, row in memory_usages:
-                    writer.writerow(row._asdict())  # type: ignore
-
-    def output_cpu_times(self, cpu_times):
+    def output_cpu_times(self, cpu_times: List[Tuple[str, float]]):
         self.output_case_results('cpu', cpu_times)
 
     def output_storage_space(self, directories: List[dict]) -> None:
@@ -138,39 +104,17 @@ class ExperimentOutput(object):
         :param directories: A list of directory options. Each directory option contains at least a 'path' value.
         An 'filename_mapper' value is optional.
         """
-        # insurance_storage = experiment.get_insurance_storage_path()
-        # client_storage = experiment.get_user_client_storage_path()
-        # authority_storage = experiment.get_attribute_authority_storage_path()
-        # central_authority_storage = experiment.get_central_authority_storage_path()
-
-        values = dict()
+        values = list()
 
         for directory_options in directories:
             directory_path = directory_options['path']
-            filename_mapper = \
-                directory_options['filename_mapper'] \
-                    if 'filename_mapper' in directory_options \
-                    else lambda x: x
+            filename_mapper = directory_options['filename_mapper'] \
+                if 'filename_mapper' in directory_options \
+                else lambda x: x
 
             for file in listdir(directory_path):
                 size = path.getsize(path.join(directory_path, file))
-                values[filename_mapper(file)] = size
-
-        # for file in listdir(insurance_storage):
-        #     size = path.getsize(path.join(insurance_storage, file))
-        #     values[path.splitext(file)[1]] = size
-        #
-        # for file in listdir(client_storage):
-        #     size = path.getsize(path.join(client_storage, file))
-        #     values[file] = size
-        #
-        # for file in listdir(authority_storage):
-        #     size = path.getsize(path.join(authority_storage, file))
-        #     values[file] = size
-        #
-        # for file in listdir(central_authority_storage):
-        #     size = path.getsize(path.join(central_authority_storage, file))
-        #     values[file] = size
+                values.append((filename_mapper(file), size))
 
         self.output_case_results('storage', values)
 
@@ -187,26 +131,22 @@ class ExperimentOutput(object):
 
         # Process raw stats
         step_timings = pstats_to_step_timings(stats_file_path)
-        step_timings['total'] = sum(step_timings.values())
 
-        self.output_case_results('timings', step_timings, skip_categories_in_case_files=['total'])
+        self.output_case_results('timings', step_timings)
 
     def output_case_results(self,
                             name: str,
-                            values: Dict[str, Any],
+                            values: List[Tuple[str, Any]],
                             skip_categories=False,
-                            skip_categories_in_case_files: List[str] = list(),
                             variables: List[str] = None
                             ) -> None:
         """
         Output the results of a single case to the different files (one file for the current case, one file
         for each category)
         :param name: The name of the measurement (for example 'network' or 'memory')
-        :param values: A dictionary of category to value. A category is for example a step in the algorithm ('encrypt', 'decrypt'),
-        or filename for storage.
+        :param values: A list containing tuples containing category and (list of) value.
+        A category is for example a step in the algorithm ('encrypt', 'decrypt'), or filename for storage.
         :param skip_categories: If true, skip appending to the category specific files
-        :param skip_categories_in_case_files: Categories in this list will not be added to the case file. This can for
-        example be used to create a file containing totals, without having a total category in the case file.
         :param variables: A list of variables. By default, only one value per implementation is used. Using this list,
         multiple variables can be exported per implementation (for example min and max values).
         """
@@ -226,9 +166,8 @@ class ExperimentOutput(object):
                                           '%s-case-%s.csv' % (name, self.state.case.name))
 
         case_rows = list()
-        for category, value in values.items():
-            if category not in skip_categories_in_case_files:
-                case_rows.append(ExperimentOutput.create_row(category, value, implementation_index, variables_amount))
+        for category, value in values:
+            case_rows.append(ExperimentOutput.create_row(category, value, implementation_index, variables_amount))
 
             if not skip_categories:
                 category_row = ExperimentOutput.create_row(self.state.case.name, value,

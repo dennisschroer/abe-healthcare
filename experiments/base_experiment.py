@@ -5,6 +5,7 @@ from cProfile import Profile
 from os import path
 from os.path import join
 from typing import List, Dict, Any, Callable
+from typing import Tuple
 
 from memory_profiler import memory_usage
 from psutil import Process
@@ -66,8 +67,8 @@ class BaseExperiment(object):
         {
             'gid': 'BOB',
             'attributes': {
-                'AUTHORITY0': [],
-                'AUTHORITY1': []
+                'AUTHORITY0': attribute_authority_descriptions[0]['attributes'],
+                'AUTHORITY1': attribute_authority_descriptions[1]['attributes']
             }
         },
         {
@@ -123,8 +124,8 @@ class BaseExperiment(object):
         # Experiment variables
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
-        self.memory_usages = None  # type: Dict[str, List[float]]
-        self.cpu_times = None  # type: Dict[str, List[float]]
+        self.memory_usages = None  # type: List[Tuple[str, List[float]]]
+        self.cpu_times = None  # type: List[Tuple[str, float]]
         self.profiler = None  # type: Profile
         self.psutil_process = None  # type: Process
 
@@ -173,6 +174,10 @@ class BaseExperiment(object):
         self.reset_user_clients()
         self.clear_insurance_storage()
 
+        self.create_central_authority()
+        self.create_attribute_authorities(self.state.implementation)
+        self.create_user_clients(self.state.implementation)
+
     def reset_user_clients(self):
         if self.user_clients is not None:
             for user_client in self.user_clients:
@@ -217,33 +222,28 @@ class BaseExperiment(object):
             os.makedirs(self.get_experiment_input_path())
         os.makedirs(self.get_user_client_storage_path())
 
-    def register_user_clients(self) -> None:
-        """
-        Register all current user clients in this experiment to the central authority.
-        :return:
-        """
-        for user_client in self.user_clients:
-            user_client.register()
+    def create_central_authority(self):
+        self.central_authority = self.state.implementation.create_central_authority(
+            storage_path=self.get_central_authority_storage_path()
+        )
 
-    def create_attribute_authorities(self, central_authority: CentralAuthority, implementation: BaseImplementation) -> \
-            List[AttributeAuthority]:
+    def create_attribute_authorities(self,
+                                     implementation: BaseImplementation) -> None:
         """
         Create the attribute authorities defined in the descriptions (self.attribute_authority_descriptions).
-        :param central_authority: The central authority in the scheme.
         :param implementation: The implementation to use.
         :return: A list of attribute authorities.
         """
-        return list(map(
-            lambda d: self.create_attribute_authority(d, central_authority, implementation),
+        self.attribute_authorities = list(map(
+            lambda d: self.create_attribute_authority(d, implementation),
             self.attribute_authority_descriptions
         ))
 
-    def create_attribute_authority(self, authority_description: Dict[str, Any], central_authority: CentralAuthority,
+    def create_attribute_authority(self, authority_description: Dict[str, Any],
                                    implementation: BaseImplementation) -> AttributeAuthority:
         """
         Create an attribute authority defined in a description.
         :param authority_description: The description of the authority.
-        :param central_authority: The central authority in the scheme.
         :param implementation: The implementation to use.
         :return: The attribute authority.
         """
@@ -251,39 +251,33 @@ class BaseExperiment(object):
             authority_description['name'],
             storage_path=self.get_attribute_authority_storage_path()
         )
-        attribute_authority.setup(central_authority, authority_description['attributes'], 1)
         return attribute_authority
 
-    def create_user_clients(self, implementation: BaseImplementation, insurance: InsuranceService) -> List[UserClient]:
+    def create_user_clients(self, implementation: BaseImplementation) -> None:
         """
         Create the user clients defined in the descriptions (self.user_descriptions).
         :param implementation: The implementation to use.
-        :param insurance: The insurance service to use.
         :return: A list of user clients.
         """
-        return list(map(
-            lambda d: self.create_user_client(d, insurance, implementation),
+        self.user_clients = list(map(
+            lambda d: self.create_user_client(d, implementation),
             self.user_descriptions
         ))
 
-    def create_user_client(self, user_description: Dict[str, Any], insurance: InsuranceService,
-                           implementation: BaseImplementation) -> UserClient:
+    def create_user_client(self, user_description: Dict[str, Any], implementation: BaseImplementation) -> UserClient:
         """
         Create a user client defined in the descriptions (self.user_descriptions).
         :param user_description: The description of the user.
         :param implementation: The implementation to use.
-        :param insurance: The insurance service to use.
         :return: A list of user clients.
         """
         user = User(user_description['gid'], implementation)
-        client = UserClient(user, insurance, implementation, storage_path=self.get_user_client_storage_path(),
+        client = UserClient(user, implementation, storage_path=self.get_user_client_storage_path(),
                             monitor_network=self.state.measurement_type == MeasurementType.storage_and_network)
         return client
 
     def _run_setup(self) -> None:
         # Create central authority
-        self.central_authority = self.state.implementation.create_central_authority(
-            storage_path=self.get_central_authority_storage_path())
         self.central_authority.central_setup()
         self.central_authority.save_global_parameters()
         self._setup_insurance()
@@ -295,38 +289,42 @@ class BaseExperiment(object):
                                           self.state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 
-    def _run_authsetup(self) -> None:
-        # Create attribute authorities
-        self.attribute_authorities = self.create_attribute_authorities(self.central_authority,
-                                                                       self.state.implementation)
-        for authority in self.attribute_authorities:
-            self.insurance.add_authority(authority)
-            authority.save_attribute_keys()
+    def _run_authsetup(self, authority) -> None:
+        attributes = next(
+            description['attributes']
+            for description
+            in self.attribute_authority_descriptions
+            if description['name'] == authority.name
+        )
+        authority.setup(self.central_authority, attributes, 1)
+        self.insurance.add_authority(authority)
+        authority.save_attribute_keys()
 
-    def _run_register(self) -> None:
+    def _run_register(self, user_client: UserClient) -> None:
         # Create user clients
-        self.user_clients = self.create_user_clients(self.state.implementation,
-                                                     self.insurance)  # type: List[UserClient]
-        self.register_user_clients()
+        user_client.register(self.insurance)
 
-    def _run_keygen(self) -> None:
+    def _run_keygen(self, user_client: UserClient) -> None:
         """
         Generate the user secret keys for each current user client by generating the
         keys at the attribute authorities. The attributes to issue/generate are taken from the user
         descriptions (self.user_descriptions)
         :requires: self.user_clients is not None
         """
-        for user_description in self.user_descriptions:
-            user_client = self.get_user_client(user_description['gid'])  # type: ignore
-            user_client.request_secret_keys_multiple_authorities(user_description['attributes'], 1)  # type: ignore
-            user_client.save_user_secret_keys()
+        attributes = next(
+            description['attributes']
+            for description
+            in self.user_descriptions
+            if description['gid'] == user_client.user.gid
+        )
+        user_client.request_secret_keys_multiple_authorities(attributes, 1)  # type: ignore
+        user_client.save_user_secret_keys()
 
     def _run_encrypt(self) -> None:
         self.location = self.user_clients[0].encrypt_file(self.file_name, self.read_policy, self.write_policy)
 
-    def _run_update_keys(self) -> None:
-        for authority in self.attribute_authorities:
-            authority.update_keys(1)
+    def _run_update_keys(self, authority: AttributeAuthority) -> None:
+        authority.update_keys(1)
 
     def _run_data_update(self):
         with open(self.update_file_name, 'rb') as update_file:
@@ -348,14 +346,17 @@ class BaseExperiment(object):
 
             if self.run_descriptions['setup_authsetup'] == 'once':
                 self._run_setup()
-                self._run_authsetup()
+                for authority in self.attribute_authorities:
+                    self._run_authsetup(authority)
             if self.run_descriptions['register_keygen'] == 'once':
-                self._run_register()
-                self._run_keygen()
+                for user_client in self.user_clients:
+                    self._run_register(user_client)
+                    self._run_keygen(user_client)
             if self.run_descriptions['encrypt'] == 'once':
                 self._run_encrypt()
             if self.run_descriptions['update_keys'] == 'once':
-                self._run_update_keys()
+                for authority in self.attribute_authorities:
+                    self._run_update_keys(authority)
             if self.run_descriptions['decrypt'] == 'once':
                 self._run_decrypt()
 
@@ -387,14 +388,17 @@ class BaseExperiment(object):
 
             if self.run_descriptions['setup_authsetup'] == 'always':
                 self.run_step(ABEStep.setup, self._run_setup)
-                self.run_step(ABEStep.authsetup, self._run_authsetup)
+                for authority in self.attribute_authorities:
+                    self.run_step(ABEStep.authsetup, self._run_authsetup, [authority])
             if self.run_descriptions['register_keygen'] == 'always':
-                self.run_step(ABEStep.register, self._run_register)
-                self.run_step(ABEStep.keygen, self._run_keygen)
+                for user_client in self.user_clients:
+                    self.run_step(ABEStep.register, self._run_register, [user_client])
+                    self.run_step(ABEStep.keygen, self._run_keygen, [user_client])
             if self.run_descriptions['encrypt'] == 'always':
                 self.run_step(ABEStep.encrypt, self._run_encrypt)
             if self.run_descriptions['update_keys'] == 'always':
-                self.run_step(ABEStep.update_keys, self._run_update_keys)
+                for authority in self.attribute_authorities:
+                    self.run_step(ABEStep.update_keys, self._run_update_keys, [authority])
             if self.run_descriptions['data_update'] == 'always':
                 self.run_step(ABEStep.data_update, self._run_data_update)
             if self.run_descriptions['policy_update'] == 'always':
@@ -410,18 +414,20 @@ class BaseExperiment(object):
         except:
             self.output.output_error()
 
-    def run_step(self, abe_step: ABEStep, method: Callable[[], None]):
+    def run_step(self, abe_step: ABEStep, method: Callable[[], None], args: List[Any] = list()):
         if self.state.measurement_type == MeasurementType.memory:
-            u = memory_usage((method, [], {}), interval=self.memory_measure_interval)
-            self.memory_usages[abe_step.name] = [min(u), max(u), max(u) - min(u), len(u)]
+            u = memory_usage((method, args, {}), interval=self.memory_measure_interval)
+            self.memory_usages.append((abe_step.name, [min(u), max(u), max(u) - min(u), len(u)]))
         elif self.state.measurement_type == MeasurementType.cpu:
             times_before = self.psutil_process.cpu_times()
-            method()
+            method(*args)  # type: ignore
             times_after = self.psutil_process.cpu_times()
-            self.cpu_times[abe_step.name] = (times_after.user - times_before.user) + \
-                                            (times_after.system - times_before.system)
+            self.cpu_times.append((
+                abe_step.name,
+                (times_after.user - times_before.user) + (times_after.system - times_before.system)
+            ))
         else:
-            method()
+            method(*args)  # type: ignore
 
     def log_current_state(self) -> None:
         """
@@ -447,10 +453,10 @@ class BaseExperiment(object):
             self.profiler = Profile()
             self.profiler.enable()
         elif self.state.measurement_type == MeasurementType.cpu:
-            self.cpu_times = dict()
+            self.cpu_times = list()
             self.psutil_process = Process()
         elif self.state.measurement_type == MeasurementType.memory:
-            self.memory_usages = dict()
+            self.memory_usages = list()
 
     def stop_measurements(self) -> None:
         """

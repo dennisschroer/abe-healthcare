@@ -1,7 +1,8 @@
 import csv
+import logging
 import marshal
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from shared.connection.base_connection import BaseConnection
 
@@ -34,33 +35,38 @@ def strip_directories(path: str) -> str:
 
 
 function_step_mapping = {
-    'setup': 'authsetup',
-    'central_setup': 'setup',
-    'keygen': 'keygen',
-    'register_user': 'register',
-    'create_record': 'encrypt',
-    'decrypt_record': 'decrypt',
-    'update_record': 'update',
-    'update_policy': 'policy_update',
-    'update_keys': 'update_keys'
+    '_run_authsetup': 'authsetup',
+    '_run_setup': 'setup',
+    '_run_keygen': 'keygen',
+    '_run_register': 'register',
+    '_run_encrypt': 'encrypt',
+    '_run_decrypt': 'decrypt',
+    '_run_data_update': 'update',
+    '_run_policy_update': 'policy_update',
+    '_run_update_keys': 'update_keys'
 }
 timing_functions = list(function_step_mapping.keys())
 algorithm_steps = set(list(function_step_mapping.values()))
 
 
-def pstats_to_step_timings(input_file_path: str) -> Dict[str, float]:
+def pstats_to_step_timings(input_file_path: str) -> List[Tuple[str, float]]:
     with open(input_file_path, 'rb') as input_file:
         stats = marshal.load(input_file)
-        timings = {}  # type: Dict[str, float]
+        timings = []  # type: List[Tuple[str, float]]
 
+        # The output dictionary maps a tuple describing a function (filename, line number, name)
+        # to a tuple of statistics. The tuple's data is (number of calls,
+        # number of non-recursive calls, total time, cumulative time, subcall statistics).
+        # You can easily take this dictionary and do further processing.
+        # Source: https://zameermanji.com/blog/2012/6/30/undocumented-cprofile-features/
         for (function, statistics) in stats.items():
             path = list(function)[0]
             # Do not include lib functions
-            if 'abe-healthcare' in path:
-                step = function_step_mapping[function[2]] if function[2] in function_step_mapping else None
-                value = statistics[3]
-                if step is not None:
-                    timings[step] = timings[step] + value if step in timings else value
+            if 'abe-healthcare' in path and function[2] in function_step_mapping:
+                step = function_step_mapping[function[2]]
+                # We take the cumulative time divided by the number of calls
+                value = statistics[3] / statistics[0]
+                timings.append((step, value))
 
         return timings
 
