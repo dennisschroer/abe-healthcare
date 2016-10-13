@@ -125,7 +125,7 @@ class BaseExperiment(object):
         self.location = None  # type: str
         """Location of the encrypted data. Is set during the experiment"""
         self.memory_usages = None  # type: List[Tuple[str, List[float]]]
-        self.cpu_times = None  # type: List[[Tuple[str, float]]
+        self.cpu_times = None  # type: List[Tuple[str, float]]
         self.profiler = None  # type: Profile
         self.psutil_process = None  # type: Process
 
@@ -420,14 +420,14 @@ class BaseExperiment(object):
             self.memory_usages.append((abe_step.name, [min(u), max(u), max(u) - min(u), len(u)]))
         elif self.state.measurement_type == MeasurementType.cpu:
             times_before = self.psutil_process.cpu_times()
-            method(*args)
+            method(*args)  # type: ignore
             times_after = self.psutil_process.cpu_times()
             self.cpu_times.append((
                 abe_step.name,
                 (times_after.user - times_before.user) + (times_after.system - times_before.system)
             ))
         else:
-            method(*args)
+            method(*args)  # type: ignore
 
     def log_current_state(self) -> None:
         """
