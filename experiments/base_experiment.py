@@ -289,7 +289,7 @@ class BaseExperiment(object):
                                           self.state.implementation.public_key_scheme,
                                           storage_path=self.get_insurance_storage_path())
 
-    def _run_authsetup(self, authority) -> None:
+    def _run_authsetup(self, authority: AttributeAuthority) -> None:
         attributes = next(
             description['attributes']
             for description
@@ -326,11 +326,11 @@ class BaseExperiment(object):
     def _run_update_keys(self, authority: AttributeAuthority) -> None:
         authority.update_keys(1)
 
-    def _run_data_update(self):
+    def _run_data_update(self) -> None:
         with open(self.update_file_name, 'rb') as update_file:
             self.user_clients[1].update_file(self.location, update_file.read())
 
-    def _run_policy_update(self):
+    def _run_policy_update(self) -> None:
         # Performed by the owner, as only the owner is allowed to do this
         self.user_clients[0].update_policy_file(self.location, self.updated_read_policy, self.updated_write_policy, 1)
 
@@ -379,7 +379,7 @@ class BaseExperiment(object):
 
             self.reset_variables()
 
-    def run_current_state(self):
+    def run_current_state(self) -> None:
         self.log_current_state()
         # noinspection PyBroadException
         try:
