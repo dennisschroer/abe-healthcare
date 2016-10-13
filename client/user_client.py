@@ -447,7 +447,7 @@ class UserClient(object):
         :return: A new key pair.
 
         >>> from shared.implementations.base_implementation import MockImplementation
-        >>> user_client = UserClient(None, None, MockImplementation())
+        >>> user_client = UserClient(None, MockImplementation())
         >>> key_pair = user_client.create_owner_key()
         >>> key_pair is not None
         True
@@ -463,7 +463,7 @@ class UserClient(object):
         >>> from shared.implementations.base_implementation import MockImplementation
         >>> implementation = MockImplementation()
         >>> user = User('bob', implementation)
-        >>> user_client = UserClient(user, None, implementation)
+        >>> user_client = UserClient(user, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
         >>> os.path.exists(os.path.join(user_client.storage_path, USER_OWNER_KEY_FILENAME % user_client.user.gid))
@@ -481,7 +481,7 @@ class UserClient(object):
         >>> from shared.implementations.base_implementation import MockImplementation
         >>> implementation = MockImplementation()
         >>> user = User('bob', implementation)
-        >>> user_client = UserClient(user, None, implementation)
+        >>> user_client = UserClient(user, implementation)
         >>> key_pair = user_client.create_owner_key()
         >>> user_client.save_owner_keys(key_pair)
         >>> loaded = user_client.load_owner_keys()
