@@ -41,7 +41,7 @@ function_step_mapping = {
     '_run_register': 'register',
     '_run_encrypt': 'encrypt',
     '_run_decrypt': 'decrypt',
-    '_run_data_update': 'update',
+    '_run_data_update': 'data_update',
     '_run_policy_update': 'policy_update',
     '_run_update_keys': 'update_keys'
 }
