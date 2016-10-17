@@ -22,9 +22,9 @@ class PolicySizeExperiment(BaseExperiment):
                 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN'
             ]))
             cases = list(map(
-                lambda size: ExperimentCase("size %d" % (size + 1),
-                                            {'policy': ' AND '.join(attribute_pairs[:size + 1])}),
-                [2 * x for x in range(5)]
+                lambda size: ExperimentCase("size %d" % size,
+                                            {'policy': ' AND '.join(attribute_pairs[:size])}),
+                [1, 3, 5, 7, 9]
             ))
         super().__init__(cases)
 
