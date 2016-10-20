@@ -21,7 +21,7 @@ class FileSizeExperiment(BaseExperiment):
         2 ** 20,
         10 * (2 ** 20),
         50 * (2 ** 20),
-        2 ** 30
+        (2 ** 28)
     ]
 
     def __init__(self, cases: List[ExperimentCase] = None) -> None:
