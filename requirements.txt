@@ -2,3 +2,4 @@ boolean.py==2.0.0
 pycrypto==2.6.1
 psutil==4.3.0
 memory-profiler==0.41
+bottle==0.12.10
