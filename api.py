@@ -37,8 +37,7 @@ def attribute_authorities_generate_keys():
     attribute_authority.setup(central_authority, attributes, 1)
     return {
         'attributes': attributes,
-        'publicKeys': b64encode(implementation.serializer.serialize_authority_public_keys(attribute_authority.public_keys(1))),
-        'secretKeys': b64encode(implementation.serializer.serialize_authority_secret_keys(attribute_authority.secret_keys(1)))
+        'publicKeys': b64encode(implementation.serializer.serialize_authority_public_keys(attribute_authority.public_keys(1)))
     }
 
 if __name__ == '__main__':
