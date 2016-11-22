@@ -1,0 +1,25 @@
+INFO:root:Current version: 1.4.2-14-g7e904f0
+
+INFO:root:Device 'dennis-VirtualBox' starting experiment 'BaseExperiment' with timestamp '2016-10-28 09-56-31', running 100 times
+INFO:root:Run configurations: {'register_keygen': 'always', 'data_update': 'always', 'setup_authsetup': 'always', 'update_keys': 'always', 'policy_update': 'always', 'encrypt': 'always', 'decrypt': 'always'}
+INFO:root:Measure interval: 0.1
+INFO:root:Authority descriptions: [{'name': 'AUTHORITY0', 'attributes': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0', 'FIVE@AUTHORITY0', 'SIX@AUTHORITY0', 'SEVEN@AUTHORITY0', 'EIGHT@AUTHORITY0', 'NINE@AUTHORITY0', 'TEN@AUTHORITY0']}, {'name': 'AUTHORITY1', 'attributes': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1', 'FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1', 'NINE@AUTHORITY1', 'TEN@AUTHORITY1']}]
+INFO:root:User descriptions: [{'attributes': {'AUTHORITY1': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1', 'FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1', 'NINE@AUTHORITY1', 'TEN@AUTHORITY1'], 'AUTHORITY0': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0', 'FIVE@AUTHORITY0', 'SIX@AUTHORITY0', 'SEVEN@AUTHORITY0', 'EIGHT@AUTHORITY0', 'NINE@AUTHORITY0', 'TEN@AUTHORITY0']}, 'gid': 'BOB'}, {'attributes': {'AUTHORITY1': ['ONE@AUTHORITY1', 'TWO@AUTHORITY1', 'THREE@AUTHORITY1', 'FOUR@AUTHORITY1', 'FIVE@AUTHORITY1', 'SIX@AUTHORITY1', 'SEVEN@AUTHORITY1', 'EIGHT@AUTHORITY1', 'NINE@AUTHORITY1', 'TEN@AUTHORITY1'], 'AUTHORITY0': ['ONE@AUTHORITY0', 'TWO@AUTHORITY0', 'THREE@AUTHORITY0', 'FOUR@AUTHORITY0', 'FIVE@AUTHORITY0', 'SIX@AUTHORITY0', 'SEVEN@AUTHORITY0', 'EIGHT@AUTHORITY0', 'NINE@AUTHORITY0', 'TEN@AUTHORITY0']}, 'gid': 'DOCTOR'}]
+INFO:root:File size: 10485760
+INFO:root:Read policy: (ONE@AUTHORITY0 OR SIX@AUTHORITY1) AND (TWO@AUTHORITY0 OR SEVEN@AUTHORITY1) AND (THREE@AUTHORITY0 OR EIGHT@AUTHORITY1)
+INFO:root:Write policy: (ONE@AUTHORITY0 OR SIX@AUTHORITY1) AND (TWO@AUTHORITY0 OR SEVEN@AUTHORITY1) AND (THREE@AUTHORITY0 OR EIGHT@AUTHORITY1)
+INFO:root:Cases: [ExperimentCase[name=base, arguments=None]]
+INFO:root:Measurements: []
+INFO:root:=> Running BaseExperiment with implementation DAC-MACS (1/4), iteration 1/100, case base, measurement MeasurementType.storage_and_network
+INFO:root:=> Running BaseExperiment with implementation RD-DABE (2/4), iteration 1/100, case base, measurement MeasurementType.storage_and_network
+INFO:root:=> Running BaseExperiment with implementation RW-ABE (3/4), iteration 1/100, case base, measurement MeasurementType.storage_and_network
+INFO:root:=> Running BaseExperiment with implementation TAAC (4/4), iteration 1/100, case base, measurement MeasurementType.storage_and_network
+WARNING:root:Connection benchmark DOCTOR.Update Keys out already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys in already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys out already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys in already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys out already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys in already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys out already exists
+WARNING:root:Connection benchmark DOCTOR.Update Keys in already exists
+INFO:root:Device 'dennis-VirtualBox' finished experiment 'BaseExperiment' with timestamp '2016-10-28 09-56-31', current time: 2016-10-28 09-56-49
